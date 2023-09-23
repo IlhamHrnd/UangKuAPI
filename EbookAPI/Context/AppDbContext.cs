@@ -2,12 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using UangKuAPI.Model;
 
 namespace EbookAPI.Context
 {
     public class AppDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<AppStandardReferenceItem> AppStandardReferenceItems { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
@@ -26,6 +28,10 @@ namespace EbookAPI.Context
                     }
                 }
             }
+            catch (DbUpdateException e)
+            {
+                Console.WriteLine(e.Message);
+            }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
@@ -35,6 +41,9 @@ namespace EbookAPI.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().ToTable("User");
+            modelBuilder.Entity<AppStandardReferenceItem>().ToTable("AppStandardReferenceItem");
+
+            base.OnModelCreating(modelBuilder);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

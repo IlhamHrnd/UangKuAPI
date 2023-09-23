@@ -7,12 +7,12 @@
         public UserFilter()
         {
             PageNumber = 1;
-            PageSize = 50;
+            PageSize = 5;
         }
         public UserFilter(int pageNumber, int pageSize)
         {
             PageNumber = pageNumber < 1 ? 1 : pageNumber;
-            PageSize = pageSize > 50 ? 50 : pageSize;
+            PageSize = pageSize > 5 ? 5 : pageSize;
         }
     }
 

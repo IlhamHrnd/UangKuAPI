@@ -18,7 +18,7 @@ namespace EbookAPI.Controllers
             _context = context;
         }
 
-        [HttpGet("GetAllUser")]
+        [HttpGet("GetAllUser", Name = "GetAllUser")]
         public async Task<ActionResult<User>> GetAllUser([FromQuery] UserFilter filter)
         {
             try
@@ -27,30 +27,33 @@ namespace EbookAPI.Controllers
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
                 var query = $@"SELECT u.Username, u.ActiveDate,
-                                u.LastLogin, u.LastUpdateDateTime, u.LastUpdateByUser, u.PersonID,
-                                asri.ItemName AS 'SexName',
-                                asri02.ItemName AS 'AccessName',
-                                asri03.ItemName AS 'StatusName'
-                                FROM User AS u
-                                INNER JOIN AppStandardReferenceItem AS asri
-    	                            ON asri.StandardReferenceID = 'Sex'
-                                    AND asri.ItemID = u.SRSex
-                                INNER JOIN AppStandardReferenceItem AS asri02
-    	                            ON asri02.StandardReferenceID = 'Access'
-                                    AND asri02.ItemID = u.SRAccess
-                                INNER JOIN AppStandardReferenceItem AS asri03
-    	                            ON asri03.StandardReferenceID = 'Status'
-                                    AND asri03.ItemID = u.SRStatus;";
+                                                u.LastLogin, u.LastUpdateDateTime, u.LastUpdateByUser, u.PersonID,
+                                                asri.ItemName AS 'SexName',
+                                                asri02.ItemName AS 'AccessName',
+                                                asri03.ItemName AS 'StatusName'
+                                                FROM User AS u
+                                                INNER JOIN AppStandardReferenceItem AS asri
+                    	                            ON asri.StandardReferenceID = 'Sex'
+                                                    AND asri.ItemID = u.SRSex
+                                                INNER JOIN AppStandardReferenceItem AS asri02
+                    	                            ON asri02.StandardReferenceID = 'Access'
+                                                    AND asri02.ItemID = u.SRAccess
+                                                INNER JOIN AppStandardReferenceItem AS asri03
+                    	                            ON asri03.StandardReferenceID = 'Status'
+                                                    AND asri03.ItemID = u.SRStatus
+                                                ORDER BY u.Username ASC
+                                                OFFSET {(pageNumber - 1) * pageSize} ROWS
+                                                FETCH NEXT {pageSize} ROWS ONLY;";
                 var pagedData = await _context.Users.FromSqlRaw(query).ToListAsync();
                 var totalRecord = await _context.Users.CountAsync();
                 var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
 
                 string? prevPageLink = validFilter.PageNumber > 1
-                    ? Url.Link("UserAPI", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                    ? Url.Link("GetAllUser", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
                     : null;
 
                 string? nextPageLink = validFilter.PageNumber < totalPages
-                    ? Url.Link("UserAPI", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                    ? Url.Link("GetAllUser", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
                     : null;
 
                 var response = new PageResponse<List<User>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
@@ -70,7 +73,7 @@ namespace EbookAPI.Controllers
             }
         }
 
-        [HttpGet("GetLoginUserName")]
+        [HttpGet("GetLoginUserName", Name = "GetLoginUserName")]
         public async Task<ActionResult<User>> GetLoginUserName([FromQuery] UserNameFilter filter)
         {
             try
@@ -108,6 +111,92 @@ namespace EbookAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                    e.Message);
+            }
+        }
+
+        [HttpPost("CreateUsername", Name = "CreateUsername")]
+        public async Task<IActionResult> CreateUsername([FromBody] User user, [FromQuery] string password, [FromQuery] string email)
+        {
+            try
+            {
+                if (user == null || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
+                {
+                    return BadRequest("User Data, Password, And Email Are Required.");
+                }
+
+                string access = "Access-02";
+                string status = "Status-001";
+                DateTime dateTime = DateTime.Now;
+                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+
+                var query = $@"INSERT INTO `User`(`Username`, `Password`, `SRSex`, `SRAccess`, `Email`, `SRStatus`, `ActiveDate`, `LastLogin`, `LastUpdateDateTime`, `LastUpdateByUser`, `PersonID`)
+                        VALUES ('{user.Username}', '{Encryptor.Encryptor.DataEncrypt(password)}', 
+                                '{user.SexName}', '{access}', '{Encryptor.Encryptor.DataEncrypt(email)}', 
+                                '{status}', '{date}', '{date}', '{date}', '{user.Username}', '{user.Username}');";
+
+                await _context.Database.ExecuteSqlRawAsync(query);
+
+                return Ok($"User {user.Username} Created Successfully");
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpPatch("UpdateLastLogin", Name = "UpdateLastLogin")]
+        public async Task<IActionResult> UpdateLastLogin([FromQuery] string username)
+        {
+            try
+            {
+                DateTime dateTime = DateTime.Now;
+                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+
+                if (string.IsNullOrEmpty(username))
+                {
+                    return BadRequest("Username Data Is Required.");
+                }
+
+                var query = $@"UPDATE `User`
+                                SET `LastLogin` = '{date}'
+                                WHERE `Username` = '{username}';";
+
+                await _context.Database.ExecuteSqlRawAsync(query);
+
+                return Ok($"User {username} Update Successfully");
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpPatch("UpdatePasswordUser", Name = "UpdatePasswordUser")]
+        public async Task<IActionResult> UpdatePasswordUser([FromQuery] string username, [FromQuery] string password)
+        {
+            try
+            {
+                DateTime dateTime = DateTime.Now;
+                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+
+                if (string.IsNullOrEmpty(username))
+                {
+                    return BadRequest("Username Data Is Required.");
+                }
+
+                var query = $@"UPDATE `User`
+                                SET `Password` = '{Encryptor.Encryptor.DataEncrypt(password)}',
+                                `LastUpdateDateTime` = '{date}',
+                                `LastUpdateByUser` = '{username}'
+                                WHERE `Username` = '{username}';";
+
+                await _context.Database.ExecuteSqlRawAsync(query);
+
+                return Ok($"User {username} Update Successfully");
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
     }
