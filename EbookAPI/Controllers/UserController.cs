@@ -191,9 +191,16 @@ namespace EbookAPI.Controllers
                                 WHERE `Username` = '{username}'
                                     AND `Email` = '{Encryptor.Encryptor.DataEncrypt(email)}';";
 
-                await _context.Database.ExecuteSqlRawAsync(query);
+                var response =  await _context.Database.ExecuteSqlRawAsync(query);
 
-                return Ok($"User {username} Update Successfully");
+                if (response > 0)
+                {
+                    return Ok($"User {username} Update Successfully");
+                }
+                else
+                {
+                    return NotFound($"Username {username} Not Found");
+                }
             }
             catch (Exception e)
             {
