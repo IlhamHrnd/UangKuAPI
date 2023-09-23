@@ -172,7 +172,7 @@ namespace EbookAPI.Controllers
         }
 
         [HttpPatch("UpdatePasswordUser", Name = "UpdatePasswordUser")]
-        public async Task<IActionResult> UpdatePasswordUser([FromQuery] string username, [FromQuery] string password)
+        public async Task<IActionResult> UpdatePasswordUser([FromQuery] string username, [FromQuery] string password, [FromQuery] string email)
         {
             try
             {
@@ -188,7 +188,8 @@ namespace EbookAPI.Controllers
                                 SET `Password` = '{Encryptor.Encryptor.DataEncrypt(password)}',
                                 `LastUpdateDateTime` = '{date}',
                                 `LastUpdateByUser` = '{username}'
-                                WHERE `Username` = '{username}';";
+                                WHERE `Username` = '{username}'
+                                    AND `Email` = '{Encryptor.Encryptor.DataEncrypt(email)}';";
 
                 await _context.Database.ExecuteSqlRawAsync(query);
 
