@@ -18,7 +18,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetStandardID", Name = "GetStandardID")]
-        public async Task<ActionResult<List<AppStandardReferenceItem>>> GetStandardID([FromQuery] AppStandardReferenceItemFilter filter, bool isActive = false)
+        public async Task<ActionResult<List<AppStandardReferenceItem>>> GetStandardID([FromQuery] AppStandardReferenceItemFilter filter, bool isActive = false, bool isUse = false)
         {
             try
             {
@@ -27,12 +27,13 @@ namespace UangKuAPI.Controllers
                     return BadRequest("StandardReferenceID Is Required");
                 }
                 string isActiveCondition = isActive ? "AND asri.IsActive = 1" : "";
+                string isUseCondition = isUse ? "AND asri.IsUsedBySystem = 1" : "";
 
                 var query = $@"SELECT asri.StandardReferenceID, asri.ItemID, asri.ItemName,
                         asri.Note, asri.IsUsedBySystem, asri.IsActive,
                         asri.LastUpdateDateTime, asri.LastUpdateByUserID
                         FROM AppStandardReferenceItem AS asri
-                        WHERE asri.StandardReferenceID = '{filter.StandardReferenceID}' {isActiveCondition};";
+                        WHERE asri.StandardReferenceID = '{filter.StandardReferenceID}' {isActiveCondition} {isUseCondition};";
 
                 var response = await _context.AppStandardReferenceItems.FromSqlRaw(query).ToListAsync();
 
@@ -48,6 +49,5 @@ namespace UangKuAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
-
     }
 }

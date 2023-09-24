@@ -10,6 +10,7 @@ namespace EbookAPI.Context
     {
         public DbSet<User> Users { get; set; }
         public DbSet<AppStandardReferenceItem> AppStandardReferenceItems { get; set; }
+        public DbSet<AppStandardReference> AppStandardReferences { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
@@ -42,6 +43,7 @@ namespace EbookAPI.Context
         {
             modelBuilder.Entity<User>().ToTable("User");
             modelBuilder.Entity<AppStandardReferenceItem>().ToTable("AppStandardReferenceItem");
+            modelBuilder.Entity<AppStandardReference>().ToTable("AppStandardReference");
 
             base.OnModelCreating(modelBuilder);
         }
