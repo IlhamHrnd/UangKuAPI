@@ -2,7 +2,6 @@
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 using UangKuAPI.Filter;
 using UangKuAPI.Model;
 
@@ -53,6 +52,34 @@ namespace UangKuAPI.Controllers
                     PrevPageLink = prevPageLink,
                     NextPageLink = nextPageLink
                 };
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpGet("GetReferenceID", Name = "GetReferenceID")]
+        public async Task<ActionResult<AppStandardReference>> GetReferenceID([FromQuery] AppStandardReferenceIDFilter filter)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filter.ReferenceID))
+                {
+                    return BadRequest("ReferenceID Is Required");
+                }
+                var query = $@"SELECT asr.StandardReferenceID, asr.StandardReferenceName, asr.ItemLength,
+                                asr.IsUsedBySystem, asr.IsActive, asr.Note,
+                                asr.LastUpdateDateTime, asr.LastUpdateByUserID
+                                FROM AppStandardReference AS asr
+                                WHERE asr.StandardReferenceID = '{filter.ReferenceID}';";
+                var response = await _context.AppStandardReferences.FromSqlRaw(query).ToListAsync();
+                if (response == null)
+                {
+                    return NotFound("App Standard Reference Not Found");
+                }
 
                 return Ok(response);
             }

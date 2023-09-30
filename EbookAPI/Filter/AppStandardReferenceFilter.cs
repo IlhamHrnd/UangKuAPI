@@ -17,4 +17,17 @@
             PageSize = pageSize > 25 ? 25 : pageSize;
         }
     }
+
+    public class AppStandardReferenceIDFilter
+    {
+        public string? ReferenceID { get; set; }
+        public AppStandardReferenceIDFilter()
+        {
+            ReferenceID = string.Empty;
+        }
+        public AppStandardReferenceIDFilter(string? referenceID)
+        {
+            ReferenceID = string.IsNullOrEmpty(referenceID) ? string.Empty : referenceID;
+        }
+    }
 }
