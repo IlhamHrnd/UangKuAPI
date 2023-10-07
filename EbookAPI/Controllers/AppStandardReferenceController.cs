@@ -2,6 +2,7 @@
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using UangKuAPI.Filter;
 using UangKuAPI.Model;
 
@@ -96,7 +97,7 @@ namespace UangKuAPI.Controllers
             {
                 if (asr == null)
                 {
-                    return BadRequest("User AppStandardReference Are Required");
+                    return BadRequest("AppStandardReference Are Required");
                 }
 
                 DateTime dateTime = DateTime.Now;
@@ -119,24 +120,30 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("UpdateAppStandardReference", Name = "UpdateAppStandardReference")]
-        public async Task<IActionResult> UpdateAppStandardReference([FromQuery] string referenceID, [FromQuery] int itemLength, [FromQuery] bool isActive, [FromQuery] bool isUse, [FromQuery] string user)
+        public async Task<IActionResult> UpdateAppStandardReference([FromQuery] string referenceID, [FromQuery] int itemLength, [FromQuery] bool isActive, [FromQuery] bool isUse, [FromQuery] string user, [FromQuery] string note)
         {
             try
             {
                 DateTime dateTime = DateTime.Now;
                 string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                int use = 0;
+                int active = 0;
 
                 if (string.IsNullOrEmpty(referenceID))
                 {
                     return BadRequest("ReferenceID Is Required");
                 }
 
+                use = isUse ? 1 : 0;
+                active = isActive ? 1 : 0;
+
                 var query = $@"UPDATE `AppStandardReference`
                                 SET `ItemLength` = '{itemLength}',
-                                `IsUsedBySystem` = '{isUse}',
-                                `IsActive` = '{isActive}',
+                                `IsUsedBySystem` = '{use}',
+                                `IsActive` = '{active}',
                                 `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{user}'
+                                `LastUpdateByUserID` = '{user}',
+                                `Note` = '{note}'
                                 WHERE `StandardReferenceID` = '{referenceID}';";
 
                 var response = await _context.Database.ExecuteSqlRawAsync(query);

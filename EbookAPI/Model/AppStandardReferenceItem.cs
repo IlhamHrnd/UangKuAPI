@@ -4,9 +4,9 @@ namespace UangKuAPI.Model
 {
     public class AppStandardReferenceItem
     {
-        [Key]
-        [Required(ErrorMessage = "StandardReferenceID Is Required")]
         public string? StandardReferenceID { get; set; }
+        [Key]
+        [Required(ErrorMessage = "ItemID Is Required")]
         public string? ItemID { get; set; }
         public string? ItemName { get; set; }
         public string? Note { get; set; }
