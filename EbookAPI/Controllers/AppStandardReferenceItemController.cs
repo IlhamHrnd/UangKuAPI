@@ -62,11 +62,12 @@ namespace UangKuAPI.Controllers
 
                 DateTime dateTime = DateTime.Now;
                 string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                bool isdefault = true;
+                int use = asri.IsUsedBySystem == true ? 1 : 0;
+                int active = asri.IsActive == true ? 1 : 0;
 
                 var query = $@"INSERT INTO `AppStandardReferenceItem`(`StandardReferenceID`, `ItemID`, `ItemName`, `Note`, `IsUsedBySystem`,
                                 `IsActive`, `LastUpdateDateTime`, `LastUpdateByUserID`)
-                                VALUES ('{asri.StandardReferenceID}','{asri.ItemID}','{asri.ItemName}','{asri.Note}','{isdefault}','{isdefault}',
+                                VALUES ('{asri.StandardReferenceID}','{asri.ItemID}','{asri.ItemName}','{asri.Note}','{use}','{active}',
                                 '{date}','{asri.LastUpdateByUserID}')";
 
                 await _context.Database.ExecuteSqlRawAsync(query);
@@ -86,16 +87,14 @@ namespace UangKuAPI.Controllers
             {
                 DateTime dateTime = DateTime.Now;
                 string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                int use = 0 ;
-                int active = 0 ;
-
+                
                 if (string.IsNullOrEmpty(referenceID) || string.IsNullOrEmpty(itemID))
                 {
                     return BadRequest("ReferenceID And ItemID Is Required");
                 }
                 
-                use = isUse ? 1 : 0 ;
-                active = isActive ? 1 : 0 ;
+                int use = isUse ? 1 : 0 ;
+                int active = isActive ? 1 : 0 ;
                 
                 var query = $@"UPDATE `AppStandardReferenceItem`
                                 SET `ItemName` = '{itemName}',

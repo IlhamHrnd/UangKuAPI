@@ -2,7 +2,6 @@
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
 using UangKuAPI.Filter;
 using UangKuAPI.Model;
 
@@ -102,12 +101,13 @@ namespace UangKuAPI.Controllers
 
                 DateTime dateTime = DateTime.Now;
                 string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                bool isdefault = true;
+                int use = asr.IsUsedBySystem == true ? 1 : 0;
+                int active = asr.IsActive == true ? 1 : 0;
 
                 var query = $@"INSERT INTO `AppStandardReference`(`StandardReferenceID`, `StandardReferenceName`, `ItemLength`,
                                 `IsUsedBySystem`, `IsActive`, `Note`, `LastUpdateDateTime`, `LastUpdateByUserID`)
                                 VALUES('{asr.StandardReferenceID}', '{asr.StandardReferenceName}', '{asr.ItemLength}',
-                                '{isdefault}', '{isdefault}', '{asr.Note}', '{date}', '{asr.LastUpdateByUserID}');";
+                                '{use}', '{active}', '{asr.Note}', '{date}', '{asr.LastUpdateByUserID}');";
 
                 await _context.Database.ExecuteSqlRawAsync(query);
 
@@ -126,16 +126,14 @@ namespace UangKuAPI.Controllers
             {
                 DateTime dateTime = DateTime.Now;
                 string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                int use = 0;
-                int active = 0;
 
                 if (string.IsNullOrEmpty(referenceID))
                 {
                     return BadRequest("ReferenceID Is Required");
                 }
 
-                use = isUse ? 1 : 0;
-                active = isActive ? 1 : 0;
+                int use = isUse ? 1 : 0;
+                int active = isActive ? 1 : 0;
 
                 var query = $@"UPDATE `AppStandardReference`
                                 SET `ItemLength` = '{itemLength}',
