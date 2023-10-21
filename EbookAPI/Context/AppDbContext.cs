@@ -16,6 +16,7 @@ namespace EbookAPI.Context
         public DbSet<District> Districts { get; set; }
         public DbSet<Subdistrict> Subdistricts { get; set; }
         public DbSet<PostalCodes> PostalCodes { get; set; }
+        public DbSet<Profile> Profile { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
@@ -54,6 +55,7 @@ namespace EbookAPI.Context
             modelBuilder.Entity<District>().ToTable("Districts");
             modelBuilder.Entity<Subdistrict>().ToTable("Subdistricts");
             modelBuilder.Entity<PostalCodes>().ToTable("PostalCode");
+            modelBuilder.Entity<Profile>().ToTable("Profile");
 
             base.OnModelCreating(modelBuilder);
         }
