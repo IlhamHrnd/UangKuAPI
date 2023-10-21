@@ -30,7 +30,7 @@ namespace UangKuAPI.Controllers
                 }
                 var query = $@"SELECT p.PersonID, p.FirstName, p.MiddleName, p.LastName, p.BirthDate,
                                 p.PlaceOfBirth, p.Photo, p.Address, p.Province, p.City, p.Subdistrict,
-                                p.District, p.PostalCode
+                                p.District, p.PostalCode, p.LastUpdateDateTime, p.LastUpdateByUser
                                 FROM Profile AS p
                                 WHERE p.PersonID = '{filter.PersonID}';";
                 var response = await _context.Profile.FromSqlRaw(query).ToListAsync();
@@ -56,13 +56,15 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Profile Are Required");
                 }
+                DateTime dateTime = DateTime.Now;
+                string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
                 string date = $"{profile.BirthDate: yyyy-MM-dd HH:mm:ss}";
 
                 var query = $@"INSERT INTO `Profile`(`PersonID`, `FirstName`, `MiddleName`, `LastName`, `BirthDate`, `PlaceOfBirth`, 
-                                `Photo`, `Address`, `Province`, `City`, `Subdistrict`, `District`, `PostalCode`)
+                                `Photo`, `Address`, `Province`, `City`, `Subdistrict`, `District`, `PostalCode`, `LastUpdateDateTime`, `LastUpdateByUser`)
                                 VALUES('{profile.PersonID}', '{profile.FirstName}', '{profile.MiddleName}', '{profile.LastName}', '{date}', 
                                 '{profile.PlaceOfBirth}', '{profile.Photo}', '{profile.Address}', '{profile.Province}', 
-                                '{profile.City}', '{profile.Subdistrict}', '{profile.District}', '{profile.PostalCode}');";
+                                '{profile.City}', '{profile.Subdistrict}', '{profile.District}', '{profile.PostalCode}', '{updatedate}', '{profile.LastUpdateByUser}');";
                 await _context.Database.ExecuteSqlRawAsync(query);
 
                 return Ok($"Person ID {profile.PersonID} Created Successfully");
@@ -82,6 +84,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Profile Is Required");
                 }
+                DateTime dateTime = DateTime.Now;
+                string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
                 string date = $"{profile.BirthDate: yyyy-MM-dd HH:mm:ss}";
 
                 var query = $@"UPDATE `Profile`
@@ -96,7 +100,9 @@ namespace UangKuAPI.Controllers
                                 `City` = '{profile.City}',
                                 `Subdistrict` = '{profile.Subdistrict}',
                                 `District` = '{profile.District}',
-                                `PostalCode` = '{profile.PostalCode}'
+                                `PostalCode` = '{profile.PostalCode}',
+                                `LastUpdateDateTime` = '{updatedate}',
+                                `LastUpdateByUser` = '{profile.LastUpdateByUser}'
                                 WHERE `PersonID` = '{profile.PersonID}';";
 
                 var response = await _context.Database.ExecuteSqlRawAsync(query);

@@ -19,5 +19,7 @@ namespace UangKuAPI.Model
         public string? Subdistrict { get; set; }
         public string? District { get; set; }
         public int PostalCode { get; set; }
+        public DateTime? LastUpdateDateTime { get; set; }
+        public string? LastUpdateByUser { get; set; }
     }
 }
