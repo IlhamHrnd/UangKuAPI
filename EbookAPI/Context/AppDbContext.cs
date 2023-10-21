@@ -11,6 +11,11 @@ namespace EbookAPI.Context
         public DbSet<User> Users { get; set; }
         public DbSet<AppStandardReferenceItem> AppStandardReferenceItems { get; set; }
         public DbSet<AppStandardReference> AppStandardReferences { get; set; }
+        public DbSet<Province> Provinces { get; set; }
+        public DbSet<Cities> Cities { get; set; }
+        public DbSet<District> Districts { get; set; }
+        public DbSet<Subdistrict> Subdistricts { get; set; }
+        public DbSet<PostalCodes> PostalCodes { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
@@ -44,6 +49,11 @@ namespace EbookAPI.Context
             modelBuilder.Entity<User>().ToTable("User");
             modelBuilder.Entity<AppStandardReferenceItem>().ToTable("AppStandardReferenceItem");
             modelBuilder.Entity<AppStandardReference>().ToTable("AppStandardReference");
+            modelBuilder.Entity<Province>().ToTable("Provinces");
+            modelBuilder.Entity<Cities>().ToTable("Cities");
+            modelBuilder.Entity<District>().ToTable("Districts");
+            modelBuilder.Entity<Subdistrict>().ToTable("Subdistricts");
+            modelBuilder.Entity<PostalCodes>().ToTable("PostalCode");
 
             base.OnModelCreating(modelBuilder);
         }

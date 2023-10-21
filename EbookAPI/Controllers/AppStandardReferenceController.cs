@@ -76,7 +76,7 @@ namespace UangKuAPI.Controllers
                                 FROM AppStandardReference AS asr
                                 WHERE asr.StandardReferenceID = '{filter.ReferenceID}';";
                 var response = await _context.AppStandardReferences.FromSqlRaw(query).ToListAsync();
-                if (response == null)
+                if (response == null || response.Count == 0 || !response.Any())
                 {
                     return NotFound("App Standard Reference Not Found");
                 }
