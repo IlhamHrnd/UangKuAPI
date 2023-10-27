@@ -22,4 +22,46 @@ namespace UangKuAPI.Model
         public DateTime? LastUpdateDateTime { get; set; }
         public string? LastUpdateByUser { get; set; }
     }
+
+    public class GetProfile
+    {
+        [Key]
+        [Required(ErrorMessage = "PersonID Is Required")]
+        public string? PersonID { get; set; }
+        public string? FirstName { get; set; }
+        public string? MiddleName { get; set; }
+        public string? LastName { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? PlaceOfBirth { get; set; }
+        public byte[]? Photo { get; set; }
+        public string? Address { get; set; }
+        public string? Province { get; set; }
+        public string? City { get; set; }
+        public string? Subdistrict { get; set; }
+        public string? District { get; set; }
+        public int PostalCode { get; set; }
+        public DateTime? LastUpdateDateTime { get; set; }
+        public string? LastUpdateByUser { get; set; }
+    }
+
+    public class PostProfile
+    {
+        [Key]
+        [Required(ErrorMessage = "PersonID Is Required")]
+        public string? PersonID { get; set; }
+        public string? FirstName { get; set; }
+        public string? MiddleName { get; set; }
+        public string? LastName { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? PlaceOfBirth { get; set; }
+        public string? Photo { get; set; }
+        public string? Address { get; set; }
+        public string? Province { get; set; }
+        public string? City { get; set; }
+        public string? Subdistrict { get; set; }
+        public string? District { get; set; }
+        public int PostalCode { get; set; }
+        public DateTime? LastUpdateDateTime { get; set; }
+        public string? LastUpdateByUser { get; set; }
+    }
 }

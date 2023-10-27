@@ -1,8 +1,6 @@
 ﻿using EbookAPI.Context;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Net;
 using UangKuAPI.Filter;
 using UangKuAPI.Model;
 
@@ -20,7 +18,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetPersonID", Name = "GetPersonID")]
-        public async Task<ActionResult<Profile>> GetPersonID([FromQuery] ProfileFilter filter)
+        public async Task<ActionResult<GetProfile>> GetPersonID([FromQuery] ProfileFilter filter)
         {
             try
             {
@@ -48,7 +46,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPost("PostProfile", Name = "PostProfile")]
-        public async Task<IActionResult> PostProfile([FromBody] Profile profile)
+        public async Task<IActionResult> PostProfile([FromBody] PostProfile profile)
         {
             try
             {
@@ -76,7 +74,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("PatchProfile", Name = "PatchProfile")]
-        public async Task<IActionResult> PatchProfile([FromBody] Profile profile)
+        public async Task<IActionResult> PatchProfile([FromBody] PostProfile profile)
         {
             try
             {
