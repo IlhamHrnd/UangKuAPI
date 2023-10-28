@@ -1,4 +1,5 @@
 ﻿using EbookAPI.Context;
+using EbookAPI.Encryptor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.Filter;
@@ -37,6 +38,22 @@ namespace UangKuAPI.Controllers
                     return NotFound("PersonID Not Found");
                 }
 
+                foreach (var item in response)
+                {
+                    if (!string.IsNullOrEmpty(item.PersonID))
+                    {
+                        item.FirstName = EncryptorNullChecker.DecryptIfNotNull(item.FirstName);
+                        item.MiddleName = EncryptorNullChecker.DecryptIfNotNull(item.MiddleName);
+                        item.LastName = EncryptorNullChecker.DecryptIfNotNull(item.LastName);
+                        item.PlaceOfBirth = EncryptorNullChecker.DecryptIfNotNull(item.PlaceOfBirth);
+                        item.Address = EncryptorNullChecker.DecryptIfNotNull(item.Address);
+                        item.Province = EncryptorNullChecker.DecryptIfNotNull(item.Province);
+                        item.City = EncryptorNullChecker.DecryptIfNotNull(item.City);
+                        item.District = EncryptorNullChecker.DecryptIfNotNull(item.District);
+                        item.Subdistrict = EncryptorNullChecker.DecryptIfNotNull(item.Subdistrict);
+                    }
+                }
+
                 return Ok(response);
             }
             catch (Exception e)
@@ -53,6 +70,18 @@ namespace UangKuAPI.Controllers
                 if (profile == null)
                 {
                     return BadRequest($"Profile Are Required");
+                }
+                else
+                {
+                    profile.FirstName = EncryptorNullChecker.EncryptIfNotNull(profile.FirstName);
+                    profile.MiddleName = EncryptorNullChecker.EncryptIfNotNull(profile.MiddleName);
+                    profile.LastName = EncryptorNullChecker.EncryptIfNotNull(profile.LastName);
+                    profile.PlaceOfBirth = EncryptorNullChecker.EncryptIfNotNull(profile.PlaceOfBirth);
+                    profile.Address = EncryptorNullChecker.EncryptIfNotNull(profile.Address);
+                    profile.Province = EncryptorNullChecker.EncryptIfNotNull(profile.Province);
+                    profile.City = EncryptorNullChecker.EncryptIfNotNull(profile.City);
+                    profile.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
+                    profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
                 }
                 DateTime dateTime = DateTime.Now;
                 string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
@@ -81,6 +110,18 @@ namespace UangKuAPI.Controllers
                 if (profile == null)
                 {
                     return BadRequest($"Profile Is Required");
+                }
+                else
+                {
+                    profile.FirstName = EncryptorNullChecker.EncryptIfNotNull(profile.FirstName);
+                    profile.MiddleName = EncryptorNullChecker.EncryptIfNotNull(profile.MiddleName);
+                    profile.LastName = EncryptorNullChecker.EncryptIfNotNull(profile.LastName);
+                    profile.PlaceOfBirth = EncryptorNullChecker.EncryptIfNotNull(profile.PlaceOfBirth);
+                    profile.Address = EncryptorNullChecker.EncryptIfNotNull(profile.Address);
+                    profile.Province = EncryptorNullChecker.EncryptIfNotNull(profile.Province);
+                    profile.City = EncryptorNullChecker.EncryptIfNotNull(profile.City);
+                    profile.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
+                    profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
                 }
                 DateTime dateTime = DateTime.Now;
                 string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";

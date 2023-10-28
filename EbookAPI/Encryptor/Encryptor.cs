@@ -97,4 +97,27 @@ namespace EbookAPI.Encryptor
             return Encoding.UTF8.GetString(bytesDecrypted);
         }
     }
+
+    public static class EncryptorNullChecker
+    {
+        //Untuk Pengecekan Data Encrypt Null Atau Tidak
+        public static string EncryptIfNotNull(string? value)
+        {
+            if (value != null)
+            {
+                return Encryptor.DataEncrypt(value);
+            }
+            return value;
+        }
+
+        //Untuk Pengecekan Data Decrypt Null Atau Tidak
+        public static string DecryptIfNotNull(string? value)
+        {
+            if (value != null)
+            {
+                return Encryptor.DataDecrypt(value);
+            }
+            return value;
+        }
+    }
 }
