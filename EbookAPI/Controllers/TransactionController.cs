@@ -219,25 +219,4 @@ namespace UangKuAPI.Controllers
             }
         }
     }
-
-    public class TransactionNumberGenerator
-    {
-        private int _number;
-
-        public TransactionNumberGenerator()
-        {
-            _number = 1;
-        }
-
-        public string GetNewTransactionNumber(string transType)
-        {
-            string transDate = DateTime.Now.ToString("yyMMdd");
-            string formattedNumber = _number.ToString("D3");
-            string transNo = $"TRA/{transType}/{transDate}-{formattedNumber}";
-
-            _number++;
-
-            return transNo;
-        }
-    }
 }
