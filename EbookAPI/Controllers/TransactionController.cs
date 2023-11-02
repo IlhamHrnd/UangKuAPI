@@ -1,8 +1,9 @@
 ﻿using EbookAPI.Context;
+using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UangKuAPI.Filter;
 using UangKuAPI.Model;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace UangKuAPI.Controllers
 {
@@ -29,12 +30,15 @@ namespace UangKuAPI.Controllers
                 DateTime dateTime = DateTime.Now;
                 string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
                 string createdate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string transdate = $"{dateTime: yyyy-MM-dd}";
 
                 var query = $@"INSERT INTO `Transaction`(`TransNo`, `SRTransaction`, `SRTransItem`, `Amount`, `Description`, 
-                                `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`) 
+                                `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`, 
+                                `TransType`, `TransDate`, `PersonID`) 
                                 VALUES('{transaction.TransNo}', '{transaction.SRTransaction}', '{transaction.SRTransItem}',
                                 '{transaction.Amount}', '{transaction.Description}', '{transaction.Photo}', '{createdate}',
-                                '{transaction.CreatedByUserID}', '{updatedate}', '{transaction.LastUpdateByUserID}');";
+                                '{transaction.CreatedByUserID}', '{updatedate}', '{transaction.LastUpdateByUserID}', '{transaction.TransType}', 
+                                '{transdate}', '{transaction.PersonID}');";
 
                 await _content.Database.ExecuteSqlRawAsync(query);
 
@@ -57,8 +61,7 @@ namespace UangKuAPI.Controllers
                 }
                 DateTime dateTime = DateTime.Now;
                 string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-
-                //UPDATE `Transaction` SET `TransNo`='[value-1]',`SRTransaction`='[value-2]',`SRTransItem`='[value-3]',`Amount`='[value-4]',`Description`='[value-5]',`Photo`='[value-6]',`CreatedDateTime`='[value-7]',`CreatedByUserID`='[value-8]',`LastUpdateDateTime`='[value-9]',`LastUpdateByUserID`='[value-10]' WHERE 1
+                string transdate = $"{dateTime: yyyy-MM-dd}";
 
                 var query = $@"UPDATE `Transaction`
                                 SET `SRTransaction` = '{transaction.SRTransaction}',
@@ -67,7 +70,9 @@ namespace UangKuAPI.Controllers
                                 `Description` = '{transaction.Description}',
                                 `Photo` = '{transaction.Photo}',   
                                 `LastUpdateDateTime` = '{updatedate}',
-                                `LastUpdateByUserID` = '{transaction.LastUpdateByUserID}'
+                                `LastUpdateByUserID` = '{transaction.LastUpdateByUserID}',
+                                `TransType` = '{transaction.TransType}',
+                                `TransDate` = '{transdate}'
                                 WHERE `TransNo` = '{transaction.TransNo}';";
 
                 var response = await _content.Database.ExecuteSqlRawAsync(query);
@@ -85,6 +90,154 @@ namespace UangKuAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
+        }
+
+        [HttpGet("GetNewTransactionNo", Name = "GetNewTransactionNo")]
+        public IActionResult GetNewTransactionNo([FromQuery] string TransType)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(TransType))
+                {
+                    return BadRequest($"Transaction Type Is Required");
+                }
+                string transDate = DateTime.Now.ToString("yyMMdd");
+                int number = 1;
+                string formattedNumber = number.ToString("D3");
+                string transNo = $"TRA/{TransType}/{transDate}-{formattedNumber}";
+
+                while (_content.Transaction.Any(t => t.TransNo == transNo))
+                {
+                    number++;
+                    formattedNumber = number.ToString("D3");
+                    transNo = $"TRA/{TransType}/{transDate}-{formattedNumber}";
+                }
+
+                number++;
+
+                return Ok(transNo);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpGet("GetAllTransaction", Name = "GetAllTransaction")]
+        public async Task<ActionResult<Transaction>> GetAllTransaction([FromQuery] TransactionFilter filter)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filter.PersonID))
+                {
+                    return BadRequest($"Person ID Is Required");
+                }
+
+                var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID);
+                var pageNumber = validFilter.PageNumber;
+                var pageSize = validFilter.PageSize;
+                var personID = validFilter.PersonID;
+                var query = $@"SELECT t.TransNO, t.Amount, t.Description, t.Photo, t.TransType,
+                                asriTrans.ItemName AS SRTransaction,
+                                asriTransItem.ItemName AS SRTransItem
+                                FROM Transaction AS t
+                                INNER JOIN AppStandardReferenceItem AS asriTrans
+                                    ON asriTrans.ItemID = t.SRTransaction
+                                    AND asriTrans.StandardReferenceID = 'Transaction'
+                                INNER JOIN AppStandardReferenceItem AS asriTransItem
+                                    ON asriTransItem.ItemID = t.SRTransItem
+                                WHERE t.PersonID = '{personID}'
+                                ORDER BY t.TransNO DESC
+                                OFFSET {(pageNumber - 1) * pageSize} ROWS
+                                FETCH NEXT {pageSize} ROWS ONLY;";
+                var pagedData = await _content.Transaction.FromSqlRaw(query).ToListAsync();
+
+                if (pagedData == null || pagedData.Count == 0 || !pagedData.Any())
+                {
+                    return NotFound("Person ID Not Found");
+                }
+
+                var totalRecord = await _content.Transaction.CountAsync();
+                var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
+
+                string? prevPageLink = validFilter.PageNumber > 1
+                    ? Url.Link("GetAllTransaction", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                    : null;
+
+                string? nextPageLink = validFilter.PageNumber < totalPages
+                    ? Url.Link("GetAllTransaction", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                    : null;
+
+                var response = new PageResponse<List<Transaction>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
+                {
+                    TotalPages = totalPages,
+                    TotalRecords = totalRecord,
+                    PrevPageLink = prevPageLink,
+                    NextPageLink = nextPageLink
+                };
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   e.Message);
+            }
+        }
+
+        [HttpGet("GetTransactionNo", Name = "GetTransactionNo")]
+        public async Task<ActionResult<Transaction>> GetTransactionNo([FromQuery] string TransNo)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(TransNo))
+                {
+                    return BadRequest($"Transaction No Is Required");
+                }
+                var query = $@"SELECT t.TransNO, t.Amount, t.Description, t.Photo, t.TransType,
+                                asriTrans.ItemName AS SRTransaction,
+                                asriTransItem.ItemName AS SRTransItem
+                                FROM Transaction AS t
+                                INNER JOIN AppStandardReferenceItem AS asriTrans
+                                    ON asriTrans.ItemID = t.SRTransaction
+                                    AND asriTrans.StandardReferenceID = 'Transaction'
+                                INNER JOIN AppStandardReferenceItem AS asriTransItem
+                                    ON asriTransItem.ItemID = t.SRTransItem
+                                WHERE t.TransNo = '{TransNo}';";
+                var response = await _content.Transaction.FromSqlRaw(query).ToListAsync();
+                if (response == null || response.Count == 0 || !response.Any())
+                {
+                    return NotFound($"{TransNo} Not Found");
+                }
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   e.Message);
+            }
+        }
+    }
+
+    public class TransactionNumberGenerator
+    {
+        private int _number;
+
+        public TransactionNumberGenerator()
+        {
+            _number = 1;
+        }
+
+        public string GetNewTransactionNumber(string transType)
+        {
+            string transDate = DateTime.Now.ToString("yyMMdd");
+            string formattedNumber = _number.ToString("D3");
+            string transNo = $"TRA/{transType}/{transDate}-{formattedNumber}";
+
+            _number++;
+
+            return transNo;
         }
     }
 }
