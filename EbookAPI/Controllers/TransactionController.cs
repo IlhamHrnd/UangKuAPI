@@ -218,5 +218,46 @@ namespace UangKuAPI.Controllers
                    e.Message);
             }
         }
+
+        //Data Yang Di Retrieve Masih Null Tapi Test Di Navicat / Query Langsung Data Muncul
+        [HttpGet("GetSumTransaction", Name = "GetSumTransaction")]
+        public IActionResult GetSumTransaction([FromQuery] string personID)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(personID))
+                {
+                    return BadRequest("Person ID Is Required");
+                }
+                DateTime dateTime = DateTime.Now;
+                DateTime startTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                string startDate = $"{startTime: yyyy-MM-dd}";
+                string endDate = $"{dateTime: yyyy-MM-dd}";
+
+                //var query = $@"SELECT asri.ItemName, SUM(t.Amount) AS 'Amount'
+                //                FROM Transaction AS t
+                //                INNER JOIN AppStandardReferenceItem AS asri
+                //                    ON asri.ItemID = t.SRTransaction
+                //                WHERE t.PersonID = '{personID}'
+                //                    AND t.TransDate BETWEEN '{startDate}' AND '{endDate}'
+                //                GROUP BY t.SRTransaction;";
+
+                var result = _context.Transaction
+                    .Where(t => t.PersonID == personID && t.TransDate >= startTime && t.TransDate <= dateTime)
+                    .GroupBy(t => t.SRTransaction)
+                    .Select(group => new GetSumTransaction
+                    {
+                        SRTransaction = group.Key,
+                        Amount = group.Sum(t => t.Amount)
+                    })
+                    .ToList();
+
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
     }
 }

@@ -13,6 +13,8 @@ namespace UangKuAPI.Model
         public string? Description { get; set; }
         public byte[]? Photo { get; set; }
         public string? TransType { get; set; }
+        public string? PersonID { get; set; }
+        public DateTime? TransDate { get; set; }
     }
 
     public class PostTransaction
@@ -61,5 +63,11 @@ namespace UangKuAPI.Model
         public string? Description { get; set; }
         public byte[]? Photo { get; set; }
         public string? TransType { get; set; }
+    }
+
+    public class GetSumTransaction
+    {
+        public decimal Amount { get; set; }
+        public string? SRTransaction { get; set; }
     }
 }
