@@ -11,11 +11,11 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class TransactionController : ControllerBase
     {
-        private readonly AppDbContext _content;
+        private readonly AppDbContext _context;
 
-        public TransactionController(AppDbContext content)
+        public TransactionController(AppDbContext context)
         {
-            _content = content;
+            _context = context;
         }
 
         [HttpPost("PostTransaction", Name = "PostTransaction")]
@@ -40,7 +40,7 @@ namespace UangKuAPI.Controllers
                                 '{transaction.CreatedByUserID}', '{updatedate}', '{transaction.LastUpdateByUserID}', '{transaction.TransType}', 
                                 '{transdate}', '{transaction.PersonID}');";
 
-                await _content.Database.ExecuteSqlRawAsync(query);
+                await _context.Database.ExecuteSqlRawAsync(query);
 
                 return Ok($"Transaction No {transaction.TransNo} Created Successfully");
             }
@@ -75,7 +75,7 @@ namespace UangKuAPI.Controllers
                                 `TransDate` = '{transdate}'
                                 WHERE `TransNo` = '{transaction.TransNo}';";
 
-                var response = await _content.Database.ExecuteSqlRawAsync(query);
+                var response = await _context.Database.ExecuteSqlRawAsync(query);
 
                 if (response > 0)
                 {
@@ -106,7 +106,7 @@ namespace UangKuAPI.Controllers
                 string formattedNumber = number.ToString("D3");
                 string transNo = $"TRA/{TransType}/{transDate}-{formattedNumber}";
 
-                while (_content.Transaction.Any(t => t.TransNo == transNo))
+                while (_context.Transaction.Any(t => t.TransNo == transNo))
                 {
                     number++;
                     formattedNumber = number.ToString("D3");
@@ -150,14 +150,14 @@ namespace UangKuAPI.Controllers
                                 ORDER BY t.TransNO DESC
                                 OFFSET {(pageNumber - 1) * pageSize} ROWS
                                 FETCH NEXT {pageSize} ROWS ONLY;";
-                var pagedData = await _content.Transaction.FromSqlRaw(query).ToListAsync();
+                var pagedData = await _context.Transaction.FromSqlRaw(query).ToListAsync();
 
                 if (pagedData == null || pagedData.Count == 0 || !pagedData.Any())
                 {
                     return NotFound("Person ID Not Found");
                 }
 
-                var totalRecord = await _content.Transaction.CountAsync();
+                var totalRecord = await _context.Transaction.CountAsync();
                 var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
 
                 string? prevPageLink = validFilter.PageNumber > 1
@@ -204,7 +204,7 @@ namespace UangKuAPI.Controllers
                                 INNER JOIN AppStandardReferenceItem AS asriTransItem
                                     ON asriTransItem.ItemID = t.SRTransItem
                                 WHERE t.TransNo = '{TransNo}';";
-                var response = await _content.Transaction.FromSqlRaw(query).ToListAsync();
+                var response = await _context.Transaction.FromSqlRaw(query).ToListAsync();
                 if (response == null || response.Count == 0 || !response.Any())
                 {
                     return NotFound($"{TransNo} Not Found");
