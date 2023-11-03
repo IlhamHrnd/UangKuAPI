@@ -133,11 +133,17 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Person ID Is Required");
                 }
 
+                DateTime dateTime = DateTime.Now;
+                DateTime startTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                string startDate = $"{startTime: yyyy-MM-dd}";
+                string endDate = $"{dateTime: yyyy-MM-dd}";
+
                 var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID);
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
                 var personID = validFilter.PersonID;
                 var query = $@"SELECT t.TransNO, t.Amount, t.Description, t.Photo, t.TransType,
+                                t.PersonID, t.TransDate,
                                 asriTrans.ItemName AS SRTransaction,
                                 asriTransItem.ItemName AS SRTransItem
                                 FROM Transaction AS t
@@ -147,6 +153,7 @@ namespace UangKuAPI.Controllers
                                 INNER JOIN AppStandardReferenceItem AS asriTransItem
                                     ON asriTransItem.ItemID = t.SRTransItem
                                 WHERE t.PersonID = '{personID}'
+                                AND t.TransDate BETWEEN '{startDate}' AND '{endDate}'
                                 ORDER BY t.TransNO DESC
                                 OFFSET {(pageNumber - 1) * pageSize} ROWS
                                 FETCH NEXT {pageSize} ROWS ONLY;";
