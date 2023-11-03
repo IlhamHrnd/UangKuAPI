@@ -18,6 +18,7 @@ namespace EbookAPI.Context
         public DbSet<PostalCodes> PostalCodes { get; set; }
         public DbSet<Profile> Profile { get; set; }
         public DbSet<Transaction> Transaction { get; set; }
+        public DbSet<GetSumTransaction> GetSumTransactions { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
@@ -57,7 +58,16 @@ namespace EbookAPI.Context
             modelBuilder.Entity<Subdistrict>().ToTable("Subdistricts");
             modelBuilder.Entity<PostalCodes>().ToTable("PostalCode");
             modelBuilder.Entity<Profile>().ToTable("Profile");
-            modelBuilder.Entity<Transaction>().ToTable("Transaction");
+            modelBuilder.Entity<Transaction>(entity =>
+            {
+                entity.ToTable("Transaction");
+                entity.HasKey(t => t.TransNo);
+            });
+            modelBuilder.Entity<GetSumTransaction>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("Transaction");
+            });
 
             base.OnModelCreating(modelBuilder);
         }

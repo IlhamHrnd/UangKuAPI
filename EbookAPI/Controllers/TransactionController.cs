@@ -219,9 +219,8 @@ namespace UangKuAPI.Controllers
             }
         }
 
-        //Data Yang Di Retrieve Masih Null Tapi Test Di Navicat / Query Langsung Data Muncul
         [HttpGet("GetSumTransaction", Name = "GetSumTransaction")]
-        public IActionResult GetSumTransaction([FromQuery] string personID)
+        public async Task<IActionResult> GetSumTransaction([FromQuery] string personID)
         {
             try
             {
@@ -234,25 +233,24 @@ namespace UangKuAPI.Controllers
                 string startDate = $"{startTime: yyyy-MM-dd}";
                 string endDate = $"{dateTime: yyyy-MM-dd}";
 
-                //var query = $@"SELECT asri.ItemName, SUM(t.Amount) AS 'Amount'
-                //                FROM Transaction AS t
-                //                INNER JOIN AppStandardReferenceItem AS asri
-                //                    ON asri.ItemID = t.SRTransaction
-                //                WHERE t.PersonID = '{personID}'
-                //                    AND t.TransDate BETWEEN '{startDate}' AND '{endDate}'
-                //                GROUP BY t.SRTransaction;";
+                var query = $@"SELECT asri.ItemName AS 'SRTransaction', SUM(t.Amount) AS 'Amount'
+                                FROM Transaction AS t
+                                INNER JOIN AppStandardReferenceItem AS asri
+                                    ON asri.ItemID = t.SRTransaction
+                                WHERE t.PersonID = '{personID}'
+                                    AND t.TransDate BETWEEN '{startDate}' AND '{endDate}'
+                                GROUP BY t.SRTransaction;";
 
-                var result = _context.Transaction
-                    .Where(t => t.PersonID == personID && t.TransDate >= startTime && t.TransDate <= dateTime)
-                    .GroupBy(t => t.SRTransaction)
-                    .Select(group => new GetSumTransaction
-                    {
-                        SRTransaction = group.Key,
-                        Amount = group.Sum(t => t.Amount)
-                    })
-                    .ToList();
+                var result = await _context.GetSumTransactions.FromSqlRaw(query).ToListAsync();
 
-                return Ok(result);
+                if (result == null || result.Count == 0 || !result.Any())
+                {
+                    return NotFound($"Transaction For {personID} Not Found");
+                }
+                else
+                {
+                    return Ok(result);
+                }
             }
             catch (Exception e)
             {
