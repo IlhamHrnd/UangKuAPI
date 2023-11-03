@@ -202,6 +202,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Transaction No Is Required");
                 }
                 var query = $@"SELECT t.TransNO, t.Amount, t.Description, t.Photo, t.TransType,
+                                t.PersonID, t.TransDate,
                                 asriTrans.ItemName AS SRTransaction,
                                 asriTransItem.ItemName AS SRTransItem
                                 FROM Transaction AS t
