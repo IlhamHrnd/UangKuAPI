@@ -92,9 +92,16 @@ namespace UangKuAPI.Controllers
                                 VALUES('{profile.PersonID}', '{profile.FirstName}', '{profile.MiddleName}', '{profile.LastName}', '{date}', 
                                 '{profile.PlaceOfBirth}', '{profile.Photo}', '{profile.Address}', '{profile.Province}', 
                                 '{profile.City}', '{profile.Subdistrict}', '{profile.District}', '{profile.PostalCode}', '{updatedate}', '{profile.LastUpdateByUser}');";
-                await _context.Database.ExecuteSqlRawAsync(query);
+                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
-                return Ok($"Person ID {profile.PersonID} Created Successfully");
+                if (rowsAffected > 0)
+                {
+                    return Ok($"Person ID {profile.PersonID} Created Successfully");
+                }
+                else
+                {
+                    return BadRequest($"Failed To Insert Data For Person ID {profile.PersonID}");
+                }
             }
             catch (Exception e)
             {

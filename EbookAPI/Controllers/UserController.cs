@@ -134,9 +134,16 @@ namespace EbookAPI.Controllers
                                 '{user.SexName}', '{access}', '{Encryptor.Encryptor.DataEncrypt(email)}', 
                                 '{status}', '{date}', '{date}', '{date}', '{user.Username}', '{user.Username}');";
 
-                await _context.Database.ExecuteSqlRawAsync(query);
+                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
-                return Ok($"User {user.Username} Created Successfully");
+                if (rowsAffected > 0)
+                {
+                    return Ok($"User {user.Username} Created Successfully");
+                }
+                else
+                {
+                    return BadRequest($"Failed To Insert Data For Username {user.Username}");
+                }
             }
             catch (Exception e)
             {

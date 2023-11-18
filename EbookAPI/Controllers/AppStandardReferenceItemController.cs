@@ -70,9 +70,16 @@ namespace UangKuAPI.Controllers
                                 VALUES ('{asri.StandardReferenceID}','{asri.ItemID}','{asri.ItemName}','{asri.Note}','{use}','{active}',
                                 '{date}','{asri.LastUpdateByUserID}')";
 
-                await _context.Database.ExecuteSqlRawAsync(query);
+                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
-                return Ok($"Standard Reference Item {asri.ItemName} Created Successfully");
+                if (rowsAffected > 0)
+                {
+                    return Ok($"Standard ReferenceID {asri.StandardReferenceID} Created Successfully");
+                }
+                else
+                {
+                    return BadRequest($"Failed To Insert Data For Standard ReferenceID {asri.StandardReferenceID}");
+                }
             }
             catch (Exception e)
             {

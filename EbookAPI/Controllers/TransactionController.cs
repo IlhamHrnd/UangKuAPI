@@ -40,9 +40,16 @@ namespace UangKuAPI.Controllers
                                 '{transaction.CreatedByUserID}', '{updatedate}', '{transaction.LastUpdateByUserID}', '{transaction.TransType}', 
                                 '{transdate}', '{transaction.PersonID}');";
 
-                await _context.Database.ExecuteSqlRawAsync(query);
+                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
-                return Ok($"Transaction No {transaction.TransNo} Created Successfully");
+                if (rowsAffected > 0)
+                {
+                    return Ok($"Transaction No {transaction.TransNo} Created Successfully");
+                }
+                else
+                {
+                    return BadRequest($"Failed To Insert Data For Transaction No {transaction.TransNo}");
+                }
             }
             catch (Exception e)
             {
