@@ -34,5 +34,20 @@
         }
     }
 
+    public class UserNameEditFilter
+    {
+        public string? Username { get; set; }
+
+        public UserNameEditFilter()
+        {
+            Username = string.Empty;
+        }
+
+        public UserNameEditFilter(string? username)
+        {
+            Username = string.IsNullOrEmpty(username) ? string.Empty : username;
+        }
+    }
+
 
 }

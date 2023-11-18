@@ -207,5 +207,85 @@ namespace EbookAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
+
+        [HttpGet("GetUsername", Name = "GetUsername")]
+        public async Task<ActionResult<User>> GetUsername([FromQuery] UserNameEditFilter filter)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filter.Username))
+                {
+                    return BadRequest("Username Is Required");
+                }
+                var query = $@"SELECT u.Username, u.ActiveDate,
+                                u.LastLogin, u.LastUpdateDateTime, u.LastUpdateByUser, u.PersonID,
+                                asri.ItemName AS 'SexName',
+                                asri02.ItemName AS 'AccessName',
+                                asri03.ItemName AS 'StatusName'
+                                FROM User AS u
+                                INNER JOIN AppStandardReferenceItem AS asri
+    	                            ON asri.StandardReferenceID = 'Sex'
+                                    AND asri.ItemID = u.SRSex
+                                INNER JOIN AppStandardReferenceItem AS asri02
+    	                            ON asri02.StandardReferenceID = 'Access'
+                                    AND asri02.ItemID = u.SRAccess
+                                INNER JOIN AppStandardReferenceItem AS asri03
+    	                            ON asri03.StandardReferenceID = 'Status'
+                                    AND asri03.ItemID = u.SRStatus
+                                WHERE u.Username = '{filter.Username}';";
+                var response = await _context.Users.FromSqlRaw(query).ToListAsync();
+                if (response == null || response.Count == 0 || !response.Any())
+                {
+                    return NotFound("User Not Found");
+                }
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   e.Message);
+            }
+        }
+
+        [HttpPatch("UpdateUsername", Name = "UpdateUsername")]
+        public async Task<IActionResult> UpdateUsername([FromQuery] string username, [FromBody] UserName user)
+        {
+            try
+            {
+                DateTime dateTime = DateTime.Now;
+                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+
+                if (string.IsNullOrEmpty(username) || user == null)
+                {
+                    return BadRequest("All Data Is Required.");
+                }
+
+                string active = user.IsActive ? "Status-001" : "Status-002";
+
+                var query = $@"UPDATE `User`
+                                SET `SRSex` = '{user.Sex}',
+                                `SRAccess` = '{user.Access}',
+                                `SRStatus` = '{active}',
+                                `LastUpdateDateTime` = '{date}',
+                                `LastUpdateByUser` = '{user.LastUpdateUser}'
+                                WHERE `Username` = '{username}';";
+
+                var response = await _context.Database.ExecuteSqlRawAsync(query);
+
+                if (response > 0)
+                {
+                    return Ok($"User {username} Update Successfully");
+                }
+                else
+                {
+                    return NotFound($"Username {username} Not Found");
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
     }
 }

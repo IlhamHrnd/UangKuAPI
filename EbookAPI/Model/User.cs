@@ -16,4 +16,12 @@ namespace EbookAPI.Model
         public string? LastUpdateByUser { get; set; }
         public string? PersonID { get; set; }
     }
+
+    public class UserName
+    {
+        public string? Sex { get; set; }
+        public string? Access { get; set; }
+        public bool IsActive { get; set; }
+        public string? LastUpdateUser { get; set; }
+    }
 }
