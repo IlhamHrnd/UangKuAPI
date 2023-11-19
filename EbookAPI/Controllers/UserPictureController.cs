@@ -31,19 +31,13 @@ namespace UangKuAPI.Controllers
                                 up.PersonID, up.IsDeleted, up.CreatedByUserID, up.CreatedDateTime, 
                                 up.LastUpdateDateTime, up.LastUpdateByUserID
                                 FROM UserPicture AS up
-                                WHERE up.IsDeleted = '{isDeleted}'
-                                AND up.PersonID = '{filter.PersonID}'
+                                WHERE up.PersonID = '{filter.PersonID}'
+                                AND up.IsDeleted = '{isDeleted}'
                                 ORDER BY up.PictureID DESC
                                 OFFSET {(pageNumber - 1) * pageSize} ROWS
                                 FETCH NEXT {pageSize} ROWS ONLY;";
                 var pagedData = await _context.Picture.FromSqlRaw(query).ToListAsync();
-
-                if (pagedData == null || pagedData.Count == 0 || !pagedData.Any())
-                {
-                    return NotFound($"Person ID Not Found");
-                }
-
-                var totalRecord = await _context.Users.CountAsync();
+                var totalRecord = await _context.Picture.CountAsync();
                 var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
 
                 string? prevPageLink = validFilter.PageNumber > 1
@@ -61,6 +55,11 @@ namespace UangKuAPI.Controllers
                     PrevPageLink = prevPageLink,
                     NextPageLink = nextPageLink
                 };
+
+                if (pagedData == null || pagedData.Count == 0 || !pagedData.Any())
+                {
+                    return NotFound($"PersonID {filter.PersonID} Not Found");
+                }
 
                 return Ok(response);
             }

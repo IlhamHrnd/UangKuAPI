@@ -26,8 +26,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest("StandardReferenceID Is Required");
                 }
-                string isActiveCondition = isActive ? "AND asri.IsActive = 1" : "";
-                string isUseCondition = isUse ? "AND asri.IsUsedBySystem = 1" : "";
+                string isActiveCondition = isActive ? "AND asri.IsActive = '1'" : "";
+                string isUseCondition = isUse ? "AND asri.IsUsedBySystem = '1'" : "";
 
                 var query = $@"SELECT asri.StandardReferenceID, asri.ItemID, asri.ItemName,
                         asri.Note, asri.IsUsedBySystem, asri.IsActive,
