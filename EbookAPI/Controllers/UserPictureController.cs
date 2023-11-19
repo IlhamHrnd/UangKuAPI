@@ -1,8 +1,9 @@
 ﻿using EbookAPI.Context;
+using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UangKuAPI.Filter;
 using UangKuAPI.Model;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace UangKuAPI.Controllers
 {
@@ -15,6 +16,59 @@ namespace UangKuAPI.Controllers
         public UserPictureController(AppDbContext context)
         {
             _context = context;
+        }
+
+        [HttpGet("GetUserPicture", Name = "GetUserPicture")]
+        public async Task<ActionResult<GetUserPicture>> GetUserPicture([FromQuery] PictureFilter filter)
+        {
+            try
+            {
+                var validFilter = new PictureFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.IsDeleted);
+                var pageNumber = validFilter.PageNumber;
+                var pageSize = validFilter.PageSize;
+                int isDeleted = filter.IsDeleted ? 1 : 0;
+                var query = $@"SELECT up.PictureID, up.Picture, up.PictureName, up.PictureFormat, 
+                                up.PersonID, up.IsDeleted, up.CreatedByUserID, up.CreatedDateTime, 
+                                up.LastUpdateDateTime, up.LastUpdateByUserID
+                                FROM UserPicture AS up
+                                WHERE up.IsDeleted = '{isDeleted}'
+                                AND up.PersonID = '{filter.PersonID}'
+                                ORDER BY up.PictureID DESC
+                                OFFSET {(pageNumber - 1) * pageSize} ROWS
+                                FETCH NEXT {pageSize} ROWS ONLY;";
+                var pagedData = await _context.Picture.FromSqlRaw(query).ToListAsync();
+
+                if (pagedData == null || pagedData.Count == 0 || !pagedData.Any())
+                {
+                    return NotFound($"Person ID Not Found");
+                }
+
+                var totalRecord = await _context.Users.CountAsync();
+                var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
+
+                string? prevPageLink = validFilter.PageNumber > 1
+                    ? Url.Link("GetUserPicture", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                    : null;
+
+                string? nextPageLink = validFilter.PageNumber < totalPages
+                    ? Url.Link("GetUserPicture", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                    : null;
+
+                var response = new PageResponse<List<UserPicture>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
+                {
+                    TotalPages = totalPages,
+                    TotalRecords = totalRecord,
+                    PrevPageLink = prevPageLink,
+                    NextPageLink = nextPageLink
+                };
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   e.Message);
+            }
         }
 
         [HttpPost("PostUserPicture", Name = "PostUserPicture")]
@@ -36,7 +90,7 @@ namespace UangKuAPI.Controllers
                                 `LastUpdateDateTime`, `LastUpdateByUserID`) 
                                 VALUES ('{picture.PictureID}', '{picture.Picture}', '{picture.PictureName}', '{picture.PictureFormat}',
                                 '{picture.PersonID}', '{deleted}', '{picture.CreatedByUserID}', '{createddate}',
-                                '{updatedate}','{picture.LastUpdateByUser}');";
+                                '{updatedate}','{picture.LastUpdateByUserID}');";
                 int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
                 if (rowsAffected > 0)
