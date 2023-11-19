@@ -37,7 +37,9 @@ namespace UangKuAPI.Controllers
                                 OFFSET {(pageNumber - 1) * pageSize} ROWS
                                 FETCH NEXT {pageSize} ROWS ONLY;";
                 var pagedData = await _context.Picture.FromSqlRaw(query).ToListAsync();
-                var totalRecord = await _context.Picture.CountAsync();
+                var totalRecord = await _context.Picture
+                    .Where(p => p.IsDeleted == filter.IsDeleted && p.PersonID == filter.PersonID)
+                    .CountAsync();
                 var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
 
                 string? prevPageLink = validFilter.PageNumber > 1
