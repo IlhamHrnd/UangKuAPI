@@ -86,6 +86,20 @@ namespace UangKuAPI.Controllers
                 string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
                 int deleted = picture.IsDeleted == true ? 1 : 0;
 
+                var parameterID = await _context.Parameter
+                    .Where(p => p.ParameterID == AppParameterValue.MaxPicture)
+                    .FirstOrDefaultAsync();
+
+                int result = int.TryParse(parameterID?.ParameterValue, out result) ? result : 0;
+
+                int pictureCount = await _context.Picture
+                    .CountAsync(up => up.PersonID == picture.PersonID && up.IsDeleted == false);
+
+                if (pictureCount > result)
+                {
+                    return BadRequest($"The PersonID For {picture.PersonID} Maximum Limit Has Been Reached.");
+                }
+
                 var query = $@"INSERT INTO `UserPicture`(`PictureID`, `Picture`, `PictureName`, `PictureFormat`, 
                                 `PersonID`, `IsDeleted`, `CreatedByUserID`, `CreatedDateTime`, 
                                 `LastUpdateDateTime`, `LastUpdateByUserID`) 

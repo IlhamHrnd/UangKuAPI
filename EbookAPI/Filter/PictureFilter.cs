@@ -9,14 +9,14 @@
         public PictureFilter()
         {
             PageNumber = 1;
-            PageSize = 10;
+            PageSize = 25;
             PersonID = string.Empty;
             IsDeleted = false;
         }
         public PictureFilter(int pageNumber, int pageSize, string personID, bool isDeleted)
         {
             PageNumber = pageNumber < 1 ? 1 : pageNumber;
-            PageSize = pageSize > 10 ? 10 : pageSize;
+            PageSize = pageSize > 25 ? 25 : pageSize;
             PersonID = string.IsNullOrEmpty(personID) ? string.Empty : personID;
             IsDeleted = isDeleted;
         }
