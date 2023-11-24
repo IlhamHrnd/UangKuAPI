@@ -13,12 +13,4 @@ namespace UangKuAPI.Model
         public string? LastUpdateByUserID { get; set; }
         public bool IsUsedBySystem { get; set; }
     }
-
-    //Class Static Untuk Parameter
-    //Jangan DIGANTI
-    public static class AppParameterValue
-    {
-        private static string? maxpicture = "MaxPicture";
-        public static string? MaxPicture { get => maxpicture; set => maxpicture = value; }
-    }
 }

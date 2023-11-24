@@ -3,6 +3,7 @@ using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.Filter;
+using UangKuAPI.Helper;
 using UangKuAPI.Model;
 
 namespace UangKuAPI.Controllers
@@ -75,6 +76,8 @@ namespace UangKuAPI.Controllers
         [HttpPost("PostUserPicture", Name = "PostUserPicture")]
         public async Task<IActionResult> PostUserPicture([FromBody] PostUserPicture picture)
         {
+            var param = new ParameterHelper(_context);
+
             try
             {
                 if (picture == null)
@@ -86,18 +89,37 @@ namespace UangKuAPI.Controllers
                 string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
                 int deleted = picture.IsDeleted == true ? 1 : 0;
 
-                var parameterID = await _context.Parameter
-                    .Where(p => p.ParameterID == AppParameterValue.MaxPicture)
-                    .FirstOrDefaultAsync();
+                //Proses Mencari Data MaxPicture Yang Menyimpan Jumlah Maksimal Gambar Yang Bisa Di Upload User
+                var maxPicture = await param.GetParameterValue(AppParameterValue.MaxPicture);
+                int picResult = ParameterHelper.TryParseInt(maxPicture);
 
-                int result = int.TryParse(parameterID?.ParameterValue, out result) ? result : 0;
+                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
+                var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
+                int sizeResult = ParameterHelper.TryParseInt(maxSize);
+                long longResult = ImageHelper.MaxSizeInt(sizeResult);
 
+                //Menghitung Jumlah Gambar Yang Sudah Di Upload User
                 int pictureCount = await _context.Picture
                     .CountAsync(up => up.PersonID == picture.PersonID && up.IsDeleted == false);
 
-                if (pictureCount > result)
+                //Mencari Nama Gambar Yang Sama Yang Sudah Di Upload User
+                //Untuk Menghemat Space Server
+                int nameCount = await _context.Picture
+                    .CountAsync(up => up.PersonID == picture.PersonID && up.PictureName == picture.PictureName);
+
+                if (pictureCount > picResult)
                 {
-                    return BadRequest($"The PersonID For {picture.PersonID} Maximum Limit Has Been Reached.");
+                    return BadRequest($"The PersonID For {picture.PersonID} Maximum Limit Has Been Reached");
+                }
+
+                if (nameCount > 0)
+                {
+                    return BadRequest($"Duplicate Picture For {picture.PictureName} Already Exist");
+                }
+
+                if (picture.PictureSize > longResult)
+                {
+                    return BadRequest($"The Image You Uploaded {picture.PictureName} Exceeds The Maximum Size Limit");
                 }
 
                 var query = $@"INSERT INTO `UserPicture`(`PictureID`, `Picture`, `PictureName`, `PictureFormat`, 

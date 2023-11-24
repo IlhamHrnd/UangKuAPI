@@ -31,6 +31,7 @@ namespace UangKuAPI.Model
         public DateTime? CreatedDateTime { get; set; }
         public DateTime? LastUpdateDateTime { get; set; }
         public string? LastUpdateByUserID { get; set; }
+        public long PictureSize { get; set; }
     }
     public class GetUserPicture
     {
