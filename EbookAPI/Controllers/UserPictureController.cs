@@ -146,22 +146,22 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpDelete("DeleteUserPicture", Name = "DeleteUserPicture")]
-        public async Task<IActionResult> DeleteUserPicture([FromQuery] string pictureID, [FromQuery] bool isDeleted, [FromQuery] string lastupdateUserID)
+        public async Task<IActionResult> DeleteUserPicture([FromQuery] string pictureID, [FromBody] DeletedPictureFilter filter)
         {
             try
             {
-                if (string.IsNullOrEmpty(pictureID))
+                if (string.IsNullOrEmpty(pictureID) || filter == null)
                 {
-                    return BadRequest($"PictureID Is Required");
+                    return BadRequest($"All Data Are Required");
                 }
                 DateTime dateTime = DateTime.Now;
                 string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                int deleted = isDeleted == true ? 1 : 0;
+                int deleted = filter.IsDeleted == true ? 1 : 0;
 
                 var query = $@"UPDATE `UserPicture`
                                 SET `IsDeleted` = '{deleted}',
                                 `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{lastupdateUserID}'
+                                `LastUpdateByUserID` = '{filter.LastUpdateUserID}'
                                 WHERE `PictureID` = '{pictureID}';";
 
                 var response = await _context.Database.ExecuteSqlRawAsync(query);

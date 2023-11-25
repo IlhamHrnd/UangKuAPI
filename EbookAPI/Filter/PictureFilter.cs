@@ -21,4 +21,20 @@
             IsDeleted = isDeleted;
         }
     }
+
+    public class DeletedPictureFilter
+    {
+        public string LastUpdateUserID { get; set; }
+        public bool IsDeleted { get; set; }
+        public DeletedPictureFilter()
+        {
+            LastUpdateUserID = string.Empty;
+            IsDeleted = false;
+        }
+        public DeletedPictureFilter(string lastupdateUserID, bool isDeleted)
+        {
+            LastUpdateUserID = string.IsNullOrEmpty(lastupdateUserID) ? string.Empty : lastupdateUserID;
+            IsDeleted = isDeleted;
+        }
+    }
 }
