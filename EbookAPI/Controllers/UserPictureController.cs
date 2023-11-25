@@ -145,6 +145,42 @@ namespace UangKuAPI.Controllers
             }
         }
 
+        [HttpDelete("DeleteUserPicture", Name = "DeleteUserPicture")]
+        public async Task<IActionResult> DeleteUserPicture([FromQuery] string pictureID, [FromQuery] bool isDeleted, [FromQuery] string lastupdateUserID)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(pictureID))
+                {
+                    return BadRequest($"PictureID Is Required");
+                }
+                DateTime dateTime = DateTime.Now;
+                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                int deleted = isDeleted == true ? 1 : 0;
+
+                var query = $@"UPDATE `UserPicture`
+                                SET `IsDeleted` = '{deleted}',
+                                `LastUpdateDateTime` = '{date}',
+                                `LastUpdateByUserID` = '{lastupdateUserID}'
+                                WHERE `PictureID` = '{pictureID}';";
+
+                var response = await _context.Database.ExecuteSqlRawAsync(query);
+
+                if (response > 0)
+                {
+                    return Ok($"{pictureID} Delete Successfully");
+                }
+                else
+                {
+                    return NotFound($"{pictureID} Not Found");
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
         [HttpGet("GetNewPictureID", Name = "GetNewPictureID")]
         public IActionResult GetNewPictureID([FromQuery] string TransType)
         {
