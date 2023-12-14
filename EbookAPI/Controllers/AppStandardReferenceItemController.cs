@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.Filter;
+using UangKuAPI.Helper;
 using UangKuAPI.Model;
 
 namespace UangKuAPI.Controllers
@@ -60,8 +61,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest("AppStandardReferenceItem Are Required");
                 }
 
-                DateTime dateTime = DateTime.Now;
-                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
                 int use = asri.IsUsedBySystem == true ? 1 : 0;
                 int active = asri.IsActive == true ? 1 : 0;
 
@@ -92,8 +92,7 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                DateTime dateTime = DateTime.Now;
-                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
                 
                 if (string.IsNullOrEmpty(referenceID) || string.IsNullOrEmpty(itemID))
                 {

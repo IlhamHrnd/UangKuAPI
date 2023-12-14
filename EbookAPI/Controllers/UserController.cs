@@ -4,6 +4,7 @@ using EbookAPI.Model;
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UangKuAPI.Helper;
 
 namespace EbookAPI.Controllers
 {
@@ -126,8 +127,7 @@ namespace EbookAPI.Controllers
 
                 string access = "Access-02";
                 string status = "Status-001";
-                DateTime dateTime = DateTime.Now;
-                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
 
                 var query = $@"INSERT INTO `User`(`Username`, `Password`, `SRSex`, `SRAccess`, `Email`, `SRStatus`, `ActiveDate`, `LastLogin`, `LastUpdateDateTime`, `LastUpdateByUser`, `PersonID`)
                         VALUES ('{user.Username}', '{Encryptor.Encryptor.DataEncrypt(password)}', 
@@ -156,8 +156,7 @@ namespace EbookAPI.Controllers
         {
             try
             {
-                DateTime dateTime = DateTime.Now;
-                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
 
                 if (string.IsNullOrEmpty(username))
                 {
@@ -183,8 +182,7 @@ namespace EbookAPI.Controllers
         {
             try
             {
-                DateTime dateTime = DateTime.Now;
-                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
 
                 if (string.IsNullOrEmpty(username))
                 {
@@ -260,8 +258,7 @@ namespace EbookAPI.Controllers
         {
             try
             {
-                DateTime dateTime = DateTime.Now;
-                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
 
                 if (string.IsNullOrEmpty(username) || user == null)
                 {

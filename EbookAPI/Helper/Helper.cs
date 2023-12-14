@@ -59,6 +59,14 @@ namespace UangKuAPI.Helper
 
             return result;
         }
+
+        public static string DateTimeStartMonth(int day, string format)
+        {
+            var dateTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, day);
+            var result = dateTime.ToString(format);
+
+            return result;
+        }
     }
 
     public static class DateStringFormat
@@ -67,6 +75,8 @@ namespace UangKuAPI.Helper
         public static string Yymmdd { get => yymmdd; set => yymmdd = value; }
         private static string yymmddhhmmss = "yyyy-MM-dd HH:mm:ss";
         public static string Yymmddhhmmss { get => yymmddhhmmss; set => yymmddhhmmss = value; }
+        private static string yymmdd2 = "yyyy-MM-dd";
+        public static string Yymmddhh2 { get => yymmdd2; set => yymmdd2 = value; }
     }
 
     public static class NumberStringFormat

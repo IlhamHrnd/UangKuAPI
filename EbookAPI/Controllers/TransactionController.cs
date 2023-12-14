@@ -3,6 +3,7 @@ using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.Filter;
+using UangKuAPI.Helper;
 using UangKuAPI.Model;
 
 namespace UangKuAPI.Controllers
@@ -28,9 +29,9 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Transaction Are Required");
                 }
                 DateTime dateTime = DateTime.Now;
-                string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                string createdate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                string transdate = $"{dateTime: yyyy-MM-dd}";
+                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string createdate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string transdate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmdd);
 
                 var query = $@"INSERT INTO `Transaction`(`TransNo`, `SRTransaction`, `SRTransItem`, `Amount`, `Description`, 
                                 `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`, 
@@ -66,10 +67,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction Are Required");
                 }
-                DateTime dateTime = DateTime.Now;
-                string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                string transdate = $"{dateTime: yyyy-MM-dd}";
-
+                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string transdate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhh2);
                 var query = $@"UPDATE `Transaction`
                                 SET `SRTransaction` = '{transaction.SRTransaction}',
                                 `SRTransItem` = '{transaction.SRTransItem}',
@@ -140,10 +139,8 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Person ID Is Required");
                 }
 
-                DateTime dateTime = DateTime.Now;
-                DateTime startTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                string startDate = $"{startTime: yyyy-MM-dd}";
-                string endDate = $"{dateTime: yyyy-MM-dd}";
+                string startDate = DateTimeFormat.DateTimeStartMonth(1, DateStringFormat.Yymmddhh2);
+                string endDate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhh2);
 
                 var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID);
                 var pageNumber = validFilter.PageNumber;
@@ -243,10 +240,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest("Person ID Is Required");
                 }
-                DateTime dateTime = DateTime.Now;
-                DateTime startTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                string startDate = $"{startTime: yyyy-MM-dd}";
-                string endDate = $"{dateTime: yyyy-MM-dd}";
+                string startDate = DateTimeFormat.DateTimeStartMonth(1, DateStringFormat.Yymmddhh2);
+                string endDate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhh2);
 
                 var query = $@"SELECT asri.ItemName AS 'SRTransaction', SUM(t.Amount) AS 'Amount'
                                 FROM Transaction AS t

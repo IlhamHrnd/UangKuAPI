@@ -3,6 +3,7 @@ using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.Filter;
+using UangKuAPI.Helper;
 using UangKuAPI.Model;
 
 namespace UangKuAPI.Controllers
@@ -99,8 +100,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest("AppStandardReference Are Required");
                 }
 
-                DateTime dateTime = DateTime.Now;
-                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
                 int use = asr.IsUsedBySystem == true ? 1 : 0;
                 int active = asr.IsActive == true ? 1 : 0;
 
@@ -131,8 +131,7 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                DateTime dateTime = DateTime.Now;
-                string date = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
 
                 if (string.IsNullOrEmpty(referenceID))
                 {

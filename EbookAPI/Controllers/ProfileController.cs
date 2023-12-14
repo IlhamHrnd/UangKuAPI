@@ -3,6 +3,7 @@ using EbookAPI.Encryptor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.Filter;
+using UangKuAPI.Helper;
 using UangKuAPI.Model;
 
 namespace UangKuAPI.Controllers
@@ -83,9 +84,8 @@ namespace UangKuAPI.Controllers
                     profile.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
                     profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
                 }
-                DateTime dateTime = DateTime.Now;
-                string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                string date = $"{profile.BirthDate: yyyy-MM-dd HH:mm:ss}";
+                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
 
                 var query = $@"INSERT INTO `Profile`(`PersonID`, `FirstName`, `MiddleName`, `LastName`, `BirthDate`, `PlaceOfBirth`, 
                                 `Photo`, `Address`, `Province`, `City`, `Subdistrict`, `District`, `PostalCode`, `LastUpdateDateTime`, `LastUpdateByUser`)
@@ -131,8 +131,8 @@ namespace UangKuAPI.Controllers
                     profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
                 }
                 DateTime dateTime = DateTime.Now;
-                string updatedate = $"{dateTime: yyyy-MM-dd HH:mm:ss}";
-                string date = $"{profile.BirthDate: yyyy-MM-dd HH:mm:ss}";
+                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
 
                 var query = $@"UPDATE `Profile`
                                 SET `FirstName` = '{profile.FirstName}',
