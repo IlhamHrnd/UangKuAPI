@@ -43,4 +43,39 @@ namespace UangKuAPI.Helper
         private static string? maxsize = "MaxFileSize";
         public static string? MaxSize { get => maxsize; set => maxsize = value; }
     }
+
+    public static class DateTimeFormat
+    {
+        public static string DateTimeNow(string format)
+        {
+            var result = DateTime.Now.ToString(format);
+
+            return result;
+        }
+
+        public static string DateTimeUser(DateTime date, string format)
+        {
+            var result = date.ToString(format);
+
+            return result;
+        }
+    }
+
+    public static class DateStringFormat
+    {
+        private static string yymmdd = "yyMMdd";
+        public static string Yymmdd { get => yymmdd; set => yymmdd = value; }
+        private static string yymmddhhmmss = "yyyy-MM-dd HH:mm:ss";
+        public static string Yymmddhhmmss { get => yymmddhhmmss; set => yymmddhhmmss = value; }
+    }
+
+    public static class NumberStringFormat
+    {
+        public static string NumberThreeDigit(int number)
+        {
+            var result = number.ToString($"D3");
+
+            return result;
+        }
+    }
 }

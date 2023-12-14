@@ -21,6 +21,7 @@ namespace EbookAPI.Context
         public DbSet<GetSumTransaction> GetSumTransactions { get; set; }
         public DbSet<UserPicture> Picture { get; set; }
         public DbSet<AppParameter> Parameter { get; set; }
+        public DbSet<UserReport> Report { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
@@ -62,6 +63,7 @@ namespace EbookAPI.Context
             modelBuilder.Entity<Profile>().ToTable("Profile");
             modelBuilder.Entity<UserPicture>().ToTable("UserPicture");
             modelBuilder.Entity<AppParameter>().ToTable("AppParameter");
+            modelBuilder.Entity<UserReport>().ToTable("UserReport");
             modelBuilder.Entity<Transaction>(entity =>
             {
                 entity.ToTable("Transaction");
