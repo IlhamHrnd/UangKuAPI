@@ -53,6 +53,13 @@ namespace UangKuAPI.Helper
             return result;
         }
 
+        public static DateTime DateTimeNowDate()
+        {
+            var result = DateTime.Now;
+
+            return result;
+        }
+
         public static string DateTimeUser(DateTime date, string format)
         {
             var result = date.ToString(format);

@@ -47,11 +47,11 @@ namespace UangKuAPI.Model
         [Key]
         [Required(ErrorMessage = "ReportNo Is Required")]
         public string? ReportNo { get; set; }
-        public DateTime DateErrorOccured { get; set; }
-        public string? SRErrorLocation { get; set; }
-        public string? SRErrorPossibility { get; set; }
-        public string? ErrorCronologic { get; set; }
-        public string? Picture { get; set; }
+        public string? SRReportStatus { get; set; }
+        public DateTime? ApprovedDateTime { get; set; }
+        public string? ApprovedByUserID { get; set; }
+        public DateTime? VoidDateTime { get; set; }
+        public string? VoidByUserID { get; set; }
         public DateTime? LastUpdateDateTime { get; set; }
         public string? LastUpdateByUserID { get; set; }
     }
