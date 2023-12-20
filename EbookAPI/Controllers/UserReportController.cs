@@ -124,9 +124,16 @@ namespace UangKuAPI.Controllers
                 }
 
                 _context.Update(report);
-                await _context.SaveChangesAsync();
+                var response = await _context.SaveChangesAsync();
 
-                return Ok($"{ReportNo} Successfully Update");
+                if (response > 0)
+                {
+                    return Ok($"{ReportNo} Successfully Update");
+                }
+                else
+                {
+                    return NotFound($"{ReportNo} Not Found");
+                }
             }
             catch (Exception e)
             {
