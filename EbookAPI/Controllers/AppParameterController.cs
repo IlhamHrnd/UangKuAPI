@@ -2,7 +2,6 @@
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.Serialization;
 using UangKuAPI.Filter;
 using UangKuAPI.Helper;
 using UangKuAPI.Model;
@@ -106,28 +105,35 @@ namespace UangKuAPI.Controllers
         [HttpPost("PostAppParameter", Name = "PostAppParameter")]
         public async Task<IActionResult> PostAppParameter([FromBody] AppParameter ap)
         {
-            if (ap == null)
+            try
             {
-                return BadRequest($"AppParameter Is Required");
-            }
+                if (ap == null)
+                {
+                    return BadRequest($"AppParameter Is Required");
+                }
 
-            string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-            int use = ap.IsUsedBySystem == true ? 1 : 0;
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                int use = ap.IsUsedBySystem == true ? 1 : 0;
 
-            var query = $@"INSERT INTO `AppParameter`(`ParameterID`, `ParameterName`, `ParameterValue`, 
+                var query = $@"INSERT INTO `AppParameter`(`ParameterID`, `ParameterName`, `ParameterValue`, 
                             `LastUpdateDateTime`, `LastUpdateByUserID`, `IsUsedBySystem`) 
                             VALUES ('{ap.ParameterID}','{ap.ParameterName}','{ap.ParameterValue}',
                             '{date}','{ap.LastUpdateByUserID}','{use}')";
 
-            int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
+                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
-            if (rowsAffected > 0)
-            {
-                return Ok($"Parameter {ap.ParameterID} Created Successfully");
+                if (rowsAffected > 0)
+                {
+                    return Ok($"Parameter {ap.ParameterID} Created Successfully");
+                }
+                else
+                {
+                    return BadRequest($"Failed To Insert Data For ParameterID {ap.ParameterID}");
+                }
             }
-            else
+            catch (Exception e)
             {
-                return BadRequest($"Failed To Insert Data For ParameterID {ap.ParameterID}");
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
     }
