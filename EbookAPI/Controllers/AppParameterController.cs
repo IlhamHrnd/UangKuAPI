@@ -136,5 +136,43 @@ namespace UangKuAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
+
+        [HttpPatch("UpdateAppParameter", Name = "UpdateAppParameter")]
+        public async Task<IActionResult> UpdateAppParameter([FromBody] AppParameter ap)
+        {
+            try
+            {
+                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                int use = ap.IsUsedBySystem == true ? 1 : 0;
+
+                if (string.IsNullOrEmpty(ap.ParameterID))
+                {
+                    return BadRequest($"ParameterID Is Required");
+                }
+
+                var query = $@"UPDATE `AppParameter`
+                                SET `ParameterName` = '{ap.ParameterName}',
+                                `ParameterValue` = '{ap.ParameterValue}',
+                                `LastUpdateDateTime` = '{date}',
+                                `LastUpdateByUserID` = '{ap.LastUpdateByUserID}',
+                                `IsUsedBySystem` = '{use}'
+                                WHERE `ParameterID` = '{ap.ParameterID}'";
+
+                var response = await _context.Database.ExecuteSqlRawAsync(query);
+
+                if (response > 0)
+                {
+                    return Ok($"{ap.ParameterID} Update Successfully");
+                }
+                else
+                {
+                    return NotFound($"{ap.ParameterID} Not Found");
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
     }
 }
