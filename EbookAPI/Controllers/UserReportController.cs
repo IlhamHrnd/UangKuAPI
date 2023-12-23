@@ -62,13 +62,14 @@ namespace UangKuAPI.Controllers
                 string createddate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
                 string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
                 string errordate = DateTimeFormat.DateTimeUser(report.DateErrorOccured, DateStringFormat.Yymmddhhmmss);
+                string reportStatus = "ReportStatus-001";
 
                 var query = $@"INSERT INTO `UserReport`(`ReportNo`, `DateErrorOccured`, `SRErrorLocation`, `SRErrorPossibility`, 
                                 `ErrorCronologic`, `Picture`, `CreatedDateTime`, `CreatedByUserID`, 
-                                `LastUpdateDateTime`, `LastUpdateByUserID`, `PersonID`)
+                                `LastUpdateDateTime`, `LastUpdateByUserID`, `PersonID`, `SRReportStatus`)
                                 VALUES('{report.ReportNo}', '{errordate}', '{report.SRErrorLocation}', '{report.SRErrorPossibility}',
                                 '{report.ErrorCronologic}', '{report.Picture}', '{createddate}', '{report.CreatedByUserID}',
-                                '{updatedate}', '{report.LastUpdateByUserID}', '{report.PersonID}');";
+                                '{updatedate}', '{report.LastUpdateByUserID}', '{report.PersonID}', '{reportStatus}');";
                 int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
                 if (rowsAffected > 0)
@@ -151,14 +152,32 @@ namespace UangKuAPI.Controllers
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
                 var pagedData = await _context.Report
-                    .Select(r => new GetUserReport
+                    .Join(
+                        _context.AppStandardReferenceItems.Where(asri => asri.StandardReferenceID == "ErrorLocation"),
+                        ur => ur.SRErrorLocation,
+                        asri => asri.ItemID,
+                        (ur, asri) => new { ur, ErrorLocationItemName = asri.ItemName }
+                    )
+                    .Join(
+                        _context.AppStandardReferenceItems.Where(asri => asri.StandardReferenceID == "ErrorPossibility"),
+                        combined => combined.ur.SRErrorPossibility,
+                        asri => asri.ItemID,
+                        (combined, asri) => new { combined.ur, combined.ErrorLocationItemName, ErrorPossibilityItemName = asri.ItemName }
+                    )
+                    .Join(
+                        _context.AppStandardReferenceItems.Where(asri => asri.StandardReferenceID == "ReportStatus"),
+                        combined => combined.ur.SRReportStatus,
+                        asri => asri.ItemID,
+                        (combined, asri) => new { combined.ur, combined.ErrorLocationItemName, combined.ErrorPossibilityItemName, ReportStatusItemName = asri.ItemName }
+                    )
+                    .Select(result => new GetUserReport
                     {
-                        ReportNo = r.ReportNo, DateErrorOccured = r.DateErrorOccured,
-                        SRErrorLocation = r.SRErrorLocation, SRErrorPossibility = r.SRErrorPossibility,
-                        ErrorCronologic = r.ErrorCronologic, Picture = r.Picture,
-                        IsApprove = r.IsApprove, SRReportStatus = r.SRReportStatus,
-                        CreatedDateTime = r.CreatedDateTime, CreatedByUserID = r.CreatedByUserID,
-                        PersonID = r.PersonID
+                        ReportNo = result.ur.ReportNo, DateErrorOccured = result.ur.DateErrorOccured,
+                        SRErrorLocation = result.ErrorLocationItemName, SRErrorPossibility = result.ErrorPossibilityItemName,
+                        ErrorCronologic = result.ur.ErrorCronologic, Picture = result.ur.Picture,
+                        IsApprove = result.ur.IsApprove, SRReportStatus = result.ReportStatusItemName,
+                        CreatedDateTime = result.ur.CreatedDateTime, CreatedByUserID = result.ur.CreatedByUserID,
+                        PersonID = result.ur.PersonID
                     })
                     .Where(r => (string.IsNullOrEmpty(filter.PersonID) || r.PersonID == filter.PersonID))
                     .OrderByDescending(r => r.CreatedDateTime)
