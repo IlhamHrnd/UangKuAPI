@@ -66,6 +66,32 @@ namespace UangKuAPI.Controllers
             }
         }
 
+        [HttpGet("GetAllParameterWithNoPageFilter", Name = "GetAllParameterWithNoPageFilter")]
+        public async Task<ActionResult<List<AppParameter>>> GetAllParameterWithNoPageFilter()
+        {
+            try
+            {
+                var response = await _context.Parameter
+                    .Select(p => new AppParameter
+                    {
+                        ParameterID = p.ParameterID,
+                        ParameterName = p.ParameterName,
+                        ParameterValue = p.ParameterValue,
+                        LastUpdateDateTime = p.LastUpdateDateTime,
+                        LastUpdateByUserID = p.LastUpdateByUserID,
+                        IsUsedBySystem = p.IsUsedBySystem
+                    })
+                    .OrderBy(p => p.ParameterID)
+                    .ToListAsync();
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
         [HttpGet("GetParameterID", Name = "GetParameterID")]
         public async Task<ActionResult<AppParameter>> GetParameterID([FromQuery] string parameterID)
         {
