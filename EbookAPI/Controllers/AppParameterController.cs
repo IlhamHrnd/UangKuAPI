@@ -137,7 +137,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"AppParameter Is Required");
                 }
 
-                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
                 int use = ap.IsUsedBySystem == true ? 1 : 0;
 
                 var query = $@"INSERT INTO `AppParameter`(`ParameterID`, `ParameterName`, `ParameterValue`, 
@@ -167,7 +167,7 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
                 int use = ap.IsUsedBySystem == true ? 1 : 0;
 
                 if (string.IsNullOrEmpty(ap.ParameterID))

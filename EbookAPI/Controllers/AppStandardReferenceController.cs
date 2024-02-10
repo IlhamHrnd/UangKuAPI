@@ -100,7 +100,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest("AppStandardReference Are Required");
                 }
 
-                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
                 int use = asr.IsUsedBySystem == true ? 1 : 0;
                 int active = asr.IsActive == true ? 1 : 0;
 
@@ -131,7 +131,7 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
 
                 if (string.IsNullOrEmpty(referenceID))
                 {

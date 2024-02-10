@@ -29,9 +29,9 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Transaction Are Required");
                 }
                 DateTime dateTime = DateTime.Now;
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
-                string createdate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
-                string transdate = DateFormat.DateTimeNow(DateStringFormat.Yymmdd, DateTime.Now);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string createdate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string transdate = DateFormat.DateTimeNow(DateStringFormat.Shortyearpattern, DateTime.Now);
 
                 var query = $@"INSERT INTO `Transaction`(`TransNo`, `SRTransaction`, `SRTransItem`, `Amount`, `Description`, 
                                 `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`, 
@@ -67,8 +67,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction Are Required");
                 }
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
-                string transdate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, DateTime.Now);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string transdate = DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, DateTime.Now);
                 var query = $@"UPDATE `Transaction`
                                 SET `SRTransaction` = '{transaction.SRTransaction}',
                                 `SRTransItem` = '{transaction.SRTransItem}',
@@ -145,12 +145,12 @@ namespace UangKuAPI.Controllers
                 var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.StartDate, filter.EndDate);
 
                 string startDate = filter.StartDate.HasValue
-                    ? DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, (DateTime)filter.StartDate)
-                    : DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, dateTimeNowDate);
+                    ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)filter.StartDate)
+                    : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, dateTimeNowDate);
 
                 string endDate = filter.EndDate.HasValue
-                    ? DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, (DateTime)filter.EndDate)
-                    : DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, DateTime.Now);
+                    ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)filter.EndDate)
+                    : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, DateTime.Now);
 
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
@@ -252,8 +252,8 @@ namespace UangKuAPI.Controllers
                 var dateTimeNow = DateFormat.DateTimeNow();
                 var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
 
-                string startDate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, dateTimeNowDate);
-                string endDate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, DateTime.Now);
+                string startDate = DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, dateTimeNowDate);
+                string endDate = DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, DateTime.Now);
 
                 var query = $@"SELECT asri.ItemName AS 'SRTransaction', SUM(t.Amount) AS 'Amount'
                                 FROM Transaction AS t
