@@ -60,6 +60,13 @@ namespace UangKuAPI.Helper
             return result;
         }
 
+        public static DateTime DateTimeFirstDate(int date, DateTime dateTime)
+        {
+            var result = new DateTime(dateTime.Year, dateTime.Month, date);
+
+            return result;
+        }
+
         public static string DateTimeUser(DateTime date, string format)
         {
             var result = date.ToString(format);

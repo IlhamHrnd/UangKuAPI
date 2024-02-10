@@ -139,10 +139,16 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Person ID Is Required");
                 }
 
-                string startDate = DateTimeFormat.DateTimeStartMonth(1, DateStringFormat.Yymmddhh2);
-                string endDate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhh2);
+                var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.StartDate, filter.EndDate);
 
-                var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID);
+                string startDate = filter.StartDate.HasValue
+                    ? DateTimeFormat.DateTimeUser((DateTime)filter.StartDate, DateStringFormat.Yymmddhh2)
+                    : DateTimeFormat.DateTimeStartMonth(1, DateStringFormat.Yymmddhh2);
+
+                string endDate = filter.EndDate.HasValue
+                    ? DateTimeFormat.DateTimeUser((DateTime)filter.EndDate, DateStringFormat.Yymmddhh2)
+                    : DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhh2);
+
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
                 var personID = validFilter.PersonID;
