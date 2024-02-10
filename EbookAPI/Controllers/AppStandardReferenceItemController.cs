@@ -61,7 +61,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest("AppStandardReferenceItem Are Required");
                 }
 
-                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
                 int use = asri.IsUsedBySystem == true ? 1 : 0;
                 int active = asri.IsActive == true ? 1 : 0;
 
@@ -92,7 +92,7 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
                 
                 if (string.IsNullOrEmpty(referenceID) || string.IsNullOrEmpty(itemID))
                 {

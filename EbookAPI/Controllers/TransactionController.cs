@@ -29,9 +29,9 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Transaction Are Required");
                 }
                 DateTime dateTime = DateTime.Now;
-                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-                string createdate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-                string transdate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmdd);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
+                string createdate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
+                string transdate = DateFormat.DateTimeNow(DateStringFormat.Yymmdd, DateTime.Now);
 
                 var query = $@"INSERT INTO `Transaction`(`TransNo`, `SRTransaction`, `SRTransItem`, `Amount`, `Description`, 
                                 `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`, 
@@ -67,8 +67,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction Are Required");
                 }
-                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-                string transdate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhh2);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
+                string transdate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, DateTime.Now);
                 var query = $@"UPDATE `Transaction`
                                 SET `SRTransaction` = '{transaction.SRTransaction}',
                                 `SRTransItem` = '{transaction.SRTransItem}',
@@ -139,15 +139,18 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Person ID Is Required");
                 }
 
+                var dateTimeNow = DateFormat.DateTimeNow();
+                var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
+
                 var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.StartDate, filter.EndDate);
 
                 string startDate = filter.StartDate.HasValue
-                    ? DateTimeFormat.DateTimeUser((DateTime)filter.StartDate, DateStringFormat.Yymmddhh2)
-                    : DateTimeFormat.DateTimeStartMonth(1, DateStringFormat.Yymmddhh2);
+                    ? DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, (DateTime)filter.StartDate)
+                    : DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, dateTimeNowDate);
 
                 string endDate = filter.EndDate.HasValue
-                    ? DateTimeFormat.DateTimeUser((DateTime)filter.EndDate, DateStringFormat.Yymmddhh2)
-                    : DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhh2);
+                    ? DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, (DateTime)filter.EndDate)
+                    : DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, DateTime.Now);
 
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
@@ -246,8 +249,11 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest("Person ID Is Required");
                 }
-                string startDate = DateTimeFormat.DateTimeStartMonth(1, DateStringFormat.Yymmddhh2);
-                string endDate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhh2);
+                var dateTimeNow = DateFormat.DateTimeNow();
+                var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
+
+                string startDate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, dateTimeNowDate);
+                string endDate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhh2, DateTime.Now);
 
                 var query = $@"SELECT asri.ItemName AS 'SRTransaction', SUM(t.Amount) AS 'Amount'
                                 FROM Transaction AS t

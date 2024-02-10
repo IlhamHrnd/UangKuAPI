@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.Filter;
 using UangKuAPI.Helper;
 using UangKuAPI.Model;
-using DateTimeFormat = UangKuAPI.Helper.DateTimeFormat;
 
 namespace UangKuAPI.Controllers
 {
@@ -138,7 +137,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"AppParameter Is Required");
                 }
 
-                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
                 int use = ap.IsUsedBySystem == true ? 1 : 0;
 
                 var query = $@"INSERT INTO `AppParameter`(`ParameterID`, `ParameterName`, `ParameterValue`, 
@@ -168,7 +167,7 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
                 int use = ap.IsUsedBySystem == true ? 1 : 0;
 
                 if (string.IsNullOrEmpty(ap.ParameterID))

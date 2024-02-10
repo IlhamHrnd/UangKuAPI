@@ -28,7 +28,7 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Trans Type Is Required");
                 }
-                string transDate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmdd);
+                string transDate = DateFormat.DateTimeNow(DateStringFormat.Shortyearpattern, DateTime.Now);
                 int number = 1;
                 string formattedNumber = NumberStringFormat.NumberThreeDigit(number);
                 string transNo = $"RPT/{TransType}/{transDate}-{formattedNumber}";
@@ -59,9 +59,9 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Report Are Required");
                 }
-                string createddate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-                string errordate = DateTimeFormat.DateTimeUser(report.DateErrorOccured, DateStringFormat.Yymmddhhmmss);
+                string createddate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string errordate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, report.DateErrorOccured);
                 string reportStatus = "ReportStatus-001";
 
                 var query = $@"INSERT INTO `UserReport`(`ReportNo`, `DateErrorOccured`, `SRErrorLocation`, `SRErrorPossibility`, 
@@ -92,6 +92,8 @@ namespace UangKuAPI.Controllers
         {
             try
             {
+                var dateTime = DateFormat.DateTimeNow();
+
                 int approved = IsApproved ? 1 : 0;
 
                 if (string.IsNullOrEmpty(ReportNo))
@@ -110,17 +112,17 @@ namespace UangKuAPI.Controllers
 
                 report.IsApprove = IsApproved;
                 report.SRReportStatus = patch.SRReportStatus;
-                report.LastUpdateDateTime = DateTimeFormat.DateTimeNowDate();
+                report.LastUpdateDateTime = DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, dateTime.Day);
                 report.LastUpdateByUserID = patch.LastUpdateByUserID;
 
                 if (IsApproved)
                 {
-                    report.ApprovedDateTime = DateTimeFormat.DateTimeNowDate();
+                    report.ApprovedDateTime = DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, dateTime.Day);
                     report.ApprovedByUserID = patch.ApprovedByUserID;
                 }
                 else
                 {
-                    report.VoidDateTime = DateTimeFormat.DateTimeNowDate();
+                    report.VoidDateTime = DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, dateTime.Day);
                     report.VoidByUserID = patch.VoidByUserID;
                 }
 

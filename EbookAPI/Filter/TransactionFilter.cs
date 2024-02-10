@@ -15,11 +15,13 @@
         }
         public TransactionFilter(int pageNumber, int pageSize, string personID, DateTime? startDate, DateTime? endDate)
         {
+            var dateTime = Helper.DateFormat.DateTimeNow();
+
             PageNumber = pageNumber < 1 ? 1 : pageNumber;
             PageSize = pageSize < 1 ? 1 : pageSize;
             PersonID = string.IsNullOrEmpty(personID) ? string.Empty : personID;
-            StartDate = startDate.HasValue ? startDate.Value : Helper.DateTimeFormat.DateTimeFirstDate(1, Helper.DateTimeFormat.DateTimeNowDate());
-            EndDate = endDate.HasValue ? endDate.Value : Helper.DateTimeFormat.DateTimeNowDate();
+            StartDate = startDate.HasValue ? startDate.Value : Helper.DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, 1);
+            EndDate = endDate.HasValue ? endDate.Value : Helper.DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, dateTime.Day);
         }
     }
 }

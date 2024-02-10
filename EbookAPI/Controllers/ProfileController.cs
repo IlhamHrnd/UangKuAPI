@@ -84,8 +84,8 @@ namespace UangKuAPI.Controllers
                     profile.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
                     profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
                 }
-                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, (DateTime)profile.BirthDate);
 
                 var query = $@"INSERT INTO `Profile`(`PersonID`, `FirstName`, `MiddleName`, `LastName`, `BirthDate`, `PlaceOfBirth`, 
                                 `Photo`, `Address`, `Province`, `City`, `Subdistrict`, `District`, `PostalCode`, `LastUpdateDateTime`, `LastUpdateByUser`)
@@ -131,8 +131,8 @@ namespace UangKuAPI.Controllers
                     profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
                 }
                 DateTime dateTime = DateTime.Now;
-                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, (DateTime)profile.BirthDate);
 
                 var query = $@"UPDATE `Profile`
                                 SET `FirstName` = '{profile.FirstName}',

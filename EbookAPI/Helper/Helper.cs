@@ -44,53 +44,59 @@ namespace UangKuAPI.Helper
         public static string? MaxSize { get => maxsize; set => maxsize = value; }
     }
 
-    public static class DateTimeFormat
+    public static class DateFormat
     {
-        public static string DateTimeNow(string format)
+        public static string DateTimeNow(string format, DateTime dateTime)
         {
-            var result = DateTime.Now.ToString(format);
+            string result = string.IsNullOrEmpty(format) ? dateTime.ToString() : dateTime.ToString(format);
 
             return result;
         }
 
-        public static DateTime DateTimeNowDate()
+        public static DateTime DateTimeNowDate(int year, int month, int day)
+        {
+            var result = new DateTime(year, month, day);
+
+            return result;
+        }
+
+        public static DateTime DateTimeNow()
         {
             var result = DateTime.Now;
-
-            return result;
-        }
-
-        public static DateTime DateTimeFirstDate(int date, DateTime dateTime)
-        {
-            var result = new DateTime(dateTime.Year, dateTime.Month, date);
-
-            return result;
-        }
-
-        public static string DateTimeUser(DateTime date, string format)
-        {
-            var result = date.ToString(format);
-
-            return result;
-        }
-
-        public static string DateTimeStartMonth(int day, string format)
-        {
-            var dateTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, day);
-            var result = dateTime.ToString(format);
-
             return result;
         }
     }
 
     public static class DateStringFormat
     {
-        private static string yymmdd = "yyMMdd";
-        public static string Yymmdd { get => yymmdd; set => yymmdd = value; }
-        private static string yymmddhhmmss = "yyyy-MM-dd HH:mm:ss";
-        public static string Yymmddhhmmss { get => yymmddhhmmss; set => yymmddhhmmss = value; }
-        private static string yymmdd2 = "yyyy-MM-dd";
-        public static string Yymmddhh2 { get => yymmdd2; set => yymmdd2 = value; }
+        private static string shortyearpattern = "yyMMdd";
+        private static string longyearpattern = "yyyy-MM-dd HH:mm:ss";
+        private static string yearmonthdate = "yyyy-MM-dd";
+        private static string date = "dd/MM/yyyy";
+        private static string datetime = "dd/MM/yyyy HH:mm";
+        private static string datetimesecond = "dd/MM/yyyy HH:mm:ss";
+        private static string datelong = "dd MMM yyyy";
+        private static string dateshortmonth = "dd-MMM-yyyy";
+        private static string longdatepattern = "dd-MMM-yyyy HH:mm:ss";
+        private static string datehourminute = "dd/MM/yyyy HH:mm";
+        private static string dateshortmonthhourminute = "dd-MMM-yyyy HH:mm";
+        private static string hourmin = "HH:mm";
+        private static string month = "MMMM";
+        private static string daydatemonthyear = "dddd, dd MMMM yyyy";
+        public static string Shortyearpattern { get => shortyearpattern; set => shortyearpattern = value; }
+        public static string Longyearpattern { get => longyearpattern; set => longyearpattern = value; }
+        public static string Date { get => date; set => date = value; }
+        public static string Datetime { get => datetime; set => datetime = value; }
+        public static string Datetimesecond { get => datetimesecond; set => datetimesecond = value; }
+        public static string Datelong { get => datelong; set => datelong = value; }
+        public static string Dateshortmonth { get => dateshortmonth; set => dateshortmonth = value; }
+        public static string Longdatepattern { get => longdatepattern; set => longdatepattern = value; }
+        public static string Datehourminute { get => datehourminute; set => datehourminute = value; }
+        public static string Dateshortmonthhourminute { get => dateshortmonthhourminute; set => dateshortmonthhourminute = value; }
+        public static string Hourmin { get => hourmin; set => hourmin = value; }
+        public static string Month { get => month; set => month = value; }
+        public static string Yearmonthdate { get => yearmonthdate; set => yearmonthdate = value; }
+        public static string Daydatemonthyear { get => daydatemonthyear; set => daydatemonthyear = value; }
     }
 
     public static class NumberStringFormat

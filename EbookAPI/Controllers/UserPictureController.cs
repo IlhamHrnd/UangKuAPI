@@ -84,8 +84,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Picture Are Required");
                 }
-                string createddate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
-                string updatedate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string createddate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
                 int deleted = picture.IsDeleted == true ? 1 : 0;
 
                 //Proses Mencari Data MaxPicture Yang Menyimpan Jumlah Maksimal Gambar Yang Bisa Di Upload User
@@ -153,7 +153,7 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"All Data Are Required");
                 }
-                string date = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss);
+                string date = DateFormat.DateTimeNow(DateStringFormat.Yymmddhhmmss, DateTime.Now);
                 int deleted = filter.IsDeleted == true ? 1 : 0;
 
                 var query = $@"UPDATE `UserPicture`
@@ -188,7 +188,7 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction Type Is Required");
                 }
-                string transDate = DateTimeFormat.DateTimeNow(DateStringFormat.Yymmdd);
+                string transDate = DateFormat.DateTimeNow(DateStringFormat.Yymmdd, DateTime.Now);
                 int number = 1;
                 string formattedNumber = number.ToString("D3");
                 string transNo = $"PIC/{TransType}/{transDate}-{formattedNumber}";
