@@ -241,25 +241,31 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetSumTransaction", Name = "GetSumTransaction")]
-        public async Task<IActionResult> GetSumTransaction([FromQuery] string personID)
+        public async Task<IActionResult> GetSumTransaction([FromQuery] SumTransactionFilter filter)
         {
             try
             {
-                if (string.IsNullOrEmpty(personID))
+                if (string.IsNullOrEmpty(filter.PersonID))
                 {
                     return BadRequest("Person ID Is Required");
                 }
+
                 var dateTimeNow = DateFormat.DateTimeNow();
                 var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
 
-                string startDate = DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, dateTimeNowDate);
-                string endDate = DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, DateTime.Now);
+                string startDate = filter.StartDate.HasValue
+                    ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)filter.StartDate)
+                    : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, dateTimeNowDate);
+
+                string endDate = filter.EndDate.HasValue
+                    ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)filter.EndDate)
+                    : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, DateTime.Now);
 
                 var query = $@"SELECT asri.ItemName AS 'SRTransaction', SUM(t.Amount) AS 'Amount'
                                 FROM Transaction AS t
                                 INNER JOIN AppStandardReferenceItem AS asri
                                     ON asri.ItemID = t.SRTransaction
-                                WHERE t.PersonID = '{personID}'
+                                WHERE t.PersonID = '{filter.PersonID}'
                                     AND t.TransDate BETWEEN '{startDate}' AND '{endDate}'
                                 GROUP BY t.SRTransaction;";
 
@@ -267,7 +273,7 @@ namespace UangKuAPI.Controllers
 
                 if (result == null || result.Count == 0 || !result.Any())
                 {
-                    return NotFound($"Transaction For {personID} Not Found");
+                    return NotFound($"Transaction For {filter.PersonID} Not Found");
                 }
                 else
                 {
