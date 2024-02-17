@@ -108,4 +108,14 @@ namespace UangKuAPI.Helper
             return result;
         }
     }
+
+    public static class Converter
+    {
+        public static long IntToLong(int data)
+        {
+            long result = data * 1024 * 1024;
+
+            return result;
+        }
+    }
 }

@@ -32,7 +32,7 @@ namespace UangKuAPI.Model
         public DateTime? LastUpdateDateTime { get; set; }
         public string? LastUpdateByUserID { get; set; }
         public string? TransType { get; set; }
-        public DateOnly? TransDate { get; set; }
+        public DateTime? TransDate { get; set; }
         public string? PersonID { get; set; }
     }
 
@@ -49,7 +49,7 @@ namespace UangKuAPI.Model
         public DateTime? LastUpdateDateTime { get; set; }
         public string? LastUpdateByUserID { get; set; }
         public string? TransType { get; set; }
-        public DateOnly? TransDate { get; set; }
+        public DateTime? TransDate { get; set; }
     }
 
     public class GetTransaction
@@ -63,6 +63,7 @@ namespace UangKuAPI.Model
         public string? Description { get; set; }
         public byte[]? Photo { get; set; }
         public string? TransType { get; set; }
+        public DateTime? TransDate { get; set; }
     }
 
     public class GetSumTransaction
