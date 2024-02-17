@@ -95,7 +95,7 @@ namespace UangKuAPI.Controllers
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
                 var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
                 int sizeResult = ParameterHelper.TryParseInt(maxSize);
-                long longResult = ImageHelper.MaxSizeInt(sizeResult);
+                long longResult = Converter.IntToLong(sizeResult);
 
                 //Menghitung Jumlah Gambar Yang Sudah Di Upload User
                 int pictureCount = await _context.Picture
