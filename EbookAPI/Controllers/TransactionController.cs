@@ -22,8 +22,6 @@ namespace UangKuAPI.Controllers
         [HttpPost("PostTransaction", Name = "PostTransaction")]
         public async Task<IActionResult> PostTransaction([FromBody] PostTransaction transaction)
         {
-            var param = new ParameterHelper(_context);
-
             try
             {
                 if (transaction == null)
@@ -33,17 +31,6 @@ namespace UangKuAPI.Controllers
                 string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
                 string createdate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
                 string transdate = DateTimeIsNull(transaction.TransDate, DateFormat.DateTimeNow());
-
-                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
-                int sizeResult = ParameterHelper.TryParseInt(maxSize);
-                long longResult = ImageHelper.MaxSizeInt(sizeResult);
-                var pictureSize = Converter.IntToLong(transaction.Photo.Length);
-
-                if (pictureSize > longResult)
-                {
-                    return BadRequest($"The Image You Uploaded Exceeds The Maximum Size Limit");
-                }
 
                 var query = $@"INSERT INTO `Transaction`(`TransNo`, `SRTransaction`, `SRTransItem`, `Amount`, `Description`, 
                                 `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`, 
@@ -73,8 +60,6 @@ namespace UangKuAPI.Controllers
         [HttpPatch("PatchTransaction", Name = "PatchTransaction")]
         public async Task<IActionResult> PatchTransaction([FromBody] PatchTransaction transaction)
         {
-            var param = new ParameterHelper(_context);
-
             try
             {
                 if (transaction == null)
@@ -84,17 +69,6 @@ namespace UangKuAPI.Controllers
 
                 string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
                 string transdate = DateTimeIsNull(transaction.TransDate, DateFormat.DateTimeNow());
-
-                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
-                int sizeResult = ParameterHelper.TryParseInt(maxSize);
-                long longResult = ImageHelper.MaxSizeInt(sizeResult);
-                var pictureSize = Converter.IntToLong(transaction.Photo.Length);
-
-                if (pictureSize > longResult)
-                {
-                    return BadRequest($"The Image You Uploaded Exceeds The Maximum Size Limit");
-                }
 
                 var query = $@"UPDATE `Transaction`
                                 SET `SRTransaction` = '{transaction.SRTransaction}',

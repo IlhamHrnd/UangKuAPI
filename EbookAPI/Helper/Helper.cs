@@ -3,14 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace UangKuAPI.Helper
 {
-    public class ImageHelper
-    {
-        public static long MaxSizeInt(int data)
-        {
-            long result = data * 1024 * 1024;
-            return result;
-        }
-    }
     public class ParameterHelper
     {
         private readonly AppDbContext _context;
