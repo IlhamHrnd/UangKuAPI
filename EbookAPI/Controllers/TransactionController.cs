@@ -144,13 +144,8 @@ namespace UangKuAPI.Controllers
 
                 var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.StartDate, filter.EndDate);
 
-                string startDate = filter.StartDate.HasValue
-                    ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)filter.StartDate)
-                    : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, dateTimeNowDate);
-
-                string endDate = filter.EndDate.HasValue
-                    ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)filter.EndDate)
-                    : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, DateTime.Now);
+                string startDate = DateTimeIsNull(filter.StartDate, dateTimeNowDate);
+                string endDate = DateTimeIsNull(filter.EndDate, DateTime.Now);
 
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
@@ -253,13 +248,8 @@ namespace UangKuAPI.Controllers
                 var dateTimeNow = DateFormat.DateTimeNow();
                 var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
 
-                string startDate = filter.StartDate.HasValue
-                    ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)filter.StartDate)
-                    : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, dateTimeNowDate);
-
-                string endDate = filter.EndDate.HasValue
-                    ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)filter.EndDate)
-                    : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, DateTime.Now);
+                string startDate = DateTimeIsNull(filter.StartDate, dateTimeNowDate);
+                string endDate = DateTimeIsNull(filter.EndDate, DateTime.Now);
 
                 var query = $@"SELECT asri.ItemName AS 'SRTransaction', SUM(t.Amount) AS 'Amount'
                                 FROM Transaction AS t
@@ -284,6 +274,14 @@ namespace UangKuAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
+        }
+
+        private static string DateTimeIsNull(DateTime? dateTime, DateTime defaultTime)
+        {
+            string result = dateTime.HasValue
+                ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)dateTime)
+                : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, defaultTime);
+            return result;
         }
     }
 }
