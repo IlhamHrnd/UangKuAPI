@@ -22,16 +22,28 @@ namespace UangKuAPI.Controllers
         [HttpPost("PostTransaction", Name = "PostTransaction")]
         public async Task<IActionResult> PostTransaction([FromBody] PostTransaction transaction)
         {
+            var param = new ParameterHelper(_context);
+
             try
             {
                 if (transaction == null)
                 {
                     return BadRequest($"Transaction Are Required");
                 }
-                DateTime dateTime = DateTime.Now;
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string createdate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string transdate = DateFormat.DateTimeNow(DateStringFormat.Shortyearpattern, DateTime.Now);
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
+                string createdate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
+                string transdate = DateTimeIsNull(transaction.TransDate, DateFormat.DateTimeNow());
+
+                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
+                var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
+                int sizeResult = ParameterHelper.TryParseInt(maxSize);
+                long longResult = ImageHelper.MaxSizeInt(sizeResult);
+                var pictureSize = Converter.IntToLong(transaction.Photo.Length);
+
+                if (pictureSize > longResult)
+                {
+                    return BadRequest($"The Image You Uploaded Exceeds The Maximum Size Limit");
+                }
 
                 var query = $@"INSERT INTO `Transaction`(`TransNo`, `SRTransaction`, `SRTransItem`, `Amount`, `Description`, 
                                 `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`, 
@@ -61,14 +73,29 @@ namespace UangKuAPI.Controllers
         [HttpPatch("PatchTransaction", Name = "PatchTransaction")]
         public async Task<IActionResult> PatchTransaction([FromBody] PatchTransaction transaction)
         {
+            var param = new ParameterHelper(_context);
+
             try
             {
                 if (transaction == null)
                 {
                     return BadRequest($"Transaction Are Required");
                 }
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string transdate = DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, DateTime.Now);
+
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
+                string transdate = DateTimeIsNull(transaction.TransDate, DateFormat.DateTimeNow());
+
+                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
+                var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
+                int sizeResult = ParameterHelper.TryParseInt(maxSize);
+                long longResult = ImageHelper.MaxSizeInt(sizeResult);
+                var pictureSize = Converter.IntToLong(transaction.Photo.Length);
+
+                if (pictureSize > longResult)
+                {
+                    return BadRequest($"The Image You Uploaded Exceeds The Maximum Size Limit");
+                }
+
                 var query = $@"UPDATE `Transaction`
                                 SET `SRTransaction` = '{transaction.SRTransaction}',
                                 `SRTransItem` = '{transaction.SRTransItem}',
@@ -107,15 +134,15 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction Type Is Required");
                 }
-                string transDate = DateTime.Now.ToString("yyMMdd");
+                string transDate = DateFormat.DateTimeNow(DateStringFormat.Shortyearpattern, DateFormat.DateTimeNow());
                 int number = 1;
-                string formattedNumber = number.ToString("D3");
+                string formattedNumber = NumberStringFormat.NumberThreeDigit(number);
                 string transNo = $"TRA/{TransType}/{transDate}-{formattedNumber}";
 
                 while (_context.Transaction.Any(t => t.TransNo == transNo))
                 {
                     number++;
-                    formattedNumber = number.ToString("D3");
+                    formattedNumber = NumberStringFormat.NumberThreeDigit(number);
                     transNo = $"TRA/{TransType}/{transDate}-{formattedNumber}";
                 }
 
@@ -142,10 +169,12 @@ namespace UangKuAPI.Controllers
                 var dateTimeNow = DateFormat.DateTimeNow();
                 var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
 
-                var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.StartDate, filter.EndDate);
+                var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.StartDate, filter.EndDate, filter.OrderBy, filter.IsAscending);
 
                 string startDate = DateTimeIsNull(filter.StartDate, dateTimeNowDate);
-                string endDate = DateTimeIsNull(filter.EndDate, DateTime.Now);
+                string endDate = DateTimeIsNull(filter.EndDate, DateFormat.DateTimeNow());
+                string orderBy = !string.IsNullOrEmpty(filter.OrderBy) ? filter.OrderBy : $"CreatedDateTime";
+                string isAscending = (bool)filter.IsAscending ? "ASC" : "DESC";
 
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
@@ -162,7 +191,7 @@ namespace UangKuAPI.Controllers
                                     ON asriTransItem.ItemID = t.SRTransItem
                                 WHERE t.PersonID = '{personID}'
                                 AND t.TransDate BETWEEN '{startDate}' AND '{endDate}'
-                                ORDER BY t.TransNO DESC
+                                ORDER BY t.{orderBy} {isAscending}
                                 OFFSET {(pageNumber - 1) * pageSize} ROWS
                                 FETCH NEXT {pageSize} ROWS ONLY;";
                 var pagedData = await _context.Transaction.FromSqlRaw(query).ToListAsync();
@@ -249,7 +278,7 @@ namespace UangKuAPI.Controllers
                 var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
 
                 string startDate = DateTimeIsNull(filter.StartDate, dateTimeNowDate);
-                string endDate = DateTimeIsNull(filter.EndDate, DateTime.Now);
+                string endDate = DateTimeIsNull(filter.EndDate, DateFormat.DateTimeNow());
 
                 var query = $@"SELECT asri.ItemName AS 'SRTransaction', SUM(t.Amount) AS 'Amount'
                                 FROM Transaction AS t

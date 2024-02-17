@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace UangKuAPI.Filter
+﻿namespace UangKuAPI.Filter
 {
     public class TransactionFilter
     {
@@ -9,13 +7,17 @@ namespace UangKuAPI.Filter
         public string PersonID { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public string? OrderBy { get; set; }
+        public bool? IsAscending { get; set; }
         public TransactionFilter()
         {
             PageNumber = 1;
             PageSize = 1;
             PersonID = string.Empty;
+            OrderBy = string.Empty;
+            IsAscending = false;
         }
-        public TransactionFilter(int pageNumber, int pageSize, string personID, DateTime? startDate, DateTime? endDate)
+        public TransactionFilter(int pageNumber, int pageSize, string personID, DateTime? startDate, DateTime? endDate, string? orderBy, bool? isAscending)
         {
             var dateTime = Helper.DateFormat.DateTimeNow();
 
@@ -24,6 +26,8 @@ namespace UangKuAPI.Filter
             PersonID = string.IsNullOrEmpty(personID) ? string.Empty : personID;
             StartDate = startDate.HasValue ? startDate.Value : Helper.DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, 1);
             EndDate = endDate.HasValue ? endDate.Value : Helper.DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, dateTime.Day);
+            OrderBy = string.IsNullOrEmpty(orderBy) ? string.Empty : orderBy;
+            IsAscending = isAscending;
         }
     }
 
