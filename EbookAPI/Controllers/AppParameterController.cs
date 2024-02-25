@@ -32,7 +32,8 @@ namespace UangKuAPI.Controllers
                     {
                         ParameterID = p.ParameterID, ParameterName = p.ParameterName,
                         ParameterValue = p.ParameterValue, LastUpdateDateTime = p.LastUpdateDateTime,
-                        LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem
+                        LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem,
+                        SRControl = p.SRControl
                     })
                     .OrderBy(p => p.ParameterID)
                     .Skip((pageNumber - 1) * pageSize)
@@ -78,7 +79,8 @@ namespace UangKuAPI.Controllers
                         ParameterValue = p.ParameterValue,
                         LastUpdateDateTime = p.LastUpdateDateTime,
                         LastUpdateByUserID = p.LastUpdateByUserID,
-                        IsUsedBySystem = p.IsUsedBySystem
+                        IsUsedBySystem = p.IsUsedBySystem,
+                        SRControl = p.SRControl
                     })
                     .OrderBy(p => p.ParameterID)
                     .ToListAsync();
@@ -109,7 +111,8 @@ namespace UangKuAPI.Controllers
                         ParameterValue = p.ParameterValue,
                         LastUpdateDateTime = p.LastUpdateDateTime,
                         LastUpdateByUserID = p.LastUpdateByUserID,
-                        IsUsedBySystem = p.IsUsedBySystem
+                        IsUsedBySystem = p.IsUsedBySystem,
+                        SRControl = p.SRControl
                     })
                     .Where(p => p.ParameterID == parameterID)
                     .ToListAsync();
@@ -141,9 +144,9 @@ namespace UangKuAPI.Controllers
                 int use = ap.IsUsedBySystem == true ? 1 : 0;
 
                 var query = $@"INSERT INTO `AppParameter`(`ParameterID`, `ParameterName`, `ParameterValue`, 
-                            `LastUpdateDateTime`, `LastUpdateByUserID`, `IsUsedBySystem`) 
+                            `LastUpdateDateTime`, `LastUpdateByUserID`, `IsUsedBySystem`, `SRControl`) 
                             VALUES ('{ap.ParameterID}','{ap.ParameterName}','{ap.ParameterValue}',
-                            '{date}','{ap.LastUpdateByUserID}','{use}')";
+                            '{date}','{ap.LastUpdateByUserID}','{use}','{ap.SRControl}')";
 
                 int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
@@ -180,7 +183,8 @@ namespace UangKuAPI.Controllers
                                 `ParameterValue` = '{ap.ParameterValue}',
                                 `LastUpdateDateTime` = '{date}',
                                 `LastUpdateByUserID` = '{ap.LastUpdateByUserID}',
-                                `IsUsedBySystem` = '{use}'
+                                `IsUsedBySystem` = '{use}',
+                                `SRControl` = '{ap.SRControl}'
                                 WHERE `ParameterID` = '{ap.ParameterID}'";
 
                 var response = await _context.Database.ExecuteSqlRawAsync(query);
