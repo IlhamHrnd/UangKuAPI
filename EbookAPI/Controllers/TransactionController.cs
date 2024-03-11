@@ -30,7 +30,7 @@ namespace UangKuAPI.Controllers
                 }
                 string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
                 string createdate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
-                string transdate = DateTimeIsNull(transaction.TransDate, DateFormat.DateTimeNow());
+                string transdate = DateFormat.DateTimeIsNull(transaction.TransDate, DateFormat.DateTimeNow());
 
                 var query = $@"INSERT INTO `Transaction`(`TransNo`, `SRTransaction`, `SRTransItem`, `Amount`, `Description`, 
                                 `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`, 
@@ -68,7 +68,7 @@ namespace UangKuAPI.Controllers
                 }
 
                 string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
-                string transdate = DateTimeIsNull(transaction.TransDate, DateFormat.DateTimeNow());
+                string transdate = DateFormat.DateTimeIsNull(transaction.TransDate, DateFormat.DateTimeNow());
 
                 var query = $@"UPDATE `Transaction`
                                 SET `SRTransaction` = '{transaction.SRTransaction}',
@@ -145,8 +145,8 @@ namespace UangKuAPI.Controllers
 
                 var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.StartDate, filter.EndDate, filter.OrderBy, filter.IsAscending);
 
-                string startDate = DateTimeIsNull(filter.StartDate, dateTimeNowDate);
-                string endDate = DateTimeIsNull(filter.EndDate, DateFormat.DateTimeNow());
+                string startDate = DateFormat.DateTimeIsNull(filter.StartDate, dateTimeNowDate);
+                string endDate = DateFormat.DateTimeIsNull(filter.EndDate, DateFormat.DateTimeNow());
                 string orderBy = !string.IsNullOrEmpty(filter.OrderBy) ? filter.OrderBy : $"CreatedDateTime";
                 string isAscending = (bool)filter.IsAscending ? "ASC" : "DESC";
 
@@ -251,8 +251,8 @@ namespace UangKuAPI.Controllers
                 var dateTimeNow = DateFormat.DateTimeNow();
                 var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
 
-                string startDate = DateTimeIsNull(filter.StartDate, dateTimeNowDate);
-                string endDate = DateTimeIsNull(filter.EndDate, DateFormat.DateTimeNow());
+                string startDate = DateFormat.DateTimeIsNull(filter.StartDate, dateTimeNowDate);
+                string endDate = DateFormat.DateTimeIsNull(filter.EndDate, DateFormat.DateTimeNow());
 
                 var query = $@"SELECT asri.ItemName AS 'SRTransaction', SUM(t.Amount) AS 'Amount'
                                 FROM Transaction AS t
@@ -277,14 +277,6 @@ namespace UangKuAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
-        }
-
-        private static string DateTimeIsNull(DateTime? dateTime, DateTime defaultTime)
-        {
-            string result = dateTime.HasValue
-                ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)dateTime)
-                : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, defaultTime);
-            return result;
         }
     }
 }

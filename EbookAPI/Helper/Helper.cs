@@ -57,6 +57,14 @@ namespace UangKuAPI.Helper
             var result = DateTime.Now;
             return result;
         }
+
+        public static string DateTimeIsNull(DateTime? dateTime, DateTime defaultTime)
+        {
+            string result = dateTime.HasValue
+                ? DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, (DateTime)dateTime)
+                : DateFormat.DateTimeNow(DateStringFormat.Yearmonthdate, defaultTime);
+            return result;
+        }
     }
 
     public static class DateStringFormat

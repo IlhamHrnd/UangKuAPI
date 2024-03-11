@@ -190,13 +190,13 @@ namespace UangKuAPI.Controllers
                 }
                 string transDate = DateFormat.DateTimeNow(DateStringFormat.Shortyearpattern, DateTime.Now);
                 int number = 1;
-                string formattedNumber = number.ToString("D3");
+                string formattedNumber = NumberStringFormat.NumberThreeDigit(number);
                 string transNo = $"PIC/{TransType}/{transDate}-{formattedNumber}";
 
                 while (_context.Picture.Any(p => p.PictureID == transNo))
                 {
                     number++;
-                    formattedNumber = number.ToString("D3");
+                    formattedNumber = NumberStringFormat.NumberThreeDigit(number);
                     transNo = $"PIC/{TransType}/{transDate}-{formattedNumber}";
                 }
 
