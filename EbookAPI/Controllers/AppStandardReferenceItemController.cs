@@ -28,36 +28,28 @@ namespace UangKuAPI.Controllers
                     return BadRequest("StandardReferenceID Is Required");
                 }
 
-                int use;
-                switch (filter.isUse)
-                {
-                    case null:
-                        use = 0;
-                        break;
+                string isActiveCondition;
+                string isUseCondition;
 
-                    case true:
-                        use = 1;
-                        break;
-
-                    default:
-                        use = 0;
-                        break;
-
-                }
-
-                int active;
                 switch (filter.isActive)
                 {
-                    case null:
-                        active = 0;
-                        break;
-
                     case true:
-                        active = 1;
+                        isActiveCondition = "AND asri.IsActive = '1'";
                         break;
 
                     default:
-                        active = 0;
+                        isActiveCondition = string.Empty;
+                        break;
+                }
+
+                switch (filter.isUse)
+                {
+                    case true:
+                        isUseCondition = "AND asri.IsUsedBySystem = '1'";
+                        break;
+
+                    default:
+                        isUseCondition = string.Empty;
                         break;
                 }
 
@@ -66,8 +58,7 @@ namespace UangKuAPI.Controllers
                                 asri.LastUpdateDateTime, asri.LastUpdateByUserID, asri.ItemIcon
                             FROM AppStandardReferenceItem AS asri
                             WHERE asri.StandardReferenceID = '{filter.StandardReferenceID}'
-                                AND asri.IsUsedBySystem = '{use}'
-                                AND asri.IsActive = '{active}';";
+                                {isActiveCondition} {isUseCondition};";
 
                 var response = await _context.AppStandardReferenceItems.FromSqlRaw(query).ToListAsync();
 
