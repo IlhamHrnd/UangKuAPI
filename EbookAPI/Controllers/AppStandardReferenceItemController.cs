@@ -19,7 +19,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetStandardID", Name = "GetStandardID")]
-        public async Task<ActionResult<List<AppStandardReferenceItem>>> GetStandardID([FromQuery] AppStandardReferenceItemFilter filter, bool isActive = false, bool isUse = false)
+        public async Task<ActionResult<List<AppStandardReferenceItem>>> GetStandardID([FromQuery] AppStandardReferenceItemFilter filter)
         {
             try
             {
@@ -27,14 +27,47 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest("StandardReferenceID Is Required");
                 }
-                string isActiveCondition = isActive ? "AND asri.IsActive = '1'" : "";
-                string isUseCondition = isUse ? "AND asri.IsUsedBySystem = '1'" : "";
+
+                int use;
+                switch (filter.isUse)
+                {
+                    case null:
+                        use = 0;
+                        break;
+
+                    case true:
+                        use = 1;
+                        break;
+
+                    default:
+                        use = 0;
+                        break;
+
+                }
+
+                int active;
+                switch (filter.isActive)
+                {
+                    case null:
+                        active = 0;
+                        break;
+
+                    case true:
+                        active = 1;
+                        break;
+
+                    default:
+                        active = 0;
+                        break;
+                }
 
                 var query = $@"SELECT asri.StandardReferenceID, asri.ItemID, asri.ItemName,
-                        asri.Note, asri.IsUsedBySystem, asri.IsActive,
-                        asri.LastUpdateDateTime, asri.LastUpdateByUserID
-                        FROM AppStandardReferenceItem AS asri
-                        WHERE asri.StandardReferenceID = '{filter.StandardReferenceID}' {isActiveCondition} {isUseCondition};";
+                                asri.Note, asri.IsUsedBySystem, asri.IsActive,
+                                asri.LastUpdateDateTime, asri.LastUpdateByUserID, asri.ItemIcon
+                            FROM AppStandardReferenceItem AS asri
+                            WHERE asri.StandardReferenceID = '{filter.StandardReferenceID}'
+                                AND asri.IsUsedBySystem = '{use}'
+                                AND asri.IsActive = '{active}';";
 
                 var response = await _context.AppStandardReferenceItems.FromSqlRaw(query).ToListAsync();
 
@@ -52,23 +85,70 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPost("CreateAppStandardReferenceItem", Name = "CreateAppStandardReferenceItem")]
-        public async Task<IActionResult> CreateAppStandardReferenceItem([FromBody] AppStandardReferenceItem asri)
+        public async Task<IActionResult> CreateAppStandardReferenceItem([FromBody] PostAppStandardReferenceItem asri)
         {
+            var param = new ParameterHelper(_context);
+
             try
             {
-                if (asri == null)
+                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+
+                if (string.IsNullOrEmpty(asri.StandardReferenceID) || string.IsNullOrEmpty(asri.ItemID))
                 {
-                    return BadRequest("AppStandardReferenceItem Are Required");
+                    return BadRequest("ReferenceID And ItemID Is Required");
                 }
 
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                int use = asri.IsUsedBySystem == true ? 1 : 0;
-                int active = asri.IsActive == true ? 1 : 0;
+                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
+                var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
+                int sizeResult = ParameterHelper.TryParseInt(maxSize);
+                long longResult = Converter.IntToLong(sizeResult);
+
+                //Cek Jika Base64String Gambar Kosong Atau Tidak
+                //Jika Kosong Maka Tidak Akan Disave
+                string? icon = string.IsNullOrEmpty(asri.ItemIcon) || asri.IconSize == 0 ? string.Empty : asri.ItemIcon;
+
+                if (asri.IconSize > longResult)
+                {
+                    return BadRequest($"The Icon You Uploaded Exceeds The Maximum Size Limit");
+                }
+
+                int use;
+                switch (asri.IsUsedBySystem)
+                {
+                    case null:
+                        use = 0;
+                        break;
+
+                    case true:
+                        use = 1;
+                        break;
+
+                    default:
+                        use = 0;
+                        break;
+
+                }
+
+                int active;
+                switch (asri.IsActive)
+                {
+                    case null:
+                        active = 0;
+                        break;
+
+                    case true:
+                        active = 1;
+                        break;
+
+                    default:
+                        active = 0;
+                        break;
+                }
 
                 var query = $@"INSERT INTO `AppStandardReferenceItem`(`StandardReferenceID`, `ItemID`, `ItemName`, `Note`, `IsUsedBySystem`,
-                                `IsActive`, `LastUpdateDateTime`, `LastUpdateByUserID`)
+                                `IsActive`, `LastUpdateDateTime`, `LastUpdateByUserID`, `ItemIcon`)
                                 VALUES ('{asri.StandardReferenceID}','{asri.ItemID}','{asri.ItemName}','{asri.Note}','{use}','{active}',
-                                '{date}','{asri.LastUpdateByUserID}')";
+                                '{date}','{asri.LastUpdateByUserID}', '{asri.ItemIcon}')";
 
                 int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
 
@@ -88,38 +168,85 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("UpdateAppStandardReferenceItem", Name = "UpdateAppStandardReferenceItem")]
-        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromQuery] string referenceID, string itemID, string itemName, string note, bool isActive, bool isUse, string user)
+        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromQuery] PostAppStandardReferenceItem asri)
         {
+            var param = new ParameterHelper(_context);
+
             try
             {
                 string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                
-                if (string.IsNullOrEmpty(referenceID) || string.IsNullOrEmpty(itemID))
+
+                if (string.IsNullOrEmpty(asri.StandardReferenceID) || string.IsNullOrEmpty(asri.ItemID))
                 {
                     return BadRequest("ReferenceID And ItemID Is Required");
                 }
-                
-                int use = isUse ? 1 : 0 ;
-                int active = isActive ? 1 : 0 ;
-                
+
+                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
+                var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
+                int sizeResult = ParameterHelper.TryParseInt(maxSize);
+                long longResult = Converter.IntToLong(sizeResult);
+
+                //Cek Jika Base64String Gambar Kosong Atau Tidak
+                //Jika Kosong Maka Tidak Akan Disave
+                string? icon = string.IsNullOrEmpty(asri.ItemIcon) || asri.IconSize == 0 ? string.Empty : asri.ItemIcon;
+
+                if (asri.IconSize > longResult)
+                {
+                    return BadRequest($"The Icon You Uploaded Exceeds The Maximum Size Limit");
+                }
+
+                int use;
+                switch (asri.IsUsedBySystem)
+                {
+                    case null:
+                        use = 0;
+                        break;
+
+                    case true:
+                        use = 1;
+                        break;
+
+                    default:
+                        use = 0;
+                        break;
+
+                }
+
+                int active;
+                switch (asri.IsActive)
+                {
+                    case null:
+                        active = 0;
+                        break;
+
+                    case true:
+                        active = 1;
+                        break;
+
+                    default:
+                        active = 0;
+                        break;
+                }
+
                 var query = $@"UPDATE `AppStandardReferenceItem`
-                                SET `ItemName` = '{itemName}',
-                                `Note` = '{note}',
+                                SET `ItemName` = '{asri.ItemName}',
+                                `Note` = '{asri.Note}',
                                 `IsUsedBySystem` = '{use}',
                                 `IsActive` = '{active}',
                                 `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{user}'
-                                WHERE `StandardReferenceID` = '{referenceID}' AND `ItemID` = '{itemID}'";
+                                `LastUpdateByUserID` = '{asri.LastUpdateByUserID}',
+                                `ItemIcon` = '{asri.ItemIcon}'
+                                WHERE `StandardReferenceID` = '{asri.StandardReferenceID}' AND `ItemID` = '{asri.ItemID}'";
 
                 var response = await _context.Database.ExecuteSqlRawAsync(query);
 
                 if (response > 0)
                 {
-                    return Ok($"{itemID} Update Successfully");
+                    return Ok($"{asri.ItemID} Update Successfully");
                 }
                 else
                 {
-                    return NotFound($"{itemID} Not Found");
+                    return NotFound($"{asri.ItemID} Not Found");
                 }
             }
             catch (Exception e)
