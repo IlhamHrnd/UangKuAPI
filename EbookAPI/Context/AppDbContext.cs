@@ -23,6 +23,7 @@ namespace EbookAPI.Context
         public DbSet<AppParameter> Parameter { get; set; }
         public DbSet<UserReport> Report { get; set; }
         public DbSet<UserWishlist> UserWishlist { get; set; }
+        public DbSet<UserWishlistPerCategory> UserWishlistPerCategories { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
@@ -65,7 +66,6 @@ namespace EbookAPI.Context
             modelBuilder.Entity<UserPicture>().ToTable("UserPicture");
             modelBuilder.Entity<AppParameter>().ToTable("AppParameter");
             modelBuilder.Entity<UserReport>().ToTable("UserReport");
-            modelBuilder.Entity<UserWishlist>().ToTable("UserWishlist");
             modelBuilder.Entity<Transaction>(entity =>
             {
                 entity.ToTable("Transaction");
@@ -75,6 +75,16 @@ namespace EbookAPI.Context
             {
                 entity.HasNoKey();
                 entity.ToView("Transaction");
+            });
+            modelBuilder.Entity<UserWishlist>(entity =>
+            {
+                entity.ToTable("UserWishlist");
+                entity.HasKey(uw => uw.PersonID);
+            });
+            modelBuilder.Entity<UserWishlistPerCategory>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("UserWishlist");
             });
 
             base.OnModelCreating(modelBuilder);
