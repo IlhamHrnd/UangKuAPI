@@ -2,7 +2,6 @@
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 using UangKuAPI.Filter;
 using UangKuAPI.Helper;
 using UangKuAPI.Model;
