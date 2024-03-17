@@ -245,5 +245,56 @@ namespace UangKuAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
+
+        [HttpGet("GetUserWishlistPerCategory", Name = "GetUserWishlistPerCategory")]
+        public async Task<IActionResult> GetUserWishlistPerCategory([FromQuery] UserWishlistPerCategoryFilter filter)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filter.PersonID))
+                {
+                    return BadRequest($"Person ID Is Required");
+                }
+
+                int isComplete;
+                switch (filter.IsComplete)
+                {
+                    case true:
+                        isComplete = 1;
+                        break;
+
+                    case false:
+                        isComplete = 0;
+                        break;
+
+                    default:
+                        isComplete = 0;
+                        break;
+                }
+
+                var query = $@"SELECT COUNT(uw.SRProductCategory) AS 'CountProductCategory', asri.ItemName, asri.ItemIcon
+	                            FROM UserWishlist AS uw
+	                            INNER JOIN AppStandardReferenceItem AS asri
+		                            ON asri.StandardReferenceID = 'Wishlist'
+		                            AND asri.ItemID = uw.SRProductCategory
+	                            WHERE uw.PersonID = '{filter.PersonID}'
+		                            AND uw.IsComplete = {isComplete}
+	                            GROUP BY uw.SRProductCategory";
+                var result = await _context.UserWishlistPerCategories.FromSqlRaw(query).ToListAsync();
+
+                if (result == null || result.Count == 0 || !result.Any())
+                {
+                    return NotFound($"Wishlist For {filter.PersonID} Not Found");
+                }
+                else
+                {
+                    return Ok(result);
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
     }
 }

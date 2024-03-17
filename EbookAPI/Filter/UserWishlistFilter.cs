@@ -21,4 +21,20 @@
             PersonID = !string.IsNullOrEmpty(personID) ? personID : string.Empty;
         }
     }
+
+    public class UserWishlistPerCategoryFilter
+    {
+        public string PersonID { get; set; }
+        public bool? IsComplete { get; set; }
+        public UserWishlistPerCategoryFilter()
+        {
+            PersonID = string.Empty;
+            IsComplete = false;
+        }
+        public UserWishlistPerCategoryFilter(string personID, bool? isComplete)
+        {
+            PersonID = string.IsNullOrEmpty(personID)? string.Empty : personID;
+            IsComplete = isComplete;
+        }
+    }
 }

@@ -57,4 +57,11 @@ namespace UangKuAPI.Model
         public bool? IsComplete { get; set; }
         public long PictureSize { get; set; }
     }
+
+    public class UserWishlistPerCategory
+    {
+        public int? CountProductCategory { get; set; }
+        public string? ItemName { get; set; }
+        public byte[]? ItemIcon { get; set; }
+    }
 }
