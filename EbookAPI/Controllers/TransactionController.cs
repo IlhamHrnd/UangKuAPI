@@ -149,6 +149,8 @@ namespace UangKuAPI.Controllers
                 string endDate = DateFormat.DateTimeIsNull(filter.EndDate, DateFormat.DateTimeNow());
                 string orderBy = !string.IsNullOrEmpty(filter.OrderBy) ? filter.OrderBy : $"CreatedDateTime";
                 string isAscending = (bool)filter.IsAscending ? "ASC" : "DESC";
+                DateTime startDates = Converter.StringToDateTime(startDate, dateTimeNowDate);
+                DateTime endDates = Converter.StringToDateTime(endDate, DateFormat.DateTimeNow());
 
                 var pageNumber = validFilter.PageNumber;
                 var pageSize = validFilter.PageSize;
@@ -175,7 +177,9 @@ namespace UangKuAPI.Controllers
                     return NotFound("Person ID Not Found");
                 }
 
-                var totalRecord = await _context.Transaction.CountAsync();
+                var totalRecord = await _context.Transaction
+                    .Where(u => u.PersonID == filter.PersonID && u.TransDate >= startDates && u.TransDate <= endDates)
+                    .CountAsync();
                 var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
 
                 string? prevPageLink = validFilter.PageNumber > 1
