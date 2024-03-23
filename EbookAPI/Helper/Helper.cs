@@ -117,5 +117,21 @@ namespace UangKuAPI.Helper
 
             return result;
         }
+
+        public static DateTime StringToDateTime(string value, DateTime defaultValue)
+        {
+            DateTime result;
+
+            try
+            {
+                result = DateTime.Parse(value);
+            }
+            catch
+            {
+                result = defaultValue;
+            }
+
+            return result;
+        }
     }
 }
