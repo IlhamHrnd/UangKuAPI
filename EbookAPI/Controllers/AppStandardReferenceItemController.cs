@@ -159,7 +159,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("UpdateAppStandardReferenceItem", Name = "UpdateAppStandardReferenceItem")]
-        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromQuery] PostAppStandardReferenceItem asri)
+        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromQuery] PatchAppStandardReferenceItem asri)
         {
             var param = new ParameterHelper(_context);
 
@@ -167,7 +167,7 @@ namespace UangKuAPI.Controllers
             {
                 string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
 
-                if (string.IsNullOrEmpty(asri.StandardReferenceID) || string.IsNullOrEmpty(asri.ItemID))
+                if (string.IsNullOrEmpty(asri.referenceID) || string.IsNullOrEmpty(asri.itemName))
                 {
                     return BadRequest("ReferenceID And ItemID Is Required");
                 }
@@ -186,8 +186,10 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"The Icon You Uploaded Exceeds The Maximum Size Limit");
                 }
 
+                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
+
                 int use;
-                switch (asri.IsUsedBySystem)
+                switch (asri.isUse)
                 {
                     case null:
                         use = 0;
@@ -204,7 +206,7 @@ namespace UangKuAPI.Controllers
                 }
 
                 int active;
-                switch (asri.IsActive)
+                switch (asri.isActive)
                 {
                     case null:
                         active = 0;
@@ -220,24 +222,24 @@ namespace UangKuAPI.Controllers
                 }
 
                 var query = $@"UPDATE `AppStandardReferenceItem`
-                                SET `ItemName` = '{asri.ItemName}',
-                                `Note` = '{asri.Note}',
+                                SET `ItemName` = '{asri.itemName}',
+                                `Note` = '{asri.note}',
                                 `IsUsedBySystem` = '{use}',
                                 `IsActive` = '{active}',
                                 `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{asri.LastUpdateByUserID}',
+                                `LastUpdateByUserID` = '{updatedate}',
                                 `ItemIcon` = '{asri.ItemIcon}'
-                                WHERE `StandardReferenceID` = '{asri.StandardReferenceID}' AND `ItemID` = '{asri.ItemID}'";
+                                WHERE `StandardReferenceID` = '{asri.referenceID}' AND `ItemID` = '{asri.itemID}'";
 
                 var response = await _context.Database.ExecuteSqlRawAsync(query);
 
                 if (response > 0)
                 {
-                    return Ok($"{asri.ItemID} Update Successfully");
+                    return Ok($"{asri.itemID} Update Successfully");
                 }
                 else
                 {
-                    return NotFound($"{asri.ItemID} Not Found");
+                    return NotFound($"{asri.itemID} Not Found");
                 }
             }
             catch (Exception e)
