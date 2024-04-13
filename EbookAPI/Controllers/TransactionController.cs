@@ -207,6 +207,58 @@ namespace UangKuAPI.Controllers
             }
         }
 
+        [HttpGet("GetAllPDFTransaction", Name = "GetAllPDFTransaction")]
+        public async Task<ActionResult<List<Transaction>>> GetAllPDFTransaction([FromQuery] TransactionFilter filter)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filter.PersonID))
+                {
+                    return BadRequest($"Person ID Is Required");
+                }
+
+                var dateTimeNow = DateFormat.DateTimeNow();
+                var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 1);
+
+                var validFilter = new TransactionFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.StartDate, filter.EndDate, filter.OrderBy, filter.IsAscending);
+
+                string startDate = DateFormat.DateTimeIsNull(filter.StartDate, dateTimeNowDate);
+                string endDate = DateFormat.DateTimeIsNull(filter.EndDate, DateFormat.DateTimeNow());
+                string orderBy = !string.IsNullOrEmpty(filter.OrderBy) ? filter.OrderBy : $"CreatedDateTime";
+                string isAscending = (bool)filter.IsAscending ? "ASC" : "DESC";
+                DateTime startDates = Converter.StringToDateTime(startDate, dateTimeNowDate);
+                DateTime endDates = Converter.StringToDateTime(endDate, DateFormat.DateTimeNow());
+                var personID = validFilter.PersonID;
+
+                var query = $@"SELECT t.TransNO, t.Amount, t.Description, t.Photo, t.TransType,
+                                t.PersonID, t.TransDate,
+                                asriTrans.ItemName AS SRTransaction,
+                                asriTransItem.ItemName AS SRTransItem
+                                FROM Transaction AS t
+                                INNER JOIN AppStandardReferenceItem AS asriTrans
+                                    ON asriTrans.ItemID = t.SRTransaction
+                                    AND asriTrans.StandardReferenceID = 'Transaction'
+                                INNER JOIN AppStandardReferenceItem AS asriTransItem
+                                    ON asriTransItem.ItemID = t.SRTransItem
+                                WHERE t.PersonID = '{personID}'
+                                AND t.TransDate BETWEEN '{startDate}' AND '{endDate}'
+                                ORDER BY t.{orderBy} {isAscending};";
+                var pagedData = await _context.Transaction.FromSqlRaw(query).ToListAsync();
+
+                if (pagedData == null || pagedData.Count == 0 || !pagedData.Any())
+                {
+                    return NotFound("Person ID Not Found");
+                }
+
+                return Ok(pagedData);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   e.Message);
+            }
+        }
+
         [HttpGet("GetTransactionNo", Name = "GetTransactionNo")]
         public async Task<ActionResult<Transaction>> GetTransactionNo([FromQuery] string TransNo)
         {
