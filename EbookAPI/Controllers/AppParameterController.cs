@@ -20,12 +20,12 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppParameter", Name = "GetAllAppParameter")]
-        public async Task<ActionResult<List<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFillter fillter)
+        public async Task<ActionResult<List<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFillter filter)
         {
             try
             {
-                var pageNumber = fillter.PageNumber;
-                var pageSize = fillter.PageSize;
+                var pageNumber = filter.PageNumber;
+                var pageSize = filter.PageSize;
                 var pagedData = await _context.Parameter
                     .Select(p => new AppParameter
                     {
@@ -39,18 +39,18 @@ namespace UangKuAPI.Controllers
                     .Take(pageSize)
                     .ToListAsync();
                 var totalRecord = await _context.Parameter.CountAsync();
-                var totalPages = (int)Math.Ceiling((double)totalRecord / fillter.PageSize);
+                var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
 
-                string? prevPageLink = fillter.PageNumber > 1
-                    ? Url.Link("GetAllAppParameter", new { PageNumber = fillter.PageNumber - 1, fillter.PageSize })
+                string? prevPageLink = filter.PageNumber > 1
+                    ? Url.Link("GetAllAppParameter", new { PageNumber = filter.PageNumber - 1, filter.PageSize })
                     : null;
 
-                string? nextPageLink = fillter.PageNumber < totalPages
-                    ? Url.Link("GetAllAppParameter", new { PageNumber = fillter.PageNumber + 1, fillter.PageSize })
+                string? nextPageLink = filter.PageNumber < totalPages
+                    ? Url.Link("GetAllAppParameter", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
                 var isDataFound = _context.Parameter.Any();
-                var response = new PageResponse<List<AppParameter>>(pagedData, fillter.PageNumber, fillter.PageSize)
+                var response = new PageResponse<List<AppParameter>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
@@ -111,12 +111,9 @@ namespace UangKuAPI.Controllers
                     .Where(p => p.ParameterID == parameterID)
                     .ToListAsync();
 
-                if (response == null || response.Count == 0 || !response.Any())
-                {
-                    return NotFound("App Parameter Not Found");
-                }
-
-                return Ok(response);
+                return response == null || response.Count == 0 || !response.Any() 
+                    ? (ActionResult<AppParameter>)NotFound("App Parameter Not Found") 
+                    : (ActionResult<AppParameter>)Ok(response);
             }
             catch (Exception e)
             {

@@ -3,8 +3,8 @@ using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
-using UangKuAPI.Filter;
 using UangKuAPI.Helper;
+using UangKuAPI.BusinessObjects.Filter;
 
 namespace UangKuAPI.Controllers
 {
@@ -24,37 +24,42 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                var validFilter = new AppStandardReferenceFilter(filter.PageNumber, filter.PageSize);
-                var pageNumber = validFilter.PageNumber;
-                var pageSize = validFilter.PageSize;
-                var query = $@"SELECT asr.StandardReferenceID, asr.StandardReferenceName, asr.ItemLength,
-                                asr.IsUsedBySystem, asr.IsActive, asr.Note,
-                                asr.LastUpdateDateTime, asr.LastUpdateByUserID
-                                FROM AppStandardReference AS asr
-                                ORDER BY asr.StandardReferenceID
-                                OFFSET {(pageNumber - 1) * pageSize} ROWS
-                                FETCH NEXT {pageSize} ROWS ONLY;";
-                var pagedData = await _context.AppStandardReferences.FromSqlRaw(query).ToListAsync();
+                var pageNumber = filter.PageNumber;
+                var pageSize = filter.PageSize;
+                var pagedData = await _context.AppStandardReferences
+                    .Select(asr => new AppStandardReference
+                    {
+                        StandardReferenceID = asr.StandardReferenceID, StandardReferenceName = asr.StandardReferenceName, ItemLength = asr.ItemLength,
+                        IsUsedBySystem = asr.IsUsedBySystem, IsActive = asr.IsActive, Note = asr.Note,
+                        LastUpdateDateTime = asr.LastUpdateDateTime, LastUpdateByUserID = asr.LastUpdateByUserID
+                    })
+                    .OrderBy(asr => asr.StandardReferenceID)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
                 var totalRecord = await _context.AppStandardReferences.CountAsync();
-                var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
+                var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
 
-                string? prevPageLink = validFilter.PageNumber > 1
-                    ? Url.Link("GetAllReferenceID", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                string? prevPageLink = filter.PageNumber > 1
+                    ? Url.Link("GetAllReferenceID", new { PageNumber = filter.PageNumber - 1, filter.PageSize })
                     : null;
 
-                string? nextPageLink = validFilter.PageNumber < totalPages
-                    ? Url.Link("GetAllReferenceID", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                string? nextPageLink = filter.PageNumber < totalPages
+                    ? Url.Link("GetAllReferenceID", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var response = new PageResponse<List<AppStandardReference>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
+                var isDataFound = _context.AppStandardReferences.Any();
+                var response = new PageResponse<List<AppStandardReference>>(pagedData, pageNumber, pageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
-                    NextPageLink = nextPageLink
+                    NextPageLink = nextPageLink,
+                    Message = isDataFound ? "Data Found" : "Data Not Found",
+                    Succeeded = isDataFound
                 };
 
-                return Ok(response);
+                return isDataFound ? Ok(response) : NotFound(response);
             }
             catch (Exception e)
             {
@@ -63,7 +68,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReferenceID", Name = "GetReferenceID")]
-        public async Task<ActionResult<AppStandardReference>> GetReferenceID([FromQuery] AppStandardReferenceIDFilter filter)
+        public async Task<ActionResult<AppStandardReference>> GetReferenceID([FromQuery] AppStandardReferenceFilter filter)
         {
             try
             {
@@ -71,18 +76,20 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest("ReferenceID Is Required");
                 }
-                var query = $@"SELECT asr.StandardReferenceID, asr.StandardReferenceName, asr.ItemLength,
-                                asr.IsUsedBySystem, asr.IsActive, asr.Note,
-                                asr.LastUpdateDateTime, asr.LastUpdateByUserID
-                                FROM AppStandardReference AS asr
-                                WHERE asr.StandardReferenceID = '{filter.ReferenceID}';";
-                var response = await _context.AppStandardReferences.FromSqlRaw(query).ToListAsync();
-                if (response == null || response.Count == 0 || !response.Any())
-                {
-                    return NotFound("App Standard Reference Not Found");
-                }
 
-                return Ok(response);
+                var response = await _context.AppStandardReferences
+                    .Select(asr => new AppStandardReference
+                    {
+                        StandardReferenceID = asr.StandardReferenceID, StandardReferenceName = asr.StandardReferenceName, ItemLength = asr.ItemLength,
+                        IsUsedBySystem = asr.IsUsedBySystem, IsActive = asr.IsActive, Note = asr.Note,
+                        LastUpdateDateTime = asr.LastUpdateDateTime, LastUpdateByUserID = asr.LastUpdateByUserID
+                    })
+                    .Where(asr => asr.StandardReferenceID == filter.ReferenceID)
+                    .ToListAsync();
+
+                return response == null || response.Count == 0 || !response.Any()
+                    ? (ActionResult<AppStandardReference>)NotFound("App Standard Reference Not Found")
+                    : (ActionResult<AppStandardReference>)Ok(response);
             }
             catch (Exception e)
             {
@@ -100,25 +107,18 @@ namespace UangKuAPI.Controllers
                     return BadRequest("AppStandardReference Are Required");
                 }
 
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                int use = asr.IsUsedBySystem == true ? 1 : 0;
-                int active = asr.IsActive == true ? 1 : 0;
-
-                var query = $@"INSERT INTO `AppStandardReference`(`StandardReferenceID`, `StandardReferenceName`, `ItemLength`,
-                                `IsUsedBySystem`, `IsActive`, `Note`, `LastUpdateDateTime`, `LastUpdateByUserID`)
-                                VALUES('{asr.StandardReferenceID}', '{asr.StandardReferenceName}', '{asr.ItemLength}',
-                                '{use}', '{active}', '{asr.Note}', '{date}', '{asr.LastUpdateByUserID}');";
-
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (rowsAffected > 0)
+                var refence = new AppStandardReference
                 {
-                    return Ok($"Standard ReferenceID {asr.StandardReferenceID} Created Successfully");
-                }
-                else
-                {
-                    return BadRequest($"Failed To Insert Data For Standard ReferenceID {asr.StandardReferenceID}");
-                }
+                    StandardReferenceID = asr.StandardReferenceID, StandardReferenceName = asr.StandardReferenceName, ItemLength = asr.ItemLength,
+                    IsUsedBySystem = asr.IsUsedBySystem, IsActive = asr.IsActive, Note = asr.Note, LastUpdateDateTime = DateFormat.DateTimeNow(),
+                    LastUpdateByUserID = asr.LastUpdateByUserID,
+                };
+                _context.AppStandardReferences.Add(refence);
+                int rowsAffected = await _context.SaveChangesAsync();
+
+                return rowsAffected > 0
+                    ? Ok($"Parameter {asr.StandardReferenceID} Created Successfully")
+                    : BadRequest($"Failed To Insert Data For ParameterID {asr.StandardReferenceID}");
             }
             catch (Exception e)
             {
@@ -127,39 +127,36 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("UpdateAppStandardReference", Name = "UpdateAppStandardReference")]
-        public async Task<IActionResult> UpdateAppStandardReference([FromQuery] string referenceID, [FromQuery] int itemLength, [FromQuery] bool isActive, [FromQuery] bool isUse, [FromQuery] string user, [FromQuery] string note)
+        public async Task<IActionResult> UpdateAppStandardReference([FromBody] AppStandardReference reference)
         {
             try
             {
                 string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
 
-                if (string.IsNullOrEmpty(referenceID))
+                if (string.IsNullOrEmpty(reference.StandardReferenceID))
                 {
                     return BadRequest("ReferenceID Is Required");
                 }
 
-                int use = isUse ? 1 : 0;
-                int active = isActive ? 1 : 0;
+                var asr = await _context.AppStandardReferences
+                    .FirstOrDefaultAsync(asr => asr.StandardReferenceID == reference.StandardReferenceID);
 
-                var query = $@"UPDATE `AppStandardReference`
-                                SET `ItemLength` = '{itemLength}',
-                                `IsUsedBySystem` = '{use}',
-                                `IsActive` = '{active}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{user}',
-                                `Note` = '{note}'
-                                WHERE `StandardReferenceID` = '{referenceID}';";
-
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (response >  0)
+                if (asr == null)
                 {
-                    return Ok($"{referenceID} Update Successfully");
+                    return NotFound($"{reference.StandardReferenceID} Not Found");
                 }
-                else
-                {
-                    return NotFound($"{referenceID} Not Found");
-                }
+
+                asr.ItemLength = reference.ItemLength;
+                asr.IsUsedBySystem = reference.IsUsedBySystem;
+                asr.IsActive = reference.IsActive;
+                asr.LastUpdateDateTime = DateFormat.DateTimeNow();
+                asr.LastUpdateByUserID = reference.LastUpdateByUserID;
+                asr.Note = reference.Note;
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                   ? Ok($"{reference.StandardReferenceID} Updated Successfully")
+                   : BadRequest($"Failed To Update Data For ParameterID {reference.StandardReferenceID}");
             }
             catch (Exception e)
             {
@@ -168,28 +165,28 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpDelete("DeleteAppStandardReference", Name = "DeleteAppStandardReference")]
-        public async Task<IActionResult> DeleteAppStandardReference([FromQuery] string referenceID)
+        public async Task<IActionResult> DeleteAppStandardReference([FromQuery] AppStandardReferenceFilter filter)
         {
             try
             {
-                if (string.IsNullOrEmpty(referenceID))
+                if (string.IsNullOrEmpty(filter.ReferenceID))
                 {
                     return BadRequest("ReferenceID Is Required");
                 }
 
-                var query = $@"DELETE FROM `AppStandardReference`
-                                WHERE `StandardReferenceID` = '{referenceID}';";
+                var asr = await _context.AppStandardReferences
+                    .FirstOrDefaultAsync(asr => asr.StandardReferenceID == filter.ReferenceID);
 
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
+                if (asr == null)
+                {
+                    return NotFound($"{filter.ReferenceID} Not Found");
+                }
 
-                if (response > 0)
-                {
-                    return Ok($"{referenceID} Delete Successfully");
-                }
-                else
-                {
-                    return NotFound($"{referenceID} Not Found");
-                }
+                _context.AppStandardReferences.Remove(asr);
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                   ? Ok($"{filter.ReferenceID} Updated Successfully")
+                   : BadRequest($"Failed To Update Data For ParameterID {filter.ReferenceID}");
             }
             catch (Exception e)
             {
