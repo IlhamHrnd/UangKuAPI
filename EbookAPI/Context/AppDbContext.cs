@@ -17,7 +17,7 @@ namespace UangKuAPI.Context
         public DbSet<PostalCodes> PostalCodes { get; set; }
         public DbSet<Profile> Profile { get; set; }
         public DbSet<Transaction> Transaction { get; set; }
-        public DbSet<GetSumTransaction> GetSumTransactions { get; set; }
+        public DbSet<SumTransaction> GetSumTransactions { get; set; }
         public DbSet<UserPicture> Picture { get; set; }
         public DbSet<AppParameter> Parameter { get; set; }
         public DbSet<UserReport> Report { get; set; }
@@ -70,7 +70,7 @@ namespace UangKuAPI.Context
                 entity.ToTable("Transaction");
                 entity.HasKey(t => t.TransNo);
             });
-            modelBuilder.Entity<GetSumTransaction>(entity =>
+            modelBuilder.Entity<SumTransaction>(entity =>
             {
                 entity.HasNoKey();
                 entity.ToView("Transaction");

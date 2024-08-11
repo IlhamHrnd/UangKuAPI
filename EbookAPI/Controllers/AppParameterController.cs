@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 
 namespace UangKuAPI.Controllers
 {
@@ -60,7 +61,9 @@ namespace UangKuAPI.Controllers
                     Succeeded = isDataFound
                 };
 
-                return isDataFound ? Ok(response) : NotFound(response);
+                return isDataFound 
+                    ? Ok(response) 
+                    : NotFound(response);
             }
             catch (Exception e)
             {
@@ -155,7 +158,7 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
                 int use = ap.IsUsedBySystem == true ? 1 : 0;
 
                 if (string.IsNullOrEmpty(ap.ParameterID))

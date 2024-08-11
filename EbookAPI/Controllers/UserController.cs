@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 
 namespace EbookAPI.Controllers
 {
@@ -127,7 +128,7 @@ namespace EbookAPI.Controllers
 
                 string access = "Access-02";
                 string status = "Status-001";
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
 
                 var query = $@"INSERT INTO `User`(`Username`, `Password`, `SRSex`, `SRAccess`, `Email`, `SRStatus`, `ActiveDate`, `LastLogin`, `LastUpdateDateTime`, `LastUpdateByUser`, `PersonID`)
                         VALUES ('{user.Username}', '{Encryptor.Encryptor.DataEncrypt(password)}', 
@@ -156,7 +157,7 @@ namespace EbookAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
 
                 if (string.IsNullOrEmpty(username))
                 {
@@ -182,7 +183,7 @@ namespace EbookAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
 
                 if (string.IsNullOrEmpty(username))
                 {
@@ -258,7 +259,7 @@ namespace EbookAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
 
                 if (string.IsNullOrEmpty(username) || user == null)
                 {

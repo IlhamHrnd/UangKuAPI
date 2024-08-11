@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Filter;
 using UangKuAPI.Helper;
+using static UangKuAPI.BusinessObjects.Helper.Helper;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using static UangKuAPI.BusinessObjects.Helper.Converter;
 
 namespace UangKuAPI.Controllers
 {
@@ -27,15 +30,15 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction Type Is Required");
                 }
-                string wishDate = DateFormat.DateTimeNow(DateStringFormat.Shortyearpattern, DateTime.Now);
+                string wishDate = DateFormat.DateTimeNow(Shortyearpattern, DateTime.Now);
                 int number = 1;
-                string formattedNumber = NumberStringFormat.NumberThreeDigit(number);
+                string formattedNumber = NumberingFormat(number, "D3");
                 string wishlistID = $"USR/{TransType}/{wishDate}-{formattedNumber}";
 
                 while (_context.UserWishlist.Any(w => w.WishlistID == wishlistID))
                 {
                     number++;
-                    formattedNumber = NumberStringFormat.NumberThreeDigit(number);
+                    formattedNumber = NumberingFormat(number, "D3");
                     wishlistID = $"USR/{TransType}/{wishDate}-{formattedNumber}";
                 }
 
@@ -144,15 +147,15 @@ namespace UangKuAPI.Controllers
                 var dateTimeNow = DateFormat.DateTimeNow();
                 var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 7);
 
-                string createddate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string wishlistdate = DateFormat.DateTimeIsNull(wishlist.WishlistDate, dateTimeNowDate);
+                string createddate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
+                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
+                string wishlistdate = DateFormat.DateTimeIsNull(wishlist.WishlistDate);
                 int complete = wishlist.IsComplete == true ? 1 : 0;
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
                 var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
                 int sizeResult = ParameterHelper.TryParseInt(maxSize);
-                long longResult = Converter.IntToLong(sizeResult);
+                long longResult = IntToLong(sizeResult);
 
                 //Cek Jika Base64String Gambar Kosong Atau Tidak
                 //Jika Kosong Maka Tidak Akan Disave
@@ -203,14 +206,14 @@ namespace UangKuAPI.Controllers
                 var dateTimeNow = DateFormat.DateTimeNow();
                 var dateTimeNowDate = DateFormat.DateTimeNowDate(dateTimeNow.Year, dateTimeNow.Month, 7);
 
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
-                string wishlistdate = DateFormat.DateTimeIsNull(wishlist.WishlistDate, dateTimeNowDate);
+                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
+                string wishlistdate = DateFormat.DateTimeIsNull(wishlist.WishlistDate);
                 int complete = wishlist.IsComplete == true ? 1 : 0;
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
                 var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
                 int sizeResult = ParameterHelper.TryParseInt(maxSize);
-                long longResult = Converter.IntToLong(sizeResult);
+                long longResult = IntToLong(sizeResult);
 
                 //Cek Jika Base64String Gambar Kosong Atau Tidak
                 //Jika Kosong Maka Tidak Akan Disave

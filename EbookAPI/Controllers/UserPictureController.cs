@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Filter;
 using UangKuAPI.Helper;
+using static UangKuAPI.BusinessObjects.Helper.Helper;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using static UangKuAPI.BusinessObjects.Helper.Converter;
 
 namespace UangKuAPI.Controllers
 {
@@ -84,8 +87,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Picture Are Required");
                 }
-                string createddate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string createddate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
+                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
                 int deleted = picture.IsDeleted == true ? 1 : 0;
 
                 //Proses Mencari Data MaxPicture Yang Menyimpan Jumlah Maksimal Gambar Yang Bisa Di Upload User
@@ -95,7 +98,7 @@ namespace UangKuAPI.Controllers
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
                 var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
                 int sizeResult = ParameterHelper.TryParseInt(maxSize);
-                long longResult = Converter.IntToLong(sizeResult);
+                long longResult = IntToLong(sizeResult);
 
                 //Menghitung Jumlah Gambar Yang Sudah Di Upload User
                 int pictureCount = await _context.Picture
@@ -153,7 +156,7 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"All Data Are Required");
                 }
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
                 int deleted = filter.IsDeleted == true ? 1 : 0;
 
                 var query = $@"UPDATE `UserPicture`
@@ -188,15 +191,15 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction Type Is Required");
                 }
-                string transDate = DateFormat.DateTimeNow(DateStringFormat.Shortyearpattern, DateTime.Now);
+                string transDate = DateFormat.DateTimeNow(Shortyearpattern, DateTime.Now);
                 int number = 1;
-                string formattedNumber = NumberStringFormat.NumberThreeDigit(number);
+                string formattedNumber = NumberingFormat(number, "D3");
                 string transNo = $"PIC/{TransType}/{transDate}-{formattedNumber}";
 
                 while (_context.Picture.Any(p => p.PictureID == transNo))
                 {
                     number++;
-                    formattedNumber = NumberStringFormat.NumberThreeDigit(number);
+                    formattedNumber = NumberingFormat(number, "D3");
                     transNo = $"PIC/{TransType}/{transDate}-{formattedNumber}";
                 }
 

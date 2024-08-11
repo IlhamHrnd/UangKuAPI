@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 
 namespace UangKuAPI.Controllers
 {
@@ -98,8 +99,8 @@ namespace UangKuAPI.Controllers
                 profile.City = EncryptorNullChecker.EncryptIfNotNull(profile.City);
                 profile.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
                 profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, (DateTime)profile.BirthDate);
+                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, (DateTime)profile.BirthDate);
 
                 var query = $@"INSERT INTO `Profile`(`PersonID`, `FirstName`, `MiddleName`, `LastName`, `BirthDate`, `PlaceOfBirth`, 
                                 `Photo`, `Address`, `Province`, `City`, `Subdistrict`, `District`, `PostalCode`, `LastUpdateDateTime`, `LastUpdateByUser`)
@@ -146,8 +147,8 @@ namespace UangKuAPI.Controllers
                 profile.City = EncryptorNullChecker.EncryptIfNotNull(profile.City);
                 profile.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
                 profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, (DateTime)profile.BirthDate);
+                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
+                string date = DateFormat.DateTimeNow(Longyearpattern, (DateTime)profile.BirthDate);
 
                 var query = $@"UPDATE `Profile` SET `FirstName` = '{profile.FirstName}', `MiddleName` = '{profile.MiddleName}',
                                 `LastName` = '{profile.LastName}', `BirthDate` = '{date}', `PlaceOfBirth` = '{profile.PlaceOfBirth}',

@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
+using static UangKuAPI.BusinessObjects.Helper.Helper;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using static UangKuAPI.BusinessObjects.Helper.Converter;
 
 namespace UangKuAPI.Controllers
 {
@@ -66,7 +69,7 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
 
                 if (string.IsNullOrEmpty(asri.StandardReferenceID) || string.IsNullOrEmpty(asri.ItemID))
                 {
@@ -76,7 +79,7 @@ namespace UangKuAPI.Controllers
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
                 var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
                 int sizeResult = ParameterHelper.TryParseInt(maxSize);
-                long longResult = Converter.IntToLong(sizeResult);
+                long longResult = IntToLong(sizeResult);
 
                 //Cek Jika Base64String Gambar Kosong Atau Tidak
                 //Jika Kosong Maka Tidak Akan Disave
@@ -143,7 +146,7 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
 
                 if (string.IsNullOrEmpty(asri.StandardReferenceID) || string.IsNullOrEmpty(asri.ItemName))
                 {
@@ -153,7 +156,7 @@ namespace UangKuAPI.Controllers
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
                 var maxSize = await param.GetParameterValue(AppParameterValue.MaxSize);
                 int sizeResult = ParameterHelper.TryParseInt(maxSize);
-                long longResult = Converter.IntToLong(sizeResult);
+                long longResult = IntToLong(sizeResult);
 
                 //Cek Jika Base64String Gambar Kosong Atau Tidak
                 //Jika Kosong Maka Tidak Akan Disave
@@ -164,7 +167,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"The Icon You Uploaded Exceeds The Maximum Size Limit");
                 }
 
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
+                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
 
                 int use;
                 switch (asri.IsUsedBySystem)

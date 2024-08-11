@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 
 namespace UangKuAPI.Controllers
 {
@@ -140,7 +141,7 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
+                string date = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
 
                 if (string.IsNullOrEmpty(reference.StandardReferenceID))
                 {

@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Filter;
 using UangKuAPI.Helper;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using static UangKuAPI.BusinessObjects.Helper.Helper;
 
 namespace UangKuAPI.Controllers
 {
@@ -28,15 +30,15 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Trans Type Is Required");
                 }
-                string transDate = DateFormat.DateTimeNow(DateStringFormat.Shortyearpattern, DateTime.Now);
+                string transDate = DateFormat.DateTimeNow(Shortyearpattern, DateTime.Now);
                 int number = 1;
-                string formattedNumber = NumberStringFormat.NumberThreeDigit(number);
+                string formattedNumber = NumberingFormat(number, "D3");
                 string transNo = $"RPT/{TransType}/{transDate}-{formattedNumber}";
 
                 while (_context.Report.Any(r => r.ReportNo == transNo))
                 {
                     number++;
-                    formattedNumber = NumberStringFormat.NumberThreeDigit(number);
+                    formattedNumber = NumberingFormat(number, "D3");
                     transNo = $"RPT/{TransType}/{transDate}-{formattedNumber}";
                 }
 
@@ -59,9 +61,9 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Report Are Required");
                 }
-                string createddate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                string errordate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, report.DateErrorOccured);
+                string createddate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
+                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
+                string errordate = DateFormat.DateTimeNow(Longyearpattern, report.DateErrorOccured);
                 string reportStatus = "ReportStatus-001";
 
                 var query = $@"INSERT INTO `UserReport`(`ReportNo`, `DateErrorOccured`, `SRErrorLocation`, `SRErrorPossibility`, 
