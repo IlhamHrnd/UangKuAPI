@@ -92,11 +92,11 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetParameterID", Name = "GetParameterID")]
-        public async Task<ActionResult<AppParameter>> GetParameterID([FromQuery] string parameterID)
+        public async Task<ActionResult<AppParameter>> GetParameterID([FromQuery] AppParameterFillter filter)
         {
             try
             {
-                if (string.IsNullOrEmpty(parameterID))
+                if (string.IsNullOrEmpty(filter.ParameterID))
                 {
                     return BadRequest($"ParameterID Is Required");
                 }
@@ -108,7 +108,7 @@ namespace UangKuAPI.Controllers
                         LastUpdateDateTime = p.LastUpdateDateTime, LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem,
                         SRControl = p.SRControl
                     })
-                    .Where(p => p.ParameterID == parameterID)
+                    .Where(p => p.ParameterID == filter.ParameterID)
                     .ToListAsync();
 
                 return response == null || response.Count == 0 || !response.Any() 
@@ -155,30 +155,28 @@ namespace UangKuAPI.Controllers
         {
             try
             {
+                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
+                int use = ap.IsUsedBySystem == true ? 1 : 0;
+
                 if (string.IsNullOrEmpty(ap.ParameterID))
                 {
                     return BadRequest($"ParameterID Is Required");
                 }
 
-                var param = await _context.Parameter
-                    .FirstOrDefaultAsync(p => p.ParameterID == ap.ParameterID);
+                var query = $@"UPDATE `AppParameter`
+                                SET `ParameterName` = '{ap.ParameterName}',
+                                `ParameterValue` = '{ap.ParameterValue}',
+                                `LastUpdateDateTime` = '{date}',
+                                `LastUpdateByUserID` = '{ap.LastUpdateByUserID}',
+                                `IsUsedBySystem` = '{use}',
+                                `SRControl` = '{ap.SRControl}'
+                                WHERE `ParameterID` = '{ap.ParameterID}'";
 
-                if (param == null)
-                {
-                    return NotFound($"{ap.ParameterID} Not Found");
-                }
+                var response = await _context.Database.ExecuteSqlRawAsync(query);
 
-                param.ParameterName = ap.ParameterName;
-                param.ParameterValue = ap.ParameterValue;
-                param.LastUpdateDateTime = DateFormat.DateTimeNow();
-                param.LastUpdateByUserID = ap.LastUpdateByUserID;
-                param.IsUsedBySystem = ap.IsUsedBySystem;
-                param.SRControl = ap.SRControl;
-
-                int rowsAffected = await _context.SaveChangesAsync();
-                return rowsAffected > 0
-                    ? Ok($"{ap.ParameterID} Updated Successfully")
-                    : BadRequest($"Failed To Update Data For ParameterID {ap.ParameterID}");
+                return response > 0 
+                    ? Ok($"{ap.ParameterID} Update Successfully") 
+                    : NotFound($"{ap.ParameterID} Not Found");
             }
             catch (Exception e)
             {

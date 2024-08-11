@@ -17,7 +17,7 @@ namespace UangKuAPI.BusinessObjects.Model
         public byte[]? ItemIcon { get; set; }
     }
 
-    public class PostAppStandardReferenceItem
+    public class AppStandardReferenceItem2
     {
         [Key]
         [Required(ErrorMessage = "StandardReferenceID Is Required")]
@@ -29,22 +29,6 @@ namespace UangKuAPI.BusinessObjects.Model
         public bool? IsActive { get; set; }
         public DateTime? LastUpdateDateTime { get; set; }
         public string? LastUpdateByUserID { get; set; }
-        public string? ItemIcon { get; set; }
-        public long IconSize { get; set; }
-    }
-
-    public class PatchAppStandardReferenceItem
-    {
-        [Key]
-        [Required(ErrorMessage = "StandardReferenceID Is Required")]
-        public string? referenceID { get; set; }
-        public string? itemID { get; set; }
-        public string? itemName { get; set; }
-        public string? note { get; set; }
-        public bool? isActive { get; set; }
-        public bool? isUse { get; set; }
-        public DateTime? LastUpdateDateTime { get; set; }
-        public string? user { get; set; }
         public string? ItemIcon { get; set; }
         public long IconSize { get; set; }
     }

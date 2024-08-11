@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
-using UangKuAPI.Filter;
 using UangKuAPI.Helper;
+using UangKuAPI.BusinessObjects.Filter;
 
 namespace UangKuAPI.Controllers
 {
@@ -28,46 +28,30 @@ namespace UangKuAPI.Controllers
                     return BadRequest("StandardReferenceID Is Required");
                 }
 
-                string isActiveCondition;
-                string isUseCondition;
+                var query = _context.AppStandardReferenceItems.AsQueryable();
 
-                switch (filter.isActive)
+                query = query.Select(asri => new AppStandardReferenceItem
                 {
-                    case true:
-                        isActiveCondition = "AND asri.IsActive = '1'";
-                        break;
+                    StandardReferenceID = asri.StandardReferenceID, ItemID = asri.ItemID, Note = asri.Note,
+                    IsUsedBySystem = asri.IsUsedBySystem, IsActive = asri.IsActive, LastUpdateDateTime = asri.LastUpdateDateTime,
+                    LastUpdateByUserID = asri.LastUpdateByUserID, ItemIcon = asri.ItemIcon
+                })
+                    .Where(asri => asri.StandardReferenceID == filter.StandardReferenceID);
 
-                    default:
-                        isActiveCondition = string.Empty;
-                        break;
+                if (filter.isActive.HasValue)
+                {
+                    query = query.Where(asri => asri.IsActive == filter.isActive.Value);
                 }
 
-                switch (filter.isUse)
+                if (filter.isUse.HasValue)
                 {
-                    case true:
-                        isUseCondition = "AND asri.IsUsedBySystem = '1'";
-                        break;
-
-                    default:
-                        isUseCondition = string.Empty;
-                        break;
+                    query = query.Where(asri => asri.IsUsedBySystem == filter.isUse.Value);
                 }
 
-                var query = $@"SELECT asri.StandardReferenceID, asri.ItemID, asri.ItemName,
-                                asri.Note, asri.IsUsedBySystem, asri.IsActive,
-                                asri.LastUpdateDateTime, asri.LastUpdateByUserID, asri.ItemIcon
-                            FROM AppStandardReferenceItem AS asri
-                            WHERE asri.StandardReferenceID = '{filter.StandardReferenceID}'
-                                {isActiveCondition} {isUseCondition};";
-
-                var response = await _context.AppStandardReferenceItems.FromSqlRaw(query).ToListAsync();
-
-                if (response == null || response.Count == 0)
-                {
-                    return NotFound("AppStandardReferenceItem Not Found");
-                }
-
-                return Ok(response);
+                var response = await query.ToListAsync();
+                return response == null || response.Count == 0 
+                    ? (ActionResult<List<AppStandardReferenceItem>>)NotFound("AppStandardReferenceItem Not Found") 
+                    : (ActionResult<List<AppStandardReferenceItem>>)Ok(response);
             }
             catch (Exception e)
             {
@@ -76,7 +60,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPost("CreateAppStandardReferenceItem", Name = "CreateAppStandardReferenceItem")]
-        public async Task<IActionResult> CreateAppStandardReferenceItem([FromBody] PostAppStandardReferenceItem asri)
+        public async Task<IActionResult> CreateAppStandardReferenceItem([FromBody] AppStandardReferenceItem2 asri)
         {
             var param = new ParameterHelper(_context);
 
@@ -142,15 +126,9 @@ namespace UangKuAPI.Controllers
                                 '{date}','{asri.LastUpdateByUserID}', '{asri.ItemIcon}')";
 
                 int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (rowsAffected > 0)
-                {
-                    return Ok($"Standard ReferenceID {asri.StandardReferenceID} Created Successfully");
-                }
-                else
-                {
-                    return BadRequest($"Failed To Insert Data For Standard ReferenceID {asri.StandardReferenceID}");
-                }
+                return rowsAffected > 0
+                    ? Ok($"Standard ReferenceID {asri.StandardReferenceID} Created Successfully")
+                    : BadRequest($"Failed To Insert Data For Standard ReferenceID {asri.StandardReferenceID}");
             }
             catch (Exception e)
             {
@@ -159,7 +137,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("UpdateAppStandardReferenceItem", Name = "UpdateAppStandardReferenceItem")]
-        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromQuery] PatchAppStandardReferenceItem asri)
+        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromQuery] AppStandardReferenceItem2 asri)
         {
             var param = new ParameterHelper(_context);
 
@@ -167,7 +145,7 @@ namespace UangKuAPI.Controllers
             {
                 string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
 
-                if (string.IsNullOrEmpty(asri.referenceID) || string.IsNullOrEmpty(asri.itemName))
+                if (string.IsNullOrEmpty(asri.StandardReferenceID) || string.IsNullOrEmpty(asri.ItemName))
                 {
                     return BadRequest("ReferenceID And ItemID Is Required");
                 }
@@ -189,7 +167,7 @@ namespace UangKuAPI.Controllers
                 string updatedate = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateFormat.DateTimeNow());
 
                 int use;
-                switch (asri.isUse)
+                switch (asri.IsUsedBySystem)
                 {
                     case null:
                         use = 0;
@@ -202,11 +180,10 @@ namespace UangKuAPI.Controllers
                     default:
                         use = 0;
                         break;
-
                 }
 
                 int active;
-                switch (asri.isActive)
+                switch (asri.IsActive)
                 {
                     case null:
                         active = 0;
@@ -222,25 +199,19 @@ namespace UangKuAPI.Controllers
                 }
 
                 var query = $@"UPDATE `AppStandardReferenceItem`
-                                SET `ItemName` = '{asri.itemName}',
-                                `Note` = '{asri.note}',
+                                SET `ItemName` = '{asri.ItemName}',
+                                `Note` = '{asri.Note}',
                                 `IsUsedBySystem` = '{use}',
                                 `IsActive` = '{active}',
                                 `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{updatedate}',
+                                `LastUpdateByUserID` = '{asri.LastUpdateByUserID}',
                                 `ItemIcon` = '{asri.ItemIcon}'
-                                WHERE `StandardReferenceID` = '{asri.referenceID}' AND `ItemID` = '{asri.itemID}'";
+                                WHERE `StandardReferenceID` = '{asri.StandardReferenceID}' AND `ItemID` = '{asri.ItemID}'";
 
                 var response = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (response > 0)
-                {
-                    return Ok($"{asri.itemID} Update Successfully");
-                }
-                else
-                {
-                    return NotFound($"{asri.itemID} Not Found");
-                }
+                return response > 0 
+                    ? Ok($"{asri.ItemID} Update Successfully") 
+                    : NotFound($"{asri.ItemID} Not Found");
             }
             catch (Exception e)
             {

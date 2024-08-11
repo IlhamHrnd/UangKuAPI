@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
-using UangKuAPI.Filter;
+using UangKuAPI.BusinessObjects.Filter;
 
 namespace UangKuAPI.Controllers
 {
@@ -18,20 +18,21 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllProvince", Name = "GetAllProvince")]
-        public async Task<ActionResult<Province>> GetAllProvince()
+        public async Task<ActionResult<List<Province>>> GetAllProvince()
         {
             try
             {
-                var query = $@"SELECT p.ProvID, p.ProvName, p.LocationID, p.Status
-                                FROM Provinces AS p
-                                ORDER BY p.ProvID ASC;";
-                var response = await _context.Provinces.FromSqlRaw(query).ToListAsync();
-                if (response == null || response.Count == 0 || !response.Any())
-                {
-                    return NotFound("User Not Found");
-                }
+                var response = await _context.Provinces
+                    .Select(p => new Province
+                    {
+                        ProvID = p.ProvID, ProvName = p.ProvName, LocationID = p.LocationID, Status = p.Status
+                    })
+                    .OrderBy(p => p.ProvID)
+                    .ToListAsync();
 
-                return Ok(response);
+                return response == null || response.Count == 0 || !response.Any()
+                    ? (ActionResult<List<Province>>)NotFound("Province Not Found")
+                    : (ActionResult<List<Province>>)Ok(response);
             }
             catch (Exception e)
             {
@@ -41,7 +42,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllCities", Name = "GetAllCities")]
-        public async Task<ActionResult<Cities>> GetAllCities([FromQuery] CitiesFilter filter)
+        public async Task<ActionResult<List<Cities>>> GetAllCities([FromQuery] LocationFillter filter)
         {
             try
             {
@@ -49,17 +50,19 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest("ProvID Is Required");
                 }
-                var query = $@"SELECT c.CityID, c.CityName, c.ProvID
-                                FROM Cities AS c
-                                WHERE c.ProvID = '{filter.ProvID}'
-                                ORDER BY c.CityID;";
-                var response = await _context.Cities.FromSqlRaw(query).ToListAsync();
-                if (response == null || response.Count == 0 || !response.Any())
-                {
-                    return NotFound("Cities Not Found");
-                }
 
-                return Ok(response);
+                var response = await _context.Cities
+                    .Select(c => new Cities
+                    {
+                        CityID = c.CityID, CityName = c.CityName, ProvID = c.ProvID
+                    })
+                    .Where(c => c.ProvID == filter.ProvID)
+                    .OrderBy(c => c.CityID)
+                    .ToListAsync();
+
+                return response == null || response.Count == 0 || !response.Any()
+                    ? (ActionResult<List<Cities>>)NotFound("Cities Not Found")
+                    : (ActionResult<List<Cities>>)Ok(response);
             }
             catch (Exception e)
             {
@@ -68,7 +71,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllDistrict", Name = "GetAllDistrict")]
-        public async Task<ActionResult<District>> GetAllDistrict([FromQuery] DistrictFilter filter)
+        public async Task<ActionResult<List<District>>> GetAllDistrict([FromQuery] LocationFillter filter)
         {
             try
             {
@@ -76,17 +79,19 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest("CityID Is Required");
                 }
-                var query = $@"SELECT d.DisID, d.DisName, d.CityID
-                                FROM Districts AS d
-                                WHERE d.CityID = '{filter.CityID}'
-                                ORDER BY d.DisID ASC;";
-                var response = await _context.Districts.FromSqlRaw(query).ToListAsync();
-                if (response == null || response.Count == 0 || !response.Any())
-                {
-                    return NotFound("District Not Found");
-                }
 
-                return Ok(response);
+                var response = await _context.Districts
+                    .Select(d => new District
+                    {
+                        DisID = d.DisID, DisName = d.DisName, CityID = d.CityID
+                    })
+                    .Where(d => d.CityID == filter.CityID)
+                    .OrderBy(d => d.DisID)
+                    .ToListAsync();
+
+                return response == null || response.Count == 0 || !response.Any()
+                    ? (ActionResult<List<District>>)NotFound("District Not Found")
+                    : (ActionResult<List<District>>)Ok(response);
             }
             catch (Exception e)
             {
@@ -95,7 +100,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllSubDistrict", Name = "GetAllSubDistrict")]
-        public async Task<ActionResult<Subdistrict>> GetAllSubDistrict([FromQuery] SubDistrictFilter filter)
+        public async Task<ActionResult<List<Subdistrict>>> GetAllSubDistrict([FromQuery] LocationFillter filter)
         {
             try
             {
@@ -103,17 +108,19 @@ namespace UangKuAPI.Controllers
                 {
                     return NotFound("DistrictID Is Required");
                 }
-                var query = $@"SELECT s.SubdisID, s.SubdisName, s.DisID
-                                FROM Subdistricts AS s
-                                WHERE s.DisID = '{filter.DistrictID}'
-                                ORDER BY s.SubdisID ASC;";
-                var response = await _context.Subdistricts.FromSqlRaw(query).ToListAsync();
-                if (response == null || response.Count == 0 || !response.Any())
-                {
-                    return NotFound("Sub District Not Found");
-                }
 
-                return Ok(response);
+                var response = await _context.Subdistricts
+                    .Select(s => new Subdistrict
+                    {
+                        SubdisID = s.SubdisID, SubdisName = s.SubdisName, DisID = s.DisID
+                    })
+                    .Where(s => s.DisID == filter.DistrictID)
+                    .OrderBy(s => s.SubdisID)
+                    .ToListAsync();
+
+                return response == null || response.Count == 0 || !response.Any()
+                   ? (ActionResult<List<Subdistrict>>)NotFound("Subdistrict Not Found")
+                   : (ActionResult<List<Subdistrict>>)Ok(response);
             }
             catch (Exception e)
             {
@@ -122,39 +129,38 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetPostalCode", Name = "GetPostalCode")]
-        public async Task<ActionResult<PostalCodes>> GetPostalCode([FromQuery] PostalCodeFilter filter)
+        public async Task<ActionResult<List<PostalCodes>>> GetPostalCode([FromQuery] LocationFillter filter)
         {
             try
             {
-                if (filter.ProvID == 0)
+                var requiredFields = new Dictionary<int, string>
                 {
-                    return BadRequest("ProvID Is Required");
-                }
-                if (filter.CityID == 0)
+                    { filter.ProvID, "ProvID Is Required" },
+                    { filter.CityID, "CityID Is Required" },
+                    { filter.DisID, "DisID Is Required" },
+                    { filter.SubdisID, "SubdisID Is Required" }
+                };
+
+                foreach (var field in requiredFields)
                 {
-                    return BadRequest("CityID Is Required");
-                }
-                if (filter.DisID == 0)
-                {
-                    return BadRequest("DisID Is Required");
-                }
-                if (filter.SubdisID == 0)
-                {
-                    return BadRequest("SubdisIS Is Required");
-                }
-                var query = $@"SELECT pc.PostalID, pc.SubdisID, pc.DisID, pc.CityID, pc.ProvID, pc.PostalCode
-                                FROM PostalCode AS pc
-                                WHERE pc.ProvID = '{filter.ProvID}' AND pc.CityID = '{filter.CityID}'
-		                            AND pc.SubdisID = '{filter.SubdisID}';";
-                //Filter Untuk District / Kecamatan Di Komen Dulu Karna Data DisID Di Tabel PostalCode Tidak Sesuai Dengan Yang Ada Di Tabel District
-                //AND pc.DisID = '{filter.DisID}'
-                var response = await _context.PostalCodes.FromSqlRaw(query).ToListAsync();
-                if (response == null || response.Count == 0 || !response.Any())
-                {
-                    return NotFound("PostalCode Not Found");
+                    if (field.Key == 0)
+                    {
+                        return BadRequest(field.Value);
+                    }
                 }
 
-                return Ok(response);
+                var response = await _context.PostalCodes
+                    .Select(p => new PostalCodes
+                    {
+                        PostalID = p.ProvID, SubdisID = p.SubdisID, DisID = p.DisID, CityID = p.CityID, 
+                        ProvID = p.ProvID, PostalCode = p.PostalCode
+                    })
+                    .Where(p => p.ProvID == filter.ProvID && p.CityID == filter.CityID && p.SubdisID == filter.SubdisID)
+                    .ToListAsync();
+
+                return response == null || response.Count == 0 || !response.Any()
+                   ? (ActionResult<List<PostalCodes>>)NotFound("PostalCodes Not Found")
+                   : (ActionResult<List<PostalCodes>>)Ok(response);
             }
             catch (Exception e)
             {
