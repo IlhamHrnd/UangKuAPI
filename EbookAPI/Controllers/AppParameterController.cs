@@ -166,20 +166,26 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"ParameterID Is Required");
                 }
 
-                var query = $@"UPDATE `AppParameter`
-                                SET `ParameterName` = '{ap.ParameterName}',
-                                `ParameterValue` = '{ap.ParameterValue}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{ap.LastUpdateByUserID}',
-                                `IsUsedBySystem` = '{use}',
-                                `SRControl` = '{ap.SRControl}'
-                                WHERE `ParameterID` = '{ap.ParameterID}'";
+                var param = await _context.Parameter
+                    .FirstOrDefaultAsync(p => p.ParameterID == ap.ParameterID);
 
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
+                if (param == null)
+                {
+                    return NotFound($"{ap.ParameterID} Not Found");
+                }
 
-                return response > 0 
-                    ? Ok($"{ap.ParameterID} Update Successfully") 
-                    : NotFound($"{ap.ParameterID} Not Found");
+                param.ParameterName = ap.ParameterName;
+                param.ParameterValue = ap.ParameterValue;
+                param.LastUpdateDateTime = DateFormat.DateTimeNow();
+                param.LastUpdateByUserID = ap.LastUpdateByUserID;
+                param.IsUsedBySystem = ap.IsUsedBySystem;
+                param.SRControl = ap.SRControl;
+                _context.Update(param);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{ap.ParameterID} Updated Successfully")
+                    : BadRequest($"Failed To Update Data For ParameterID {ap.ParameterID}");
             }
             catch (Exception e)
             {
