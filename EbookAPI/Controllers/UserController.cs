@@ -1,9 +1,9 @@
-﻿using EbookAPI.Context;
+﻿using UangKuAPI.Context;
 using EbookAPI.Filter;
-using EbookAPI.Model;
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 
 namespace EbookAPI.Controllers

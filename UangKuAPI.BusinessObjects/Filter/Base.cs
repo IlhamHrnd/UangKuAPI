@@ -1,17 +1,17 @@
-﻿namespace UangKuAPI.Filter
+﻿namespace UangKuAPI.BusinessObjects.Filter
 {
-    public class AppParameterFilter
+    public class Base
     {
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
 
-        public AppParameterFilter()
+        public Base()
         {
             PageNumber = 1;
             PageSize = 25;
         }
 
-        public AppParameterFilter(int pageNumber, int pageSize)
+        public Base(int pageNumber, int pageSize)
         {
             PageNumber = pageNumber < 1 ? 1 : pageNumber;
             PageSize = pageSize > 25 ? 25 : pageSize;

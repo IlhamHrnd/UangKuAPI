@@ -1,10 +1,10 @@
-﻿using EbookAPI.Context;
+﻿using UangKuAPI.Context;
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using UangKuAPI.Filter;
+using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
-using UangKuAPI.Model;
+using UangKuAPI.BusinessObjects.Filter;
 
 namespace UangKuAPI.Controllers
 {
@@ -20,13 +20,12 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppParameter", Name = "GetAllAppParameter")]
-        public async Task<ActionResult<List<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
+        public async Task<ActionResult<List<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFillter fillter)
         {
             try
             {
-                var validFilter = new AppParameterFilter(filter.PageNumber, filter.PageSize);
-                var pageNumber = validFilter.PageNumber;
-                var pageSize = validFilter.PageSize;
+                var pageNumber = fillter.PageNumber;
+                var pageSize = fillter.PageSize;
                 var pagedData = await _context.Parameter
                     .Select(p => new AppParameter
                     {
@@ -40,25 +39,28 @@ namespace UangKuAPI.Controllers
                     .Take(pageSize)
                     .ToListAsync();
                 var totalRecord = await _context.Parameter.CountAsync();
-                var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
+                var totalPages = (int)Math.Ceiling((double)totalRecord / fillter.PageSize);
 
-                string? prevPageLink = validFilter.PageNumber > 1
-                    ? Url.Link("GetAllAppParameter", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                string? prevPageLink = fillter.PageNumber > 1
+                    ? Url.Link("GetAllAppParameter", new { PageNumber = fillter.PageNumber - 1, fillter.PageSize })
                     : null;
 
-                string? nextPageLink = validFilter.PageNumber < totalPages
-                    ? Url.Link("GetAllAppParameter", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                string? nextPageLink = fillter.PageNumber < totalPages
+                    ? Url.Link("GetAllAppParameter", new { PageNumber = fillter.PageNumber + 1, fillter.PageSize })
                     : null;
 
-                var response = new PageResponse<List<AppParameter>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
+                var isDataFound = _context.Parameter.Any();
+                var response = new PageResponse<List<AppParameter>>(pagedData, fillter.PageNumber, fillter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
-                    NextPageLink = nextPageLink
+                    NextPageLink = nextPageLink,
+                    Message = isDataFound ? "Data Found" : "Data Not Found",
+                    Succeeded = isDataFound
                 };
 
-                return Ok(response);
+                return isDataFound ? Ok(response) : NotFound(response);
             }
             catch (Exception e)
             {
@@ -74,12 +76,8 @@ namespace UangKuAPI.Controllers
                 var response = await _context.Parameter
                     .Select(p => new AppParameter
                     {
-                        ParameterID = p.ParameterID,
-                        ParameterName = p.ParameterName,
-                        ParameterValue = p.ParameterValue,
-                        LastUpdateDateTime = p.LastUpdateDateTime,
-                        LastUpdateByUserID = p.LastUpdateByUserID,
-                        IsUsedBySystem = p.IsUsedBySystem,
+                        ParameterID = p.ParameterID, ParameterName = p.ParameterName, ParameterValue = p.ParameterValue,
+                        LastUpdateDateTime = p.LastUpdateDateTime, LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem,
                         SRControl = p.SRControl
                     })
                     .OrderBy(p => p.ParameterID)
@@ -106,12 +104,8 @@ namespace UangKuAPI.Controllers
                 var response = await _context.Parameter
                     .Select(p => new AppParameter
                     {
-                        ParameterID = p.ParameterID,
-                        ParameterName = p.ParameterName,
-                        ParameterValue = p.ParameterValue,
-                        LastUpdateDateTime = p.LastUpdateDateTime,
-                        LastUpdateByUserID = p.LastUpdateByUserID,
-                        IsUsedBySystem = p.IsUsedBySystem,
+                        ParameterID = p.ParameterID, ParameterName = p.ParameterName, ParameterValue = p.ParameterValue,
+                        LastUpdateDateTime = p.LastUpdateDateTime, LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem,
                         SRControl = p.SRControl
                     })
                     .Where(p => p.ParameterID == parameterID)
@@ -139,25 +133,19 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"AppParameter Is Required");
                 }
-
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                int use = ap.IsUsedBySystem == true ? 1 : 0;
-
-                var query = $@"INSERT INTO `AppParameter`(`ParameterID`, `ParameterName`, `ParameterValue`, 
-                            `LastUpdateDateTime`, `LastUpdateByUserID`, `IsUsedBySystem`, `SRControl`) 
-                            VALUES ('{ap.ParameterID}','{ap.ParameterName}','{ap.ParameterValue}',
-                            '{date}','{ap.LastUpdateByUserID}','{use}','{ap.SRControl}')";
-
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (rowsAffected > 0)
+                
+                var param = new AppParameter
                 {
-                    return Ok($"Parameter {ap.ParameterID} Created Successfully");
-                }
-                else
-                {
-                    return BadRequest($"Failed To Insert Data For ParameterID {ap.ParameterID}");
-                }
+                    ParameterID = ap.ParameterID, ParameterName = ap.ParameterName, ParameterValue = ap.ParameterValue,
+                    LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserID = ap.LastUpdateByUserID, IsUsedBySystem = ap.IsUsedBySystem,
+                    SRControl = ap.SRControl
+                };
+                _context.Parameter.Add(param);
+                int rowsAffected = await _context.SaveChangesAsync();
+
+                return rowsAffected > 0
+                    ? Ok($"Parameter {ap.ParameterID} Created Successfully")
+                    : BadRequest($"Failed To Insert Data For ParameterID {ap.ParameterID}");
             }
             catch (Exception e)
             {
@@ -170,33 +158,30 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                int use = ap.IsUsedBySystem == true ? 1 : 0;
-
                 if (string.IsNullOrEmpty(ap.ParameterID))
                 {
                     return BadRequest($"ParameterID Is Required");
                 }
 
-                var query = $@"UPDATE `AppParameter`
-                                SET `ParameterName` = '{ap.ParameterName}',
-                                `ParameterValue` = '{ap.ParameterValue}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{ap.LastUpdateByUserID}',
-                                `IsUsedBySystem` = '{use}',
-                                `SRControl` = '{ap.SRControl}'
-                                WHERE `ParameterID` = '{ap.ParameterID}'";
+                var param = await _context.Parameter
+                    .FirstOrDefaultAsync(p => p.ParameterID == ap.ParameterID);
 
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (response > 0)
-                {
-                    return Ok($"{ap.ParameterID} Update Successfully");
-                }
-                else
+                if (param == null)
                 {
                     return NotFound($"{ap.ParameterID} Not Found");
                 }
+
+                param.ParameterName = ap.ParameterName;
+                param.ParameterValue = ap.ParameterValue;
+                param.LastUpdateDateTime = DateFormat.DateTimeNow();
+                param.LastUpdateByUserID = ap.LastUpdateByUserID;
+                param.IsUsedBySystem = ap.IsUsedBySystem;
+                param.SRControl = ap.SRControl;
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{ap.ParameterID} Updated Successfully")
+                    : BadRequest($"Failed To Update Data For ParameterID {ap.ParameterID}");
             }
             catch (Exception e)
             {

@@ -1,10 +1,9 @@
-﻿using EbookAPI.Model;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
-using UangKuAPI.Model;
+using UangKuAPI.BusinessObjects.Model;
 
-namespace EbookAPI.Context
+namespace UangKuAPI.Context
 {
     public class AppDbContext : DbContext
     {

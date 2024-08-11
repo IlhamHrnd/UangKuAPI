@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UangKuAPI.Model
+namespace UangKuAPI.BusinessObjects.Model
 {
     public class District
     {

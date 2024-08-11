@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EbookAPI.Model
+namespace UangKuAPI.BusinessObjects.Model
 {
     public class User
     {

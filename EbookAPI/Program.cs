@@ -1,4 +1,4 @@
-using EbookAPI.Context;
+using UangKuAPI.Context;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
