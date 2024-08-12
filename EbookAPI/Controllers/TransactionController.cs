@@ -6,10 +6,8 @@ using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
-using static UangKuAPI.BusinessObjects.Helper.Converter;
 using UangKuAPI.BusinessObjects.Filter;
 using System.Linq.Expressions;
-using System;
 
 namespace UangKuAPI.Controllers
 {

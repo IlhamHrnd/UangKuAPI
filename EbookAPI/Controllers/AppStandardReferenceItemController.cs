@@ -5,7 +5,6 @@ using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
-using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using static UangKuAPI.BusinessObjects.Helper.Converter;
 
 namespace UangKuAPI.Controllers
@@ -69,8 +68,6 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-
                 if (string.IsNullOrEmpty(asri.StandardReferenceID) || string.IsNullOrEmpty(asri.ItemID))
                 {
                     return BadRequest("ReferenceID And ItemID Is Required");
@@ -90,45 +87,25 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"The Icon You Uploaded Exceeds The Maximum Size Limit");
                 }
 
-                int use;
-                switch (asri.IsUsedBySystem)
+                //Cek ReferenceID Dan ItemID Sudah Ada
+                var refer = await _context.AppStandardReferenceItems
+                    .Where(sr => sr.StandardReferenceID == asri.StandardReferenceID && sr.ItemID == asri.ItemID)
+                    .ToListAsync();
+
+                if (refer.Any())
                 {
-                    case null:
-                        use = 0;
-                        break;
-
-                    case true:
-                        use = 1;
-                        break;
-
-                    default:
-                        use = 0;
-                        break;
-
+                    return BadRequest($"{asri.StandardReferenceID}-{asri.ItemID} Already Exist");
                 }
 
-                int active;
-                switch (asri.IsActive)
+                var asr = new AppStandardReferenceItem
                 {
-                    case null:
-                        active = 0;
-                        break;
+                    StandardReferenceID = asri.StandardReferenceID, ItemID = asri.ItemID, ItemName = asri.ItemName, Note = asri.Note,
+                    IsUsedBySystem = asri.IsUsedBySystem, IsActive = asri.IsActive, LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserID = asri.LastUpdateByUserID,
+                    ItemIcon = StringToByte(asri.ItemIcon)
+                };
+                _context.Add(asr);
 
-                    case true:
-                        active = 1;
-                        break;
-
-                    default:
-                        active = 0;
-                        break;
-                }
-
-                var query = $@"INSERT INTO `AppStandardReferenceItem`(`StandardReferenceID`, `ItemID`, `ItemName`, `Note`, `IsUsedBySystem`,
-                                `IsActive`, `LastUpdateDateTime`, `LastUpdateByUserID`, `ItemIcon`)
-                                VALUES ('{asri.StandardReferenceID}','{asri.ItemID}','{asri.ItemName}','{asri.Note}','{use}','{active}',
-                                '{date}','{asri.LastUpdateByUserID}', '{asri.ItemIcon}')";
-
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
+                int rowsAffected = await _context.SaveChangesAsync();
                 return rowsAffected > 0
                     ? Ok($"Standard ReferenceID {asri.StandardReferenceID} Created Successfully")
                     : BadRequest($"Failed To Insert Data For Standard ReferenceID {asri.StandardReferenceID}");
@@ -146,8 +123,6 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-
                 if (string.IsNullOrEmpty(asri.StandardReferenceID) || string.IsNullOrEmpty(asri.ItemName))
                 {
                     return BadRequest("ReferenceID And ItemID Is Required");
@@ -167,54 +142,28 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"The Icon You Uploaded Exceeds The Maximum Size Limit");
                 }
 
-                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
+                //Cek ReferenceID Dan ItemID Sudah Ada
+                var refer = await _context.AppStandardReferenceItems
+                    .FirstOrDefaultAsync(sr => sr.StandardReferenceID == asri.StandardReferenceID && sr.ItemID == asri.ItemID);
 
-                int use;
-                switch (asri.IsUsedBySystem)
+                if (refer == null)
                 {
-                    case null:
-                        use = 0;
-                        break;
-
-                    case true:
-                        use = 1;
-                        break;
-
-                    default:
-                        use = 0;
-                        break;
+                    return BadRequest($"{asri.StandardReferenceID}-{asri.ItemID} Not Found");
                 }
 
-                int active;
-                switch (asri.IsActive)
-                {
-                    case null:
-                        active = 0;
-                        break;
+                refer.ItemName = asri.ItemName;
+                refer.Note = asri.Note;
+                refer.IsUsedBySystem = asri.IsUsedBySystem;
+                refer.IsActive = asri.IsActive;
+                refer.LastUpdateDateTime = DateFormat.DateTimeNow();
+                refer.LastUpdateByUserID = asri.LastUpdateByUserID;
+                refer.ItemIcon = StringToByte(asri.ItemIcon);
+                _context.Update(refer);
 
-                    case true:
-                        active = 1;
-                        break;
-
-                    default:
-                        active = 0;
-                        break;
-                }
-
-                var query = $@"UPDATE `AppStandardReferenceItem`
-                                SET `ItemName` = '{asri.ItemName}',
-                                `Note` = '{asri.Note}',
-                                `IsUsedBySystem` = '{use}',
-                                `IsActive` = '{active}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{asri.LastUpdateByUserID}',
-                                `ItemIcon` = '{asri.ItemIcon}'
-                                WHERE `StandardReferenceID` = '{asri.StandardReferenceID}' AND `ItemID` = '{asri.ItemID}'";
-
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-                return response > 0 
-                    ? Ok($"{asri.ItemID} Update Successfully") 
-                    : NotFound($"{asri.ItemID} Not Found");
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{asri.StandardReferenceID} Updated Successfully")
+                    : BadRequest($"Failed To Update Data For ReferenceID {asri.StandardReferenceID}");
             }
             catch (Exception e)
             {

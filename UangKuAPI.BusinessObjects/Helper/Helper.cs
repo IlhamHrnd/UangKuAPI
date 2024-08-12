@@ -1,4 +1,6 @@
-﻿namespace UangKuAPI.BusinessObjects.Helper
+﻿using System.Text;
+
+namespace UangKuAPI.BusinessObjects.Helper
 {
     public class Helper
     {
@@ -99,6 +101,14 @@
                 }
             }
 
+            return result;
+        }
+
+        public static byte[]? StringToByte(string? value)
+        {
+            var result = string.IsNullOrEmpty(value) 
+                ? null 
+                : Encoding.UTF8.GetBytes(value);
             return result;
         }
     }

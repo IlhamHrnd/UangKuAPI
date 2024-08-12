@@ -6,6 +6,7 @@ using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using static UangKuAPI.BusinessObjects.Helper.Converter;
 
 namespace UangKuAPI.Controllers
 {
@@ -90,25 +91,17 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"{profile.PersonID} Already Exist");
                 }
 
-                profile.FirstName = EncryptorNullChecker.EncryptIfNotNull(profile.FirstName);
-                profile.MiddleName = EncryptorNullChecker.EncryptIfNotNull(profile.MiddleName);
-                profile.LastName = EncryptorNullChecker.EncryptIfNotNull(profile.LastName);
-                profile.PlaceOfBirth = EncryptorNullChecker.EncryptIfNotNull(profile.PlaceOfBirth);
-                profile.Address = EncryptorNullChecker.EncryptIfNotNull(profile.Address);
-                profile.Province = EncryptorNullChecker.EncryptIfNotNull(profile.Province);
-                profile.City = EncryptorNullChecker.EncryptIfNotNull(profile.City);
-                profile.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
-                profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
-                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-                string date = DateFormat.DateTimeNow(Longyearpattern, (DateTime)profile.BirthDate);
+                var prof = new Profile
+                {
+                    PersonID = profile.PersonID, FirstName = EncryptorNullChecker.EncryptIfNotNull(profile.FirstName), MiddleName = EncryptorNullChecker.EncryptIfNotNull(profile.MiddleName),
+                    LastName = EncryptorNullChecker.EncryptIfNotNull(profile.LastName), BirthDate = profile.BirthDate, PlaceOfBirth = EncryptorNullChecker.EncryptIfNotNull(profile.PlaceOfBirth),
+                    Photo = StringToByte(profile.Photo), Address = EncryptorNullChecker.EncryptIfNotNull(profile.Address), Province = EncryptorNullChecker.EncryptIfNotNull(profile.Province),
+                    City = EncryptorNullChecker.EncryptIfNotNull(profile.City), Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict), District = EncryptorNullChecker.EncryptIfNotNull(profile.District),
+                    PostalCode = profile.PostalCode, LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUser = profile.LastUpdateByUser
+                };
+                _context.Add(prof);
 
-                var query = $@"INSERT INTO `Profile`(`PersonID`, `FirstName`, `MiddleName`, `LastName`, `BirthDate`, `PlaceOfBirth`, 
-                                `Photo`, `Address`, `Province`, `City`, `Subdistrict`, `District`, `PostalCode`, `LastUpdateDateTime`, `LastUpdateByUser`)
-                                VALUES('{profile.PersonID}', '{profile.FirstName}', '{profile.MiddleName}', '{profile.LastName}', '{date}', 
-                                '{profile.PlaceOfBirth}', '{profile.Photo}', '{profile.Address}', '{profile.Province}', 
-                                '{profile.City}', '{profile.Subdistrict}', '{profile.District}', '{profile.PostalCode}', '{updatedate}', '{profile.LastUpdateByUser}');";
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
-
+                int rowsAffected = await _context.SaveChangesAsync();
                 return rowsAffected > 0
                     ? Ok($"Person ID {profile.PersonID} Created Successfully")
                     : BadRequest($"Failed To Insert Data For Person ID {profile.PersonID}");
@@ -130,37 +123,32 @@ namespace UangKuAPI.Controllers
                 }
 
                 var person = await _context.Profile
-                    .Where(p => p.PersonID == profile.PersonID)
-                    .ToListAsync();
+                    .FirstOrDefaultAsync(p => p.PersonID == profile.PersonID);
 
-                if (!person.Any())
+                if (person == null)
                 {
                     return BadRequest($"{profile.PersonID} Not Found");
                 }
 
-                profile.FirstName = EncryptorNullChecker.EncryptIfNotNull(profile.FirstName);
-                profile.MiddleName = EncryptorNullChecker.EncryptIfNotNull(profile.MiddleName);
-                profile.LastName = EncryptorNullChecker.EncryptIfNotNull(profile.LastName);
-                profile.PlaceOfBirth = EncryptorNullChecker.EncryptIfNotNull(profile.PlaceOfBirth);
-                profile.Address = EncryptorNullChecker.EncryptIfNotNull(profile.Address);
-                profile.Province = EncryptorNullChecker.EncryptIfNotNull(profile.Province);
-                profile.City = EncryptorNullChecker.EncryptIfNotNull(profile.City);
-                profile.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
-                profile.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
-                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
-                string date = DateFormat.DateTimeNow(Longyearpattern, (DateTime)profile.BirthDate);
+                person.FirstName = EncryptorNullChecker.EncryptIfNotNull(profile.FirstName);
+                person.MiddleName = EncryptorNullChecker.EncryptIfNotNull(profile.MiddleName);
+                person.LastName = EncryptorNullChecker.EncryptIfNotNull(profile.LastName);
+                person.BirthDate = profile.BirthDate;
+                person.PlaceOfBirth = EncryptorNullChecker.EncryptIfNotNull(profile.PlaceOfBirth);
+                person.Photo = StringToByte(profile.Photo);
+                person.Address = EncryptorNullChecker.EncryptIfNotNull(profile.Address);
+                person.Province = EncryptorNullChecker.EncryptIfNotNull(profile.Province);
+                person.City = EncryptorNullChecker.EncryptIfNotNull(profile.City);
+                person.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
+                person.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
+                person.PostalCode = profile.PostalCode;
+                person.LastUpdateDateTime = DateFormat.DateTimeNow();
+                person.LastUpdateByUser = profile.LastUpdateByUser;
+                _context.Update(person);
 
-                var query = $@"UPDATE `Profile` SET `FirstName` = '{profile.FirstName}', `MiddleName` = '{profile.MiddleName}',
-                                `LastName` = '{profile.LastName}', `BirthDate` = '{date}', `PlaceOfBirth` = '{profile.PlaceOfBirth}',
-                                `Photo` = '{profile.Photo}', `Address` = '{profile.Address}', `Province` = '{profile.Province}',
-                                `City` = '{profile.City}', `Subdistrict` = '{profile.Subdistrict}', `District` = '{profile.District}',
-                                `PostalCode` = '{profile.PostalCode}', `LastUpdateDateTime` = '{updatedate}', `LastUpdateByUser` = '{profile.LastUpdateByUser}'
-                                WHERE `PersonID` = '{profile.PersonID}';";
-
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-
-                return response > 0 
-                    ? Ok($"{profile.PersonID} Update Successfully") 
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{profile.PersonID} Update Successfully")
                     : NotFound($"{profile.PersonID} Not Found");
             }
             catch (Exception e)

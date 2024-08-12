@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
-using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 
 namespace UangKuAPI.Controllers
 {
@@ -127,8 +126,8 @@ namespace UangKuAPI.Controllers
                 int rowsAffected = await _context.SaveChangesAsync();
 
                 return rowsAffected > 0
-                    ? Ok($"Parameter {asr.StandardReferenceID} Created Successfully")
-                    : BadRequest($"Failed To Insert Data For ParameterID {asr.StandardReferenceID}");
+                    ? Ok($"Standard Reference {asr.StandardReferenceID} Created Successfully")
+                    : BadRequest($"Failed To Insert Data For ReferenceID {asr.StandardReferenceID}");
             }
             catch (Exception e)
             {
