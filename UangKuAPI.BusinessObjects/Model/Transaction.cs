@@ -16,6 +16,9 @@ namespace UangKuAPI.BusinessObjects.Model
         public string? PersonID { get; set; }
         public DateTime? TransDate { get; set; }
         public DateTime? CreatedDateTime { get; set; }
+        public string? CreatedByUserID { get; set; }
+        public DateTime? LastUpdateDateTime { get; set; }
+        public string? LastUpdateByUserID { get; set; }
     }
 
     public class Transaction2

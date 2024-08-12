@@ -6,6 +6,7 @@ using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using static UangKuAPI.BusinessObjects.Helper.Converter;
 using UangKuAPI.BusinessObjects.Filter;
 using System.Linq.Expressions;
 
@@ -31,19 +32,27 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction Are Required");
                 }
-                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
-                string createdate = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
-                string transdate = DateFormat.DateTimeIsNull(transaction.TransDate);
 
-                var query = $@"INSERT INTO `Transaction`(`TransNo`, `SRTransaction`, `SRTransItem`, `Amount`, `Description`, 
-                                `Photo`, `CreatedDateTime`, `CreatedByUserID`, `LastUpdateDateTime`, `LastUpdateByUserID`, 
-                                `TransType`, `TransDate`, `PersonID`) 
-                                VALUES('{transaction.TransNo}', '{transaction.SRTransaction}', '{transaction.SRTransItem}',
-                                '{transaction.Amount}', '{transaction.Description}', '{transaction.Photo}', '{createdate}',
-                                '{transaction.CreatedByUserID}', '{updatedate}', '{transaction.LastUpdateByUserID}', '{transaction.TransType}', 
-                                '{transdate}', '{transaction.PersonID}');";
+                var trans = await _context.Transaction
+                    .Where(t => t.TransNo == transaction.TransNo)
+                    .ToListAsync();
 
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
+                if (trans.Any())
+                {
+                    return BadRequest($"{transaction.TransNo} Already Exist");
+                }
+
+                var tr = new Transaction
+                {
+                    TransNo = transaction.TransNo, SRTransaction = transaction.SRTransaction, SRTransItem = transaction.SRTransItem,
+                    Amount = transaction.Amount, Description = transaction.Description, Photo = StringToByte(transaction.Photo),
+                    CreatedDateTime = DateFormat.DateTimeNow(), CreatedByUserID = transaction.CreatedByUserID, LastUpdateDateTime = DateFormat.DateTimeNow(),
+                    LastUpdateByUserID = transaction.LastUpdateByUserID, TransType = transaction.TransType, TransDate = transaction.TransDate,
+                    PersonID = transaction.PersonID
+                };
+                _context.Add(tr);
+
+                int rowsAffected = await _context.SaveChangesAsync();
                 return rowsAffected > 0
                     ? Ok($"Transaction No {transaction.TransNo} Created Successfully")
                     : BadRequest($"Failed To Insert Data For Transaction No {transaction.TransNo}");
@@ -64,24 +73,28 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Transaction Are Required");
                 }
 
-                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
-                string transdate = DateFormat.DateTimeIsNull(transaction.TransDate);
+                var trans = await _context.Transaction
+                    .FirstOrDefaultAsync(t => t.TransNo == transaction.TransNo);
 
-                var query = $@"UPDATE `Transaction`
-                                SET `SRTransaction` = '{transaction.SRTransaction}',
-                                `SRTransItem` = '{transaction.SRTransItem}',
-                                `Amount` = '{transaction.Amount}',
-                                `Description` = '{transaction.Description}',
-                                `Photo` = '{transaction.Photo}',   
-                                `LastUpdateDateTime` = '{updatedate}',
-                                `LastUpdateByUserID` = '{transaction.LastUpdateByUserID}',
-                                `TransType` = '{transaction.TransType}',
-                                `TransDate` = '{transdate}'
-                                WHERE `TransNo` = '{transaction.TransNo}';";
+                if (trans == null)
+                {
+                    return BadRequest($"{transaction.TransNo} Not Found");
+                }
 
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-                return response > 0 
-                    ? Ok($"{transaction.TransNo} Update Successfully") 
+                trans.SRTransaction = transaction.SRTransaction;
+                trans.SRTransItem = transaction.SRTransItem;
+                trans.Amount = transaction.Amount;
+                trans.Description = transaction.Description;
+                trans.Photo = StringToByte(transaction.Photo);
+                trans.LastUpdateDateTime = DateFormat.DateTimeNow();
+                trans.LastUpdateByUserID = transaction.LastUpdateByUserID;
+                trans.TransType = transaction.TransType;
+                trans.TransDate = transaction.TransDate;
+                _context.Update(trans);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{transaction.TransNo} Update Successfully")
                     : NotFound($"{transaction.TransNo} Not Found");
             }
             catch (Exception e)
@@ -136,20 +149,29 @@ namespace UangKuAPI.Controllers
                 var pageNumber = filter.PageNumber;
                 var pageSize = filter.PageSize;
 
+                var tr = await _context.Transaction
+                    .Where(t => t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate)
+                    .ToListAsync();
+
+                if (!tr.Any())
+                {
+                    return NotFound($"Transaction {filter.PersonID} From {DateFormat.DateTimeNow(Dateshortmonth, startDate)} Until {DateFormat.DateTimeNow(Dateshortmonth, endDate)} Not Found");
+                }
+
                 var query = (from t in _context.Transaction
-                                   join trans in _context.AppStandardReferenceItems
-                                      on new { StandardReferenceID = "Transaction", ItemID = t.SRTransaction }
-                                      equals new { trans.StandardReferenceID, trans.ItemID }
-                                    join item in _context.AppStandardReferenceItems
-                                        on new { ItemID = t.SRTransItem}
-                                        equals new { item.ItemID }
-                                    where t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate
-                                   select new Transaction
-                                   {
+                             join trans in _context.AppStandardReferenceItems
+                                on new { StandardReferenceID = "Transaction", ItemID = t.SRTransaction }
+                                equals new { trans.StandardReferenceID, trans.ItemID }
+                             join item in _context.AppStandardReferenceItems
+                                 on new { ItemID = t.SRTransItem}
+                                 equals new { item.ItemID }
+                             where t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate
+                             select new Transaction
+                             {
                                         TransNo = t.TransNo, Amount = t.Amount, Description = t.Description, Photo = t.Photo,
                                         TransType = t.TransType, PersonID = t.PersonID, TransDate = t.TransDate,
                                         SRTransaction = trans.ItemName, SRTransItem = item.ItemName
-                                   })
+                             })
                                    .Skip((pageNumber - 1) * pageSize)
                                    .Take(pageSize);
 
