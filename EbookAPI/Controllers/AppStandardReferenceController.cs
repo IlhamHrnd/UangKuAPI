@@ -141,30 +141,31 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateFormat.DateTimeNow());
-
                 if (string.IsNullOrEmpty(reference.StandardReferenceID))
                 {
                     return BadRequest("ReferenceID Is Required");
                 }
 
-                int use = reference.IsUsedBySystem ? 1 : 0;
-                int active = reference.IsActive ? 1 : 0;
+                var refer = await _context.AppStandardReferences
+                    .FirstOrDefaultAsync(asr => asr.StandardReferenceID == reference.StandardReferenceID);
 
-                var query = $@"UPDATE `AppStandardReference`
-                                SET `ItemLength` = '{reference.ItemLength}',
-                                `IsUsedBySystem` = '{use}',
-                                `IsActive` = '{active}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{reference.LastUpdateByUserID}',
-                                `Note` = '{reference.Note}'
-                                WHERE `StandardReferenceID` = '{reference.StandardReferenceID}';";
+                if (refer == null)
+                {
+                    return BadRequest($"{reference.StandardReferenceID} Not Found");
+                }
 
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
+                refer.ItemLength = reference.ItemLength;
+                refer.IsUsedBySystem = reference.IsUsedBySystem;
+                refer.IsActive = reference.IsActive;
+                refer.LastUpdateDateTime = DateFormat.DateTimeNow();
+                refer.LastUpdateByUserID = reference.LastUpdateByUserID;
+                refer.Note = reference.Note;
+                _context.Update(refer);
 
-                return response > 0
-                    ? Ok($"{reference.StandardReferenceID} Update Successfully")
-                    : NotFound($"{reference.StandardReferenceID} Not Found");
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{reference.StandardReferenceID} Updated Successfully")
+                    : BadRequest($"Failed To Update Data For ReferenceID {reference.StandardReferenceID}");
             }
             catch (Exception e)
             {
@@ -182,11 +183,19 @@ namespace UangKuAPI.Controllers
                     return BadRequest("ReferenceID Is Required");
                 }
 
-                var query = $@"DELETE FROM `AppStandardReference`
-                                WHERE `StandardReferenceID` = '{filter.ReferenceID}';";
+                var refer = await _context.AppStandardReferences
+                    .FirstOrDefaultAsync(asr => asr.StandardReferenceID == filter.ReferenceID);
 
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-                return response > 0 ? Ok($"{filter.ReferenceID} Delete Successfully") : NotFound($"{filter.ReferenceID} Not Found");
+                if (refer == null)
+                {
+                    return BadRequest($"{filter.ReferenceID} Not Found");
+                }
+                _context.Remove(refer);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{filter.ReferenceID} Delete Successfully")
+                    : BadRequest($"Failed To Delete Data For ReferenceID {filter.ReferenceID}");
             }
             catch (Exception e)
             {
