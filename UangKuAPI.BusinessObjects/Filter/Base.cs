@@ -17,4 +17,11 @@
             PageSize = pageSize > 25 ? 25 : pageSize;
         }
     }
+
+    public class Parameter
+    {
+        public string? Key01 { get; set; }
+        public string? Key02 { get; set; }
+        public string? Key03 { get; set; }
+    }
 }

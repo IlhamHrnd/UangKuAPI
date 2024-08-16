@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using Microsoft.Extensions.Configuration;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace UangKuAPI.BusinessObjects.Helper
 {
@@ -110,6 +112,175 @@ namespace UangKuAPI.BusinessObjects.Helper
                 ? null 
                 : Encoding.UTF8.GetBytes(value);
             return result;
+        }
+    }
+
+    public class SecureAES
+    {
+        public static byte[] AES_Encrypt(byte[] bytesToBeEncrypted, byte[] passwordBytes)
+        {
+            byte[] encryptedBytes = null;
+
+            byte[] saltBytes = new byte[] { 2, 1, 7, 3, 6, 4, 8, 5 };
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (RijndaelManaged AES = new RijndaelManaged())
+                {
+                    AES.KeySize = 256;
+                    AES.BlockSize = 128;
+
+                    var key = new Rfc2898DeriveBytes(passwordBytes, saltBytes, 1000);
+                    AES.Key = key.GetBytes(AES.KeySize / 8);
+                    AES.IV = key.GetBytes(AES.BlockSize / 8);
+
+                    AES.Mode = CipherMode.CBC;
+
+                    using (var cs = new CryptoStream(ms, AES.CreateEncryptor(), CryptoStreamMode.Write))
+                    {
+                        cs.Write(bytesToBeEncrypted, 0, bytesToBeEncrypted.Length);
+                        cs.Close();
+                    }
+                    encryptedBytes = ms.ToArray();
+                }
+            }
+
+            return encryptedBytes;
+        }
+
+        public static byte[] AES_Decrypt(byte[] bytesToBeDecrypted, byte[] passwordBytes)
+        {
+            byte[] decryptedBytes = null;
+
+            byte[] saltBytes = new byte[] { 2, 1, 7, 3, 6, 4, 8, 5 };
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (RijndaelManaged AES = new RijndaelManaged())
+                {
+                    AES.KeySize = 256;
+                    AES.BlockSize = 128;
+
+                    var key = new Rfc2898DeriveBytes(passwordBytes, saltBytes, 1000);
+                    AES.Key = key.GetBytes(AES.KeySize / 8);
+                    AES.IV = key.GetBytes(AES.BlockSize / 8);
+
+                    AES.Mode = CipherMode.CBC;
+
+                    using (var cs = new CryptoStream(ms, AES.CreateDecryptor(), CryptoStreamMode.Write))
+                    {
+                        cs.Write(bytesToBeDecrypted, 0, bytesToBeDecrypted.Length);
+                        cs.Close();
+                    }
+                    decryptedBytes = ms.ToArray();
+                }
+            }
+
+            return decryptedBytes;
+        }
+
+        //Untuk Men Enkripsi Data
+        public static string DataEncrypt(string enkripsi)
+        {
+            byte[] dataToBeEncrypted = Encoding.UTF8.GetBytes(enkripsi);
+            byte[] dataBytes = Encoding.UTF8.GetBytes("Provinsi.ID");
+
+            dataBytes = SHA256.Create().ComputeHash(dataBytes);
+
+            byte[] bytesEncrypted = AES_Encrypt(dataToBeEncrypted, dataBytes);
+
+            return Convert.ToBase64String(bytesEncrypted);
+        }
+
+        //Untuk Men Dekripsi Data
+        public static string DataDecrypt(string dekripsi)
+        {
+            byte[] dataToBeDecrypted = Convert.FromBase64String(dekripsi);
+            byte[] dataBytesdecrypt = Encoding.UTF8.GetBytes("Provinsi.ID");
+            dataBytesdecrypt = SHA256.Create().ComputeHash(dataBytesdecrypt);
+
+            byte[] bytesDecrypted = AES_Decrypt(dataToBeDecrypted, dataBytesdecrypt);
+
+            return Encoding.UTF8.GetString(bytesDecrypted);
+        }
+
+        //Untuk Pengecekan Data Encrypt Null Atau Tidak
+        public static string EncryptIfNotNull(string? value)
+        {
+            if (value != null)
+            {
+                return DataEncrypt(value);
+            }
+            return value;
+        }
+
+        //Untuk Pengecekan Data Decrypt Null Atau Tidak
+        public static string DecryptIfNotNull(string? value)
+        {
+            if (value != null)
+            {
+                return DataDecrypt(value);
+            }
+            return value;
+        }
+    }
+
+    public class SecureCrypto
+    {
+        public static string Crypto_Encrypt(string data, string key1, string key2)
+        {
+            var ms = new MemoryStream();
+
+            var objKey = new DESCryptoServiceProvider { Key = objLockKey(key1), IV = objLockKey(key2) };
+
+            var encStream = new CryptoStream(ms,
+            objKey.CreateEncryptor(), CryptoStreamMode.Write);
+            var sw = new StreamWriter(encStream);
+            sw.WriteLine(data);
+            sw.Close();
+            encStream.Close();
+
+            var bytData = ms.ToArray();
+            var strReturnData = bytData.Aggregate("", (current, bytChar) => current + bytChar.ToString().PadLeft(3, Convert.ToChar("0")));
+
+            ms.Close();
+
+            return strReturnData;
+        }
+
+        public static string Crypto_Decrypt(string data, string key1, string key2)
+        {
+            var bytData = new byte[data.Length / 3];
+            for (int i = 0; i < data.Length; i += 3)
+            {
+                bytData[i / 3] = byte.Parse(data.Substring(i, 3));
+            }
+
+            var ms = new MemoryStream(bytData);
+            var objKey = new DESCryptoServiceProvider { Key = objLockKey(key1), IV = objLockKey(key2) };
+            var encStream = new CryptoStream(ms, objKey.CreateDecryptor(), CryptoStreamMode.Read);
+            var sr = new StreamReader(encStream);
+
+            var strReturnData = sr.ReadLine();
+
+            sr.Close();
+            encStream.Close();
+            ms.Close();
+
+            return strReturnData;
+        }
+
+        private static byte[] objLockKey(string strPassword)
+        {
+            const int intKeyLength = 8;
+            strPassword = strPassword.PadRight(intKeyLength,
+            Convert.ToChar(".")).Substring(0, intKeyLength);
+            var objKey = new byte[strPassword.Length];
+            for (var intCount = 0; intCount < strPassword.Length; intCount++)
+            {
+                objKey[intCount] = Convert.ToByte(Convert.ToChar(strPassword.Substring(intCount, 1)));
+            }
+            return objKey;
         }
     }
 }
