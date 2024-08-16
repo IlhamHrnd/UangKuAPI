@@ -1,14 +1,14 @@
 ﻿namespace UangKuAPI.BusinessObjects.Filter
 {
-    public class AppParameterFillter : Base
+    public class AppParameterFilter : Base
     {
         public string? ParameterID { get; set; }
-        public AppParameterFillter() : base()
+        public AppParameterFilter() : base()
         {
             ParameterID = string.Empty;
         }
 
-        public AppParameterFillter(int pageNumber, int pageSize, string parameterID) : base(pageNumber, pageSize)
+        public AppParameterFilter(int pageNumber, int pageSize, string parameterID) : base(pageNumber, pageSize)
         {
             ParameterID = !string.IsNullOrEmpty(parameterID) ? parameterID : string.Empty;
         }

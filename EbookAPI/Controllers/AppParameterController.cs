@@ -21,7 +21,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppParameter", Name = "GetAllAppParameter")]
-        public async Task<ActionResult<List<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFillter filter)
+        public async Task<ActionResult<List<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
         {
             try
             {
@@ -95,7 +95,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetParameterID", Name = "GetParameterID")]
-        public async Task<ActionResult<AppParameter>> GetParameterID([FromQuery] AppParameterFillter filter)
+        public async Task<ActionResult<AppParameter>> GetParameterID([FromQuery] AppParameterFilter filter)
         {
             try
             {

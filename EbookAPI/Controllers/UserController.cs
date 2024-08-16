@@ -1,11 +1,11 @@
 ﻿using UangKuAPI.Context;
-using EbookAPI.Filter;
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using UangKuAPI.BusinessObjects.Filter;
 
 namespace EbookAPI.Controllers
 {
@@ -25,9 +25,8 @@ namespace EbookAPI.Controllers
         {
             try
             {
-                var validFilter = new UserFilter(filter.PageNumber, filter.PageSize);
-                var pageNumber = validFilter.PageNumber;
-                var pageSize = validFilter.PageSize;
+                var pageNumber = filter.PageNumber;
+                var pageSize = filter.PageSize;
                 var query = $@"SELECT u.Username, u.ActiveDate,
                                                 u.LastLogin, u.LastUpdateDateTime, u.LastUpdateByUser, u.PersonID,
                                                 asri.ItemName AS 'SexName',
@@ -48,17 +47,17 @@ namespace EbookAPI.Controllers
                                                 FETCH NEXT {pageSize} ROWS ONLY;";
                 var pagedData = await _context.Users.FromSqlRaw(query).ToListAsync();
                 var totalRecord = await _context.Users.CountAsync();
-                var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
+                var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
 
-                string? prevPageLink = validFilter.PageNumber > 1
-                    ? Url.Link("GetAllUser", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                string? prevPageLink = filter.PageNumber > 1
+                    ? Url.Link("GetAllUser", new { PageNumber = filter.PageNumber - 1, filter.PageSize })
                     : null;
 
-                string? nextPageLink = validFilter.PageNumber < totalPages
-                    ? Url.Link("GetAllUser", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                string? nextPageLink = filter.PageNumber < totalPages
+                    ? Url.Link("GetAllUser", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var response = new PageResponse<List<User>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
+                var response = new PageResponse<List<User>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
@@ -76,7 +75,7 @@ namespace EbookAPI.Controllers
         }
 
         [HttpGet("GetLoginUserName", Name = "GetLoginUserName")]
-        public async Task<ActionResult<User>> GetLoginUserName([FromQuery] UserNameFilter filter)
+        public async Task<ActionResult<User>> GetLoginUserName([FromQuery] UserFilter filter)
         {
             try
             {
@@ -215,7 +214,7 @@ namespace EbookAPI.Controllers
         }
 
         [HttpGet("GetUsername", Name = "GetUsername")]
-        public async Task<ActionResult<User>> GetUsername([FromQuery] UserNameEditFilter filter)
+        public async Task<ActionResult<User>> GetUsername([FromQuery] UserFilter filter)
         {
             try
             {
