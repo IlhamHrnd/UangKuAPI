@@ -8,6 +8,9 @@ using UangKuAPI.Helper;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using static UangKuAPI.BusinessObjects.Helper.Converter;
+using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Entity;
+using System.Data;
 
 namespace UangKuAPI.Controllers
 {
@@ -23,49 +26,64 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserPicture", Name = "GetUserPicture")]
-        public async Task<ActionResult<GetUserPicture>> GetUserPicture([FromQuery] PictureFilter filter)
+        public async Task<ActionResult<UserPicture>> GetUserPicture([FromQuery] UserPictureFilter filter)
         {
             try
             {
-                var validFilter = new PictureFilter(filter.PageNumber, filter.PageSize, filter.PersonID, filter.IsDeleted);
-                var pageNumber = validFilter.PageNumber;
-                var pageSize = validFilter.PageSize;
-                int isDeleted = filter.IsDeleted ? 1 : 0;
-                var query = $@"SELECT up.PictureID, up.Picture, up.PictureName, up.PictureFormat, 
-                                up.PersonID, up.IsDeleted, up.CreatedByUserID, up.CreatedDateTime, 
-                                up.LastUpdateDateTime, up.LastUpdateByUserID
-                                FROM UserPicture AS up
-                                WHERE up.PersonID = '{filter.PersonID}'
-                                AND up.IsDeleted = '{isDeleted}'
-                                ORDER BY up.PictureID DESC
-                                OFFSET {(pageNumber - 1) * pageSize} ROWS
-                                FETCH NEXT {pageSize} ROWS ONLY;";
-                var pagedData = await _context.Picture.FromSqlRaw(query).ToListAsync();
-                var totalRecord = await _context.Picture
-                    .Where(p => p.IsDeleted == filter.IsDeleted && p.PersonID == filter.PersonID)
-                    .CountAsync();
-                var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
+                var upQ = new UserpictureQuery("upQ");
+                upQ.Select(upQ.PictureID, upQ.Picture, upQ.PictureName, upQ.PictureFormat, upQ.PersonID,
+                    upQ.CreatedByUserID, upQ.CreatedDateTime, upQ.LastUpdateDateTime, upQ.LastUpdateByUserID,
+                    "<CASE WHEN upQ.IsDeleted = 1 THEN 'true' ELSE 'false' END AS 'IsDeleted'>")
+                    .OrderBy(upQ.PersonID.Descending)
+                    .Where(upQ.PersonID == filter.PersonID && upQ.IsDeleted == filter.IsDeleted);
+                DataTable dtRecord = upQ.LoadDataTable();
 
-                string? prevPageLink = validFilter.PageNumber > 1
-                    ? Url.Link("GetUserPicture", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                upQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize);
+                DataTable dt = upQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var pagedData = new List<UserPicture>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var up = new UserPicture
+                    {
+                        PictureID = (string)dr["PictureID"],
+                        Picture = (byte[]?)dr["Picture"],
+                        PictureName = (string)dr["PictureName"],
+                        PictureFormat = (string)dr["PictureFormat"],
+                        PersonID = (string)dr["PersonID"],
+                        IsDeleted = bool.Parse((string)dr["IsDeleted"]),
+                        CreatedByUserID = (string)dr["CreatedByUserID"],
+                        CreatedDateTime = (DateTime)dr["CreatedDateTime"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"]
+                    };
+                    pagedData.Add(up);
+                }
+                var totalRecord = dtRecord.Rows.Count;
+                var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
+
+                string? prevPageLink = filter.PageNumber > 1
+                    ? Url.Link("GetUserPicture", new { PageNumber = filter.PageNumber - 1, filter.PageSize })
                     : null;
 
-                string? nextPageLink = validFilter.PageNumber < totalPages
-                    ? Url.Link("GetUserPicture", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                string? nextPageLink = filter.PageNumber < totalPages
+                    ? Url.Link("GetUserPicture", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var response = new PageResponse<List<UserPicture>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
+                var response = new PageResponse<List<UserPicture>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
                     NextPageLink = nextPageLink
                 };
-
-                if (pagedData == null || pagedData.Count == 0 || !pagedData.Any())
-                {
-                    return NotFound($"PersonID {filter.PersonID} Not Found");
-                }
 
                 return Ok(response);
             }
@@ -77,7 +95,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPost("PostUserPicture", Name = "PostUserPicture")]
-        public async Task<IActionResult> PostUserPicture([FromBody] PostUserPicture picture)
+        public async Task<IActionResult> PostUserPicture([FromBody] UserPicture2 picture)
         {
             var param = new ParameterHelper(_context);
 
@@ -87,10 +105,6 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Picture Are Required");
                 }
-                string createddate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-                int deleted = picture.IsDeleted == true ? 1 : 0;
-
                 //Proses Mencari Data MaxPicture Yang Menyimpan Jumlah Maksimal Gambar Yang Bisa Di Upload User
                 var maxPicture = await param.GetParameterValue(AppParameterValue.MaxPicture);
                 int picResult = ParameterHelper.TryParseInt(maxPicture);
@@ -109,6 +123,15 @@ namespace UangKuAPI.Controllers
                 int nameCount = await _context.Picture
                     .CountAsync(up => up.PersonID == picture.PersonID && up.PictureName == picture.PictureName);
 
+                var checkPictureID = await _context.Picture
+                    .Where(up => up.PictureID == picture.PictureID)
+                    .ToListAsync();
+
+                if (checkPictureID.Any())
+                {
+                    return BadRequest($"{picture.PictureID} Already Exist");
+                }
+
                 if (pictureCount > picResult)
                 {
                     return BadRequest($"The PersonID For {picture.PersonID} Maximum Limit Has Been Reached");
@@ -124,22 +147,20 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"The Image You Uploaded {picture.PictureName} Exceeds The Maximum Size Limit");
                 }
 
-                var query = $@"INSERT INTO `UserPicture`(`PictureID`, `Picture`, `PictureName`, `PictureFormat`, 
-                                `PersonID`, `IsDeleted`, `CreatedByUserID`, `CreatedDateTime`, 
-                                `LastUpdateDateTime`, `LastUpdateByUserID`) 
-                                VALUES ('{picture.PictureID}', '{picture.Picture}', '{picture.PictureName}', '{picture.PictureFormat}',
-                                '{picture.PersonID}', '{deleted}', '{picture.CreatedByUserID}', '{createddate}',
-                                '{updatedate}','{picture.LastUpdateByUserID}');";
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
+                var pic = new UserPicture
+                {
+                    PictureID = picture.PictureID, Picture = StringToByte(picture.Picture), PictureName = picture.PictureName,
+                    PictureFormat = picture.PictureFormat, PersonID = picture.PersonID, IsDeleted = picture.IsDeleted,
+                    CreatedByUserID = picture.CreatedByUserID, CreatedDateTime = DateFormat.DateTimeNow(), LastUpdateDateTime = DateFormat.DateTimeNow(),
+                    LastUpdateByUserID = picture.CreatedByUserID
+                };
+                _context.Picture.Add(pic);
 
-                if (rowsAffected > 0)
-                {
-                    return Ok($"Picture ID {picture.PictureID} Created Successfully");
-                }
-                else
-                {
-                    return BadRequest($"Failed To Insert Data For Picture ID {picture.PictureID}");
-                }
+                int rowsAffected = await _context.SaveChangesAsync();
+
+                return rowsAffected > 0
+                    ? Ok($"User {picture.PictureID} Created Successfully")
+                    : BadRequest($"Failed To Insert Data For PictureID {picture.PictureID}");
             }
             catch (Exception e)
             {
@@ -148,33 +169,28 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpDelete("DeleteUserPicture", Name = "DeleteUserPicture")]
-        public async Task<IActionResult> DeleteUserPicture([FromQuery] string pictureID, [FromBody] DeletedPictureFilter filter)
+        public async Task<IActionResult> DeleteUserPicture([FromQuery] UserPictureFilter filter)
         {
             try
             {
-                if (string.IsNullOrEmpty(pictureID) || filter == null)
+                if (string.IsNullOrEmpty(filter.PictureID))
                 {
-                    return BadRequest($"All Data Are Required");
+                    return BadRequest($"PictureID Is Required");
                 }
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-                int deleted = filter.IsDeleted == true ? 1 : 0;
 
-                var query = $@"UPDATE `UserPicture`
-                                SET `IsDeleted` = '{deleted}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{filter.LastUpdateUserID}'
-                                WHERE `PictureID` = '{pictureID}';";
+                var pic = await _context.Picture
+                    .FirstOrDefaultAsync(p => p.PictureID == filter.PictureID && p.IsDeleted == false);
 
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (response > 0)
+                if (pic == null)
                 {
-                    return Ok($"{pictureID} Delete Successfully");
+                    return BadRequest($"{pic.PictureID} Not Found");
                 }
-                else
-                {
-                    return NotFound($"{pictureID} Not Found");
-                }
+                _context.Remove(pic);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{filter.PictureID} Delete Successfully")
+                    : BadRequest($"Failed To Delete Data For PictureID {filter.PictureID}");
             }
             catch (Exception e)
             {
