@@ -2,10 +2,11 @@
 using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
-using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Entity;
+using System.Data;
+using Models = UangKuAPI.BusinessObjects.Model;
 
 namespace EbookAPI.Controllers
 {
@@ -21,32 +22,52 @@ namespace EbookAPI.Controllers
         }
 
         [HttpGet("GetAllUser", Name = "GetAllUser")]
-        public async Task<ActionResult<User>> GetAllUser([FromQuery] UserFilter filter)
+        public async Task<ActionResult<Models.User>> GetAllUser([FromQuery] UserFilter filter)
         {
             try
             {
-                var pageNumber = filter.PageNumber;
-                var pageSize = filter.PageSize;
-                var query = $@"SELECT u.Username, u.ActiveDate,
-                                                u.LastLogin, u.LastUpdateDateTime, u.LastUpdateByUser, u.PersonID,
-                                                asri.ItemName AS 'SexName',
-                                                asri02.ItemName AS 'AccessName',
-                                                asri03.ItemName AS 'StatusName'
-                                                FROM User AS u
-                                                INNER JOIN AppStandardReferenceItem AS asri
-                    	                            ON asri.StandardReferenceID = 'Sex'
-                                                    AND asri.ItemID = u.SRSex
-                                                INNER JOIN AppStandardReferenceItem AS asri02
-                    	                            ON asri02.StandardReferenceID = 'Access'
-                                                    AND asri02.ItemID = u.SRAccess
-                                                INNER JOIN AppStandardReferenceItem AS asri03
-                    	                            ON asri03.StandardReferenceID = 'Status'
-                                                    AND asri03.ItemID = u.SRStatus
-                                                ORDER BY u.Username ASC
-                                                OFFSET {(pageNumber - 1) * pageSize} ROWS
-                                                FETCH NEXT {pageSize} ROWS ONLY;";
-                var pagedData = await _context.Users.FromSqlRaw(query).ToListAsync();
-                var totalRecord = await _context.Users.CountAsync();
+                var uQ = new UserQuery("uQ");
+                var sexQ = new AppstandardreferenceitemQuery("sexQ");
+                var accessQ = new AppstandardreferenceitemQuery("accessQ");
+                var statusQ = new AppstandardreferenceitemQuery("statusQ");
+
+                uQ.Select(uQ.Username, uQ.ActiveDate, uQ.LastLogin, uQ.LastUpdateDateTime,
+                    uQ.LastUpdateByUser, uQ.PersonID, sexQ.ItemName.As("SexName"), accessQ.ItemName.As("AccessName"),
+                    statusQ.ItemName.As("StatusName"))
+                    .InnerJoin(sexQ).On(sexQ.StandardReferenceID == "Sex" && sexQ.ItemID == uQ.SRSex)
+                    .InnerJoin(accessQ).On(accessQ.StandardReferenceID == "Access" && accessQ.ItemID == uQ.SRAccess)
+                    .InnerJoin(statusQ).On(statusQ.StandardReferenceID == "Status" && statusQ.ItemID == uQ.SRStatus)
+                    .OrderBy(uQ.Username.Ascending);
+                DataTable dtRecord = uQ.LoadDataTable();
+
+                uQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize);
+                DataTable dt = uQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var pagedData = new List<Models.User>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var userItem = new Models.User
+                    {
+                        Username = (string)dr["Username"],
+                        ActiveDate = (DateTime)dr["ActiveDate"],
+                        LastLogin = (DateTime)dr["LastLogin"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUser = (string)dr["LastUpdateByUser"],
+                        PersonID = (string)dr["PersonID"],
+                        SexName = (string)dr["SexName"],
+                        AccessName = (string)dr["AccessName"],
+                        StatusName = (string)dr["StatusName"]
+                    };
+                    pagedData.Add(userItem);
+                }
+                var totalRecord = dtRecord.Rows.Count;
                 var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
 
                 string? prevPageLink = filter.PageNumber > 1
@@ -57,7 +78,7 @@ namespace EbookAPI.Controllers
                     ? Url.Link("GetAllUser", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var response = new PageResponse<List<User>>(pagedData, filter.PageNumber, filter.PageSize)
+                var response = new PageResponse<List<Models.User>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
@@ -75,7 +96,7 @@ namespace EbookAPI.Controllers
         }
 
         [HttpGet("GetLoginUserName", Name = "GetLoginUserName")]
-        public async Task<ActionResult<User>> GetLoginUserName([FromQuery] UserFilter filter)
+        public async Task<ActionResult<Models.User>> GetLoginUserName([FromQuery] UserFilter filter)
         {
             try
             {
@@ -83,30 +104,47 @@ namespace EbookAPI.Controllers
                 {
                     return BadRequest("Username Or Password Is Required");
                 }
-                var query = $@"SELECT u.Username, u.ActiveDate,
-                                u.LastLogin, u.LastUpdateDateTime, u.LastUpdateByUser, u.PersonID,
-                                asri.ItemName AS 'SexName',
-                                asri02.ItemName AS 'AccessName',
-                                asri03.ItemName AS 'StatusName'
-                                FROM User AS u
-                                INNER JOIN AppStandardReferenceItem AS asri
-    	                            ON asri.StandardReferenceID = 'Sex'
-                                    AND asri.ItemID = u.SRSex
-                                INNER JOIN AppStandardReferenceItem AS asri02
-    	                            ON asri02.StandardReferenceID = 'Access'
-                                    AND asri02.ItemID = u.SRAccess
-                                INNER JOIN AppStandardReferenceItem AS asri03
-    	                            ON asri03.StandardReferenceID = 'Status'
-                                    AND asri03.ItemID = u.SRStatus
-                                WHERE u.Username = '{filter.Username}'
-                                    AND u.Password = '{Encryptor.Encryptor.DataEncrypt(filter.Password)}';";
-                var response = await _context.Users.FromSqlRaw(query).ToListAsync();
-                if (response == null || response.Count == 0 || !response.Any())
+
+                var uQ = new UserQuery("uQ");
+                var sexQ = new AppstandardreferenceitemQuery("sexQ");
+                var accessQ = new AppstandardreferenceitemQuery("accessQ");
+                var statusQ = new AppstandardreferenceitemQuery("statusQ");
+
+                uQ.Select(uQ.Username, uQ.ActiveDate, uQ.LastLogin, uQ.LastUpdateDateTime,
+                    uQ.LastUpdateByUser, uQ.PersonID, sexQ.ItemName.As("SexName"), accessQ.ItemName.As("AccessName"),
+                    statusQ.ItemName.As("StatusName"))
+                    .InnerJoin(sexQ).On(sexQ.StandardReferenceID == "Sex" && sexQ.ItemID == uQ.SRSex)
+                    .InnerJoin(accessQ).On(accessQ.StandardReferenceID == "Access" && accessQ.ItemID == uQ.SRAccess)
+                    .InnerJoin(statusQ).On(statusQ.StandardReferenceID == "Status" && statusQ.ItemID == uQ.SRStatus)
+                    .OrderBy(uQ.Username.Ascending)
+                    .Where(uQ.Username == filter.Username && uQ.Password == Encryptor.Encryptor.DataEncrypt(filter.Password));
+                DataTable dt = uQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
                 {
-                    return NotFound("User Not Found");
+                    return NotFound($"{filter.Username} Not Found");
                 }
-                
-                return Ok(response);
+
+                var user = new List<Models.User>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var userItem = new Models.User
+                    {
+                        Username = (string)dr["Username"],
+                        ActiveDate = (DateTime)dr["ActiveDate"],
+                        LastLogin = (DateTime)dr["LastLogin"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUser = (string)dr["LastUpdateByUser"],
+                        PersonID = (string)dr["PersonID"],
+                        SexName = (string)dr["SexName"],
+                        AccessName = (string)dr["AccessName"],
+                        StatusName = (string)dr["StatusName"]
+                    };
+                    user.Add(userItem);
+                }
+
+                return Ok(user);
             }
             catch (Exception e)
             {
@@ -116,34 +154,38 @@ namespace EbookAPI.Controllers
         }
 
         [HttpPost("CreateUsername", Name = "CreateUsername")]
-        public async Task<IActionResult> CreateUsername([FromBody] User user, [FromQuery] string password, [FromQuery] string email)
+        public async Task<IActionResult> CreateUsername([FromBody] Models.User user)
         {
             try
             {
-                if (user == null || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email))
+                if (user == null || string.IsNullOrEmpty(user.Password) || string.IsNullOrEmpty(user.Email))
                 {
                     return BadRequest("User Data, Password, And Email Are Required.");
                 }
 
-                string access = "Access-02";
-                string status = "Status-001";
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
+                var addUser = await _context.Users
+                    .Where(u => u.Username == user.Username)
+                    .ToListAsync();
 
-                var query = $@"INSERT INTO `User`(`Username`, `Password`, `SRSex`, `SRAccess`, `Email`, `SRStatus`, `ActiveDate`, `LastLogin`, `LastUpdateDateTime`, `LastUpdateByUser`, `PersonID`)
-                        VALUES ('{user.Username}', '{Encryptor.Encryptor.DataEncrypt(password)}', 
-                                '{user.SexName}', '{access}', '{Encryptor.Encryptor.DataEncrypt(email)}', 
-                                '{status}', '{date}', '{date}', '{date}', '{user.Username}', '{user.Username}');";
-
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (rowsAffected > 0)
+                if (addUser.Any())
                 {
-                    return Ok($"User {user.Username} Created Successfully");
+                    return BadRequest($"{user.Username} Already Exist");
                 }
-                else
+
+                var newUser = new Models.User
                 {
-                    return BadRequest($"Failed To Insert Data For Username {user.Username}");
-                }
+                    Username = user.Username, Password = Encryptor.Encryptor.DataEncrypt(user.Password),
+                    SexName = user.SexName, AccessName = user.AccessName, Email = Encryptor.Encryptor.DataEncrypt(user.Email),
+                    StatusName = user.StatusName, ActiveDate = DateFormat.DateTimeNow(), LastLogin = DateFormat.DateTimeNow(),
+                    LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUser = user.Username, PersonID = user.PersonID
+                };
+                _context.Users.Add(newUser);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+
+                return rowsAffected > 0
+                    ? Ok($"User {user.Username} Created Successfully")
+                    : BadRequest($"Failed To Insert Data For Username {user.Username}");
             }
             catch (Exception e)
             {
@@ -152,24 +194,30 @@ namespace EbookAPI.Controllers
         }
 
         [HttpPatch("UpdateLastLogin", Name = "UpdateLastLogin")]
-        public async Task<IActionResult> UpdateLastLogin([FromQuery] string username)
+        public async Task<IActionResult> UpdateLastLogin([FromQuery] UserFilter filter)
         {
             try
             {
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-
-                if (string.IsNullOrEmpty(username))
+                if (string.IsNullOrEmpty(filter.Username))
                 {
                     return BadRequest("Username Data Is Required.");
                 }
 
-                var query = $@"UPDATE `User`
-                                SET `LastLogin` = '{date}'
-                                WHERE `Username` = '{username}';";
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Username == filter.Username);
 
-                await _context.Database.ExecuteSqlRawAsync(query);
+                if (user == null)
+                {
+                    return BadRequest($"{filter.Username} Not Found");
+                }
 
-                return Ok($"User {username} Update Successfully");
+                user.LastLogin = DateFormat.DateTimeNow();
+                _context.Update(user);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{filter.Username} Updated Successfully")
+                    : BadRequest($"Failed To Update Data For Username {filter.Username}");
             }
             catch (Exception e)
             {
@@ -178,34 +226,30 @@ namespace EbookAPI.Controllers
         }
 
         [HttpPatch("UpdatePasswordUser", Name = "UpdatePasswordUser")]
-        public async Task<IActionResult> UpdatePasswordUser([FromQuery] string username, [FromQuery] string password, [FromQuery] string email)
+        public async Task<IActionResult> UpdatePasswordUser([FromQuery] UserFilter filter)
         {
             try
             {
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-
-                if (string.IsNullOrEmpty(username))
+                if (string.IsNullOrEmpty(filter.Username))
                 {
                     return BadRequest("Username Data Is Required.");
                 }
 
-                var query = $@"UPDATE `User`
-                                SET `Password` = '{Encryptor.Encryptor.DataEncrypt(password)}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUser` = '{username}'
-                                WHERE `Username` = '{username}'
-                                    AND `Email` = '{Encryptor.Encryptor.DataEncrypt(email)}';";
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Username == filter.Username && u.Email == Encryptor.Encryptor.DataEncrypt(filter.Email));
 
-                var response =  await _context.Database.ExecuteSqlRawAsync(query);
+                if (user == null)
+                {
+                    return BadRequest($"{filter.Username} Not Found");
+                }
 
-                if (response > 0)
-                {
-                    return Ok($"User {username} Update Successfully");
-                }
-                else
-                {
-                    return NotFound($"Username {username} Not Found");
-                }
+                user.Password = Encryptor.Encryptor.DataEncrypt(filter.Password);
+                _context.Update(user);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{filter.Username} Updated Successfully")
+                    : BadRequest($"Failed To Update Data For Username {filter.Username}");
             }
             catch (Exception e)
             {
@@ -214,7 +258,7 @@ namespace EbookAPI.Controllers
         }
 
         [HttpGet("GetUsername", Name = "GetUsername")]
-        public async Task<ActionResult<User>> GetUsername([FromQuery] UserFilter filter)
+        public async Task<ActionResult<Models.User>> GetUsername([FromQuery] UserFilter filter)
         {
             try
             {
@@ -222,29 +266,47 @@ namespace EbookAPI.Controllers
                 {
                     return BadRequest("Username Is Required");
                 }
-                var query = $@"SELECT u.Username, u.ActiveDate,
-                                u.LastLogin, u.LastUpdateDateTime, u.LastUpdateByUser, u.PersonID,
-                                asri.ItemName AS 'SexName',
-                                asri02.ItemName AS 'AccessName',
-                                asri03.ItemName AS 'StatusName'
-                                FROM User AS u
-                                INNER JOIN AppStandardReferenceItem AS asri
-    	                            ON asri.StandardReferenceID = 'Sex'
-                                    AND asri.ItemID = u.SRSex
-                                INNER JOIN AppStandardReferenceItem AS asri02
-    	                            ON asri02.StandardReferenceID = 'Access'
-                                    AND asri02.ItemID = u.SRAccess
-                                INNER JOIN AppStandardReferenceItem AS asri03
-    	                            ON asri03.StandardReferenceID = 'Status'
-                                    AND asri03.ItemID = u.SRStatus
-                                WHERE u.Username = '{filter.Username}';";
-                var response = await _context.Users.FromSqlRaw(query).ToListAsync();
-                if (response == null || response.Count == 0 || !response.Any())
+
+                var uQ = new UserQuery("uQ");
+                var sexQ = new AppstandardreferenceitemQuery("sexQ");
+                var accessQ = new AppstandardreferenceitemQuery("accessQ");
+                var statusQ = new AppstandardreferenceitemQuery("statusQ");
+
+                uQ.Select(uQ.Username, uQ.ActiveDate, uQ.LastLogin, uQ.LastUpdateDateTime,
+                    uQ.LastUpdateByUser, uQ.PersonID, sexQ.ItemName.As("SexName"), accessQ.ItemName.As("AccessName"),
+                    statusQ.ItemName.As("StatusName"))
+                    .InnerJoin(sexQ).On(sexQ.StandardReferenceID == "Sex" && sexQ.ItemID == uQ.SRSex)
+                    .InnerJoin(accessQ).On(accessQ.StandardReferenceID == "Access" && accessQ.ItemID == uQ.SRAccess)
+                    .InnerJoin(statusQ).On(statusQ.StandardReferenceID == "Status" && statusQ.ItemID == uQ.SRStatus)
+                    .OrderBy(uQ.Username.Ascending)
+                    .Where(uQ.Username == filter.Username);
+                var dt = uQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
                 {
-                    return NotFound("User Not Found");
+                    return NotFound($"{filter.Username} Not Found");
                 }
 
-                return Ok(response);
+                var user = new List<Models.User>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var userItem = new Models.User
+                    {
+                        Username = (string)dr["Username"],
+                        ActiveDate = (DateTime)dr["ActiveDate"],
+                        LastLogin = (DateTime)dr["LastLogin"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUser = (string)dr["LastUpdateByUser"],
+                        PersonID = (string)dr["PersonID"],
+                        SexName = (string)dr["SexName"],
+                        AccessName = (string)dr["AccessName"],
+                        StatusName = (string)dr["StatusName"]
+                    };
+                    user.Add(userItem);
+                }
+
+                return Ok(user);
             }
             catch (Exception e)
             {
@@ -254,37 +316,33 @@ namespace EbookAPI.Controllers
         }
 
         [HttpPatch("UpdateUsername", Name = "UpdateUsername")]
-        public async Task<IActionResult> UpdateUsername([FromQuery] string username, [FromBody] UserName user)
+        public async Task<IActionResult> UpdateUsername([FromBody] Models.User user)
         {
             try
             {
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-
-                if (string.IsNullOrEmpty(username) || user == null)
+                if (string.IsNullOrEmpty(user.Username) || user == null)
                 {
                     return BadRequest("All Data Is Required.");
                 }
 
-                string active = user.IsActive ? "Status-001" : "Status-002";
+                var updateUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Username == user.Username);
 
-                var query = $@"UPDATE `User`
-                                SET `SRSex` = '{user.Sex}',
-                                `SRAccess` = '{user.Access}',
-                                `SRStatus` = '{active}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUser` = '{user.LastUpdateUser}'
-                                WHERE `Username` = '{username}';";
-
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (response > 0)
+                if (updateUser == null)
                 {
-                    return Ok($"User {username} Update Successfully");
+                    return BadRequest($"{user.Username} Not Found");
                 }
-                else
-                {
-                    return NotFound($"Username {username} Not Found");
-                }
+
+                updateUser.SexName = user.SexName;
+                updateUser.StatusName = user.StatusName;
+                updateUser.LastUpdateDateTime = DateFormat.DateTimeNow();
+                updateUser.LastUpdateByUser = user.LastUpdateByUser;
+                _context.Update(updateUser);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{user.Username} Updated Successfully")
+                    : BadRequest($"Failed To Update Data For Username {user.Username}");
             }
             catch (Exception e)
             {

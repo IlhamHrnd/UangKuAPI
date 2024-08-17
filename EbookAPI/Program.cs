@@ -1,5 +1,6 @@
 using UangKuAPI.Context;
 using Microsoft.EntityFrameworkCore;
+using UangKuAPI.BusinessObjects.Entity.Helper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 var app = builder.Build();
+
+//EntitySpace
+IConfiguration config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .AddEnvironmentVariables()
+    .Build();
+
+var conn = config.GetConnectionString("DatabaseConnection");
+Helper.initES(conn);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
