@@ -133,6 +133,14 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"AppParameter Is Required");
                 }
+
+                var checkParam = await _context.Parameter
+                    .FirstOrDefaultAsync(p => p.ParameterID == ap.ParameterID);
+
+                if (checkParam != null)
+                {
+                    return BadRequest($"{ap.ParameterID} Already Exist");
+                }
                 
                 var param = new AppParameter
                 {

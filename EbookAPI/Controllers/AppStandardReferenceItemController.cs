@@ -117,7 +117,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("UpdateAppStandardReferenceItem", Name = "UpdateAppStandardReferenceItem")]
-        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromQuery] AppStandardReferenceItem2 asri)
+        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromBody] AppStandardReferenceItem2 asri)
         {
             var param = new ParameterHelper(_context);
 

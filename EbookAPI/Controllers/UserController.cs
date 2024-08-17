@@ -244,6 +244,8 @@ namespace EbookAPI.Controllers
                 }
 
                 user.Password = Encryptor.Encryptor.DataEncrypt(filter.Password);
+                user.LastUpdateDateTime = DateFormat.DateTimeNow();
+                user.LastUpdateByUser = filter.Username;
                 _context.Update(user);
 
                 int rowsAffected = await _context.SaveChangesAsync();

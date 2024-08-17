@@ -3,7 +3,6 @@ using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
-using UangKuAPI.Filter;
 using UangKuAPI.Helper;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
