@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 namespace UangKuAPI.BusinessObjects.Helper
@@ -180,10 +179,10 @@ namespace UangKuAPI.BusinessObjects.Helper
         }
 
         //Untuk Men Enkripsi Data
-        public static string DataEncrypt(string enkripsi)
+        public static string DataEncrypt(string enkripsi, string key)
         {
             byte[] dataToBeEncrypted = Encoding.UTF8.GetBytes(enkripsi);
-            byte[] dataBytes = Encoding.UTF8.GetBytes("Provinsi.ID");
+            byte[] dataBytes = Encoding.UTF8.GetBytes(key);
 
             dataBytes = SHA256.Create().ComputeHash(dataBytes);
 
@@ -193,35 +192,15 @@ namespace UangKuAPI.BusinessObjects.Helper
         }
 
         //Untuk Men Dekripsi Data
-        public static string DataDecrypt(string dekripsi)
+        public static string DataDecrypt(string dekripsi, string key)
         {
             byte[] dataToBeDecrypted = Convert.FromBase64String(dekripsi);
-            byte[] dataBytesdecrypt = Encoding.UTF8.GetBytes("Provinsi.ID");
+            byte[] dataBytesdecrypt = Encoding.UTF8.GetBytes(key);
             dataBytesdecrypt = SHA256.Create().ComputeHash(dataBytesdecrypt);
 
             byte[] bytesDecrypted = AES_Decrypt(dataToBeDecrypted, dataBytesdecrypt);
 
             return Encoding.UTF8.GetString(bytesDecrypted);
-        }
-
-        //Untuk Pengecekan Data Encrypt Null Atau Tidak
-        public static string EncryptIfNotNull(string? value)
-        {
-            if (value != null)
-            {
-                return DataEncrypt(value);
-            }
-            return value;
-        }
-
-        //Untuk Pengecekan Data Decrypt Null Atau Tidak
-        public static string DecryptIfNotNull(string? value)
-        {
-            if (value != null)
-            {
-                return DataDecrypt(value);
-            }
-            return value;
         }
     }
 

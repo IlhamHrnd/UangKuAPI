@@ -207,9 +207,7 @@ namespace UangKuAPI.Controllers
                     .Where(t => t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate)
                     .CountAsync();
                 var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
-
-                var tes = pagedData;
-
+                
                 string? prevPageLink = filter.PageNumber > 1
                     ? Url.Link("GetAllTransaction", new { PageNumber = filter.PageNumber - 1, filter.PageSize })
                     : null;

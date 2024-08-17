@@ -50,15 +50,15 @@ namespace UangKuAPI.Controllers
                 {
                     if (!string.IsNullOrEmpty(item.PersonID))
                     {
-                        item.FirstName = EncryptorNullChecker.DecryptIfNotNull(item.FirstName);
-                        item.MiddleName = EncryptorNullChecker.DecryptIfNotNull(item.MiddleName);
-                        item.LastName = EncryptorNullChecker.DecryptIfNotNull(item.LastName);
-                        item.PlaceOfBirth = EncryptorNullChecker.DecryptIfNotNull(item.PlaceOfBirth);
-                        item.Address = EncryptorNullChecker.DecryptIfNotNull(item.Address);
-                        item.Province = EncryptorNullChecker.DecryptIfNotNull(item.Province);
-                        item.City = EncryptorNullChecker.DecryptIfNotNull(item.City);
-                        item.District = EncryptorNullChecker.DecryptIfNotNull(item.District);
-                        item.Subdistrict = EncryptorNullChecker.DecryptIfNotNull(item.Subdistrict);
+                        item.FirstName = Encryptor.DataEncrypt(item.FirstName);
+                        item.MiddleName = Encryptor.DataEncrypt(item.MiddleName);
+                        item.LastName = Encryptor.DataEncrypt(item.LastName);
+                        item.PlaceOfBirth = Encryptor.DataEncrypt(item.PlaceOfBirth);
+                        item.Address = Encryptor.DataEncrypt(item.Address);
+                        item.Province = Encryptor.DataEncrypt(item.Province);
+                        item.City = Encryptor.DataEncrypt(item.City);
+                        item.District = Encryptor.DataEncrypt(item.District);
+                        item.Subdistrict = Encryptor.DataEncrypt(item.Subdistrict);
                     }
                 }
 
@@ -93,10 +93,10 @@ namespace UangKuAPI.Controllers
 
                 var prof = new Profile
                 {
-                    PersonID = profile.PersonID, FirstName = EncryptorNullChecker.EncryptIfNotNull(profile.FirstName), MiddleName = EncryptorNullChecker.EncryptIfNotNull(profile.MiddleName),
-                    LastName = EncryptorNullChecker.EncryptIfNotNull(profile.LastName), BirthDate = profile.BirthDate, PlaceOfBirth = EncryptorNullChecker.EncryptIfNotNull(profile.PlaceOfBirth),
-                    Photo = StringToByte(profile.Photo), Address = EncryptorNullChecker.EncryptIfNotNull(profile.Address), Province = EncryptorNullChecker.EncryptIfNotNull(profile.Province),
-                    City = EncryptorNullChecker.EncryptIfNotNull(profile.City), Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict), District = EncryptorNullChecker.EncryptIfNotNull(profile.District),
+                    PersonID = profile.PersonID, FirstName = Encryptor.DataEncrypt(profile.FirstName), MiddleName = Encryptor.DataEncrypt(profile.MiddleName),
+                    LastName = Encryptor.DataEncrypt(profile.LastName), BirthDate = profile.BirthDate, PlaceOfBirth = Encryptor.DataEncrypt(profile.PlaceOfBirth),
+                    Photo = StringToByte(profile.Photo), Address = Encryptor.DataEncrypt(profile.Address), Province = Encryptor.DataEncrypt(profile.Province),
+                    City = Encryptor.DataEncrypt(profile.City), Subdistrict = Encryptor.DataEncrypt(profile.Subdistrict), District = Encryptor.DataEncrypt(profile.District),
                     PostalCode = profile.PostalCode, LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUser = profile.LastUpdateByUser
                 };
                 _context.Add(prof);
@@ -130,17 +130,17 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"{profile.PersonID} Not Found");
                 }
 
-                person.FirstName = EncryptorNullChecker.EncryptIfNotNull(profile.FirstName);
-                person.MiddleName = EncryptorNullChecker.EncryptIfNotNull(profile.MiddleName);
-                person.LastName = EncryptorNullChecker.EncryptIfNotNull(profile.LastName);
+                person.FirstName = Encryptor.DataEncrypt(profile.FirstName);
+                person.MiddleName = Encryptor.DataEncrypt(profile.MiddleName);
+                person.LastName = Encryptor.DataEncrypt(profile.LastName);
                 person.BirthDate = profile.BirthDate;
-                person.PlaceOfBirth = EncryptorNullChecker.EncryptIfNotNull(profile.PlaceOfBirth);
+                person.PlaceOfBirth = Encryptor.DataEncrypt(profile.PlaceOfBirth);
                 person.Photo = StringToByte(profile.Photo);
-                person.Address = EncryptorNullChecker.EncryptIfNotNull(profile.Address);
-                person.Province = EncryptorNullChecker.EncryptIfNotNull(profile.Province);
-                person.City = EncryptorNullChecker.EncryptIfNotNull(profile.City);
-                person.District = EncryptorNullChecker.EncryptIfNotNull(profile.District);
-                person.Subdistrict = EncryptorNullChecker.EncryptIfNotNull(profile.Subdistrict);
+                person.Address = Encryptor.DataEncrypt(profile.Address);
+                person.Province = Encryptor.DataEncrypt(profile.Province);
+                person.City = Encryptor.DataEncrypt(profile.City);
+                person.District = Encryptor.DataEncrypt(profile.District);
+                person.Subdistrict = Encryptor.DataEncrypt(profile.Subdistrict);
                 person.PostalCode = profile.PostalCode;
                 person.LastUpdateDateTime = DateFormat.DateTimeNow();
                 person.LastUpdateByUser = profile.LastUpdateByUser;
