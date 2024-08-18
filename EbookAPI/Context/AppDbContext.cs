@@ -23,6 +23,7 @@ namespace UangKuAPI.Context
         public DbSet<UserReport> Report { get; set; }
         public DbSet<UserWishlist> UserWishlist { get; set; }
         public DbSet<UserWishlistPerCategory> UserWishlistPerCategories { get; set; }
+        public DbSet<AppProgram> AppPrograms { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
@@ -65,6 +66,7 @@ namespace UangKuAPI.Context
             modelBuilder.Entity<UserPicture>().ToTable("UserPicture");
             modelBuilder.Entity<AppParameter>().ToTable("AppParameter");
             modelBuilder.Entity<UserReport>().ToTable("UserReport");
+            modelBuilder.Entity<AppProgram>().ToTable("AppProgram");
             modelBuilder.Entity<Transaction>(entity =>
             {
                 entity.ToTable("Transaction");

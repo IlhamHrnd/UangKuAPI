@@ -129,7 +129,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetPostalCode", Name = "GetPostalCode")]
-        public async Task<ActionResult<List<PostalCodes>>> GetPostalCode([FromQuery] LocationFillter filter)
+        public async Task<ActionResult<PostalCodes>> GetPostalCode([FromQuery] LocationFillter filter)
         {
             try
             {
@@ -159,8 +159,8 @@ namespace UangKuAPI.Controllers
                     .ToListAsync();
 
                 return response == null || response.Count == 0 || !response.Any()
-                   ? (ActionResult<List<PostalCodes>>)NotFound("PostalCodes Not Found")
-                   : (ActionResult<List<PostalCodes>>)Ok(response);
+                   ? (ActionResult<PostalCodes>)NotFound("PostalCodes Not Found")
+                   : (ActionResult<PostalCodes>)Ok(response);
             }
             catch (Exception e)
             {
