@@ -6,6 +6,8 @@ using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using UangKuAPI.BusinessObjects.Entity;
+using System.Data;
 
 namespace UangKuAPI.Controllers
 {
@@ -21,25 +23,44 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppParameter", Name = "GetAllAppParameter")]
-        public async Task<ActionResult<List<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
+        public async Task<ActionResult<AppParameter>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
         {
             try
             {
-                var pageNumber = filter.PageNumber;
-                var pageSize = filter.PageSize;
-                var pagedData = await _context.Parameter
-                    .Select(p => new AppParameter
+                var aQ = new AppparameterQuery("aQ");
+
+                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime, 
+                    aQ.LastUpdateByUserID, aQ.SRControl,
+                    "<CASE WHEN aQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>")
+                    .OrderBy(aQ.ParameterID.Ascending);
+                DataTable dtRecord = aQ.LoadDataTable();
+
+                aQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize);
+                DataTable dt = aQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var pagedData = new List<AppParameter>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var a = new AppParameter
                     {
-                        ParameterID = p.ParameterID, ParameterName = p.ParameterName,
-                        ParameterValue = p.ParameterValue, LastUpdateDateTime = p.LastUpdateDateTime,
-                        LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem,
-                        SRControl = p.SRControl
-                    })
-                    .OrderBy(p => p.ParameterID)
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-                var totalRecord = await _context.Parameter.CountAsync();
+                        ParameterID = (string)dr["ParameterID"],
+                        ParameterName = (string)dr["ParameterName"],
+                        ParameterValue = (string)dr["ParameterValue"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
+                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
+                        SRControl = (string)dr["SRControl"]
+                    };
+                    pagedData.Add(a);
+                }
+                var totalRecord = dtRecord.Rows.Count;
                 var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
 
                 string? prevPageLink = filter.PageNumber > 1
@@ -50,20 +71,15 @@ namespace UangKuAPI.Controllers
                     ? Url.Link("GetAllAppParameter", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var isDataFound = _context.Parameter.Any();
                 var response = new PageResponse<List<AppParameter>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
-                    NextPageLink = nextPageLink,
-                    Message = isDataFound ? "Data Found" : "Data Not Found",
-                    Succeeded = isDataFound
+                    NextPageLink = nextPageLink
                 };
 
-                return isDataFound 
-                    ? Ok(response) 
-                    : NotFound(response);
+                return Ok(response);
             }
             catch (Exception e)
             {
@@ -72,19 +88,39 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllParameterWithNoPageFilter", Name = "GetAllParameterWithNoPageFilter")]
-        public async Task<ActionResult<List<AppParameter>>> GetAllParameterWithNoPageFilter()
+        public async Task<ActionResult<AppParameter>> GetAllParameterWithNoPageFilter()
         {
             try
             {
-                var response = await _context.Parameter
-                    .Select(p => new AppParameter
+                var aQ = new AppparameterQuery("aQ");
+
+                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime,
+                    aQ.LastUpdateByUserID, aQ.SRControl,
+                    "<CASE WHEN aQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>")
+                    .OrderBy(aQ.ParameterID.Ascending);
+                var dt = aQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var response = new List<AppParameter>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var a = new AppParameter
                     {
-                        ParameterID = p.ParameterID, ParameterName = p.ParameterName, ParameterValue = p.ParameterValue,
-                        LastUpdateDateTime = p.LastUpdateDateTime, LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem,
-                        SRControl = p.SRControl
-                    })
-                    .OrderBy(p => p.ParameterID)
-                    .ToListAsync();
+                        ParameterID = (string)dr["ParameterID"],
+                        ParameterName = (string)dr["ParameterName"],
+                        ParameterValue = (string)dr["ParameterValue"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
+                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
+                        SRControl = (string)dr["SRControl"]
+                    };
+                    response.Add(a);
+                }
 
                 return Ok(response);
             }
@@ -104,19 +140,38 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"ParameterID Is Required");
                 }
 
-                var response = await _context.Parameter
-                    .Select(p => new AppParameter
-                    {
-                        ParameterID = p.ParameterID, ParameterName = p.ParameterName, ParameterValue = p.ParameterValue,
-                        LastUpdateDateTime = p.LastUpdateDateTime, LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem,
-                        SRControl = p.SRControl
-                    })
-                    .Where(p => p.ParameterID == filter.ParameterID)
-                    .ToListAsync();
+                var aQ = new AppparameterQuery("aQ");
 
-                return response == null || response.Count == 0 || !response.Any() 
-                    ? (ActionResult<AppParameter>)NotFound("App Parameter Not Found") 
-                    : (ActionResult<AppParameter>)Ok(response);
+                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime,
+                    aQ.LastUpdateByUserID, aQ.SRControl,
+                    "<CASE WHEN aQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>")
+                    .OrderBy(aQ.ParameterID.Ascending)
+                    .Where(aQ.ParameterID == filter.ParameterID);
+                var dt = aQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var response = new List<AppParameter>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var a = new AppParameter
+                    {
+                        ParameterID = (string)dr["ParameterID"],
+                        ParameterName = (string)dr["ParameterName"],
+                        ParameterValue = (string)dr["ParameterValue"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
+                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
+                        SRControl = (string)dr["SRControl"]
+                    };
+                    response.Add(a);
+                }
+
+                return Ok(response);
             }
             catch (Exception e)
             {

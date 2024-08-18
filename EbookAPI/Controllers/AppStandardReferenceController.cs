@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Entity;
+using System.Data;
 
 namespace UangKuAPI.Controllers
 {
@@ -20,24 +22,47 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllReferenceID", Name = "GetAllReferenceID")]
-        public async Task<ActionResult<List<AppStandardReference>>> GetAllReferenceID([FromQuery] AppStandardReferenceFilter filter)
+        public async Task<ActionResult<AppStandardReference>> GetAllReferenceID([FromQuery] AppStandardReferenceFilter filter)
         {
             try
             {
-                var pageNumber = filter.PageNumber;
-                var pageSize = filter.PageSize;
-                var pagedData = await _context.AppStandardReferences
-                    .Select(asr => new AppStandardReference
+                var asrQ = new AppstandardreferenceQuery("asrQ");
+
+                asrQ.Select(asrQ.StandardReferenceID, asrQ.StandardReferenceName, asrQ.ItemLength, asrQ.Note,
+                    asrQ.LastUpdateDateTime, asrQ.LastUpdateByUserID,
+                    "<CASE WHEN asrQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>",
+                    "<CASE WHEN asrQ.IsActive = 1 THEN 'true' ELSE 'false' END AS 'IsActive'>")
+                    .OrderBy(asrQ.StandardReferenceID.Ascending);
+                DataTable dtRecord = asrQ.LoadDataTable();
+
+                asrQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize);
+                DataTable dt = asrQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var pagedData = new List<AppStandardReference>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var asr = new AppStandardReference
                     {
-                        StandardReferenceID = asr.StandardReferenceID, StandardReferenceName = asr.StandardReferenceName, ItemLength = asr.ItemLength,
-                        IsUsedBySystem = asr.IsUsedBySystem, IsActive = asr.IsActive, Note = asr.Note,
-                        LastUpdateDateTime = asr.LastUpdateDateTime, LastUpdateByUserID = asr.LastUpdateByUserID
-                    })
-                    .OrderBy(asr => asr.StandardReferenceID)
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-                var totalRecord = await _context.AppStandardReferences.CountAsync();
+                        StandardReferenceID = (string)dr["StandardReferenceID"],
+                        StandardReferenceName = (string)dr["StandardReferenceName"],
+                        ItemLength = (int)dr["ItemLength"],
+                        Note = (string)dr["Note"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
+                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
+                        IsActive = bool.Parse((string)dr["IsActive"])
+                    };
+                    pagedData.Add(asr);
+                }
+
+                var totalRecord = dtRecord.Rows.Count;
                 var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
 
                 string? prevPageLink = filter.PageNumber > 1
@@ -48,18 +73,15 @@ namespace UangKuAPI.Controllers
                     ? Url.Link("GetAllReferenceID", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var isDataFound = _context.AppStandardReferences.Any();
-                var response = new PageResponse<List<AppStandardReference>>(pagedData, pageNumber, pageSize)
+                var response = new PageResponse<List<AppStandardReference>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
-                    NextPageLink = nextPageLink,
-                    Message = isDataFound ? "Data Found" : "Data Not Found",
-                    Succeeded = isDataFound
+                    NextPageLink = nextPageLink
                 };
 
-                return isDataFound ? Ok(response) : NotFound(response);
+                return Ok(response);
             }
             catch (Exception e)
             {
@@ -77,19 +99,40 @@ namespace UangKuAPI.Controllers
                     return BadRequest("ReferenceID Is Required");
                 }
 
-                var response = await _context.AppStandardReferences
-                    .Select(asr => new AppStandardReference
-                    {
-                        StandardReferenceID = asr.StandardReferenceID, StandardReferenceName = asr.StandardReferenceName, ItemLength = asr.ItemLength,
-                        IsUsedBySystem = asr.IsUsedBySystem, IsActive = asr.IsActive, Note = asr.Note,
-                        LastUpdateDateTime = asr.LastUpdateDateTime, LastUpdateByUserID = asr.LastUpdateByUserID
-                    })
-                    .Where(asr => asr.StandardReferenceID == filter.ReferenceID)
-                    .ToListAsync();
+                var asrQ = new AppstandardreferenceQuery("asrQ");
 
-                return response == null || response.Count == 0 || !response.Any()
-                    ? (ActionResult<AppStandardReference>)NotFound("App Standard Reference Not Found")
-                    : (ActionResult<AppStandardReference>)Ok(response);
+                asrQ.Select(asrQ.StandardReferenceID, asrQ.StandardReferenceName, asrQ.ItemLength, asrQ.Note,
+                    asrQ.LastUpdateDateTime, asrQ.LastUpdateByUserID,
+                    "<CASE WHEN asrQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>",
+                    "<CASE WHEN asrQ.IsActive = 1 THEN 'true' ELSE 'false' END AS 'IsActive'>")
+                    .OrderBy(asrQ.StandardReferenceID.Ascending)
+                    .Where(asrQ.StandardReferenceID == filter.ReferenceID);
+                DataTable dt = asrQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var response = new List<AppStandardReference>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var asr = new AppStandardReference
+                    {
+                        StandardReferenceID = (string)dr["StandardReferenceID"],
+                        StandardReferenceName = (string)dr["StandardReferenceName"],
+                        ItemLength = (int)dr["ItemLength"],
+                        Note = (string)dr["Note"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
+                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
+                        IsActive = bool.Parse((string)dr["IsActive"])
+                    };
+                    response.Add(asr);
+                }
+
+                return Ok(response);
             }
             catch (Exception e)
             {

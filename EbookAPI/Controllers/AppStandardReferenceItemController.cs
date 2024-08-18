@@ -6,6 +6,8 @@ using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
 using static UangKuAPI.BusinessObjects.Helper.Converter;
+using UangKuAPI.BusinessObjects.Entity;
+using System.Data;
 
 namespace UangKuAPI.Controllers
 {
@@ -30,30 +32,50 @@ namespace UangKuAPI.Controllers
                     return BadRequest("StandardReferenceID Is Required");
                 }
 
-                var query = _context.AppStandardReferenceItems.AsQueryable();
+                var asriQ = new AppstandardreferenceitemQuery("asriQ");
 
-                query = query.Select(asri => new AppStandardReferenceItem
-                {
-                    StandardReferenceID = asri.StandardReferenceID, ItemID = asri.ItemID, Note = asri.Note,
-                    IsUsedBySystem = asri.IsUsedBySystem, IsActive = asri.IsActive, LastUpdateDateTime = asri.LastUpdateDateTime,
-                    LastUpdateByUserID = asri.LastUpdateByUserID, ItemIcon = asri.ItemIcon
-                })
-                    .Where(asri => asri.StandardReferenceID == filter.StandardReferenceID);
+                asriQ.Select(asriQ.StandardReferenceID, asriQ.ItemID, asriQ.Note, asriQ.LastUpdateDateTime, asriQ.LastUpdateByUserID,
+                    asriQ.ItemIcon, asriQ.ItemName,
+                    "<CASE WHEN asriQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>",
+                    "<CASE WHEN asriQ.IsActive = 1 THEN 'true' ELSE 'false' END AS 'IsActive'>")
+                    .Where(asriQ.StandardReferenceID == filter.StandardReferenceID);
 
-                if (filter.isActive.HasValue)
+                if (filter.isUse ?? false)
                 {
-                    query = query.Where(asri => asri.IsActive == filter.isActive.Value);
+                    asriQ.Where(asriQ.IsUsedBySystem == filter.isUse);
                 }
 
-                if (filter.isUse.HasValue)
+                if (filter.isActive ?? false)
                 {
-                    query = query.Where(asri => asri.IsUsedBySystem == filter.isUse.Value);
+                    asriQ.Where(asriQ.IsActive == filter.isActive);
+                }
+                DataTable dt = asriQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
                 }
 
-                var response = await query.ToListAsync();
-                return response == null || response.Count == 0 
-                    ? (ActionResult<List<AppStandardReferenceItem>>)NotFound("AppStandardReferenceItem Not Found") 
-                    : (ActionResult<List<AppStandardReferenceItem>>)Ok(response);
+                var response = new List<AppStandardReferenceItem>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var asri = new AppStandardReferenceItem
+                    {
+                        StandardReferenceID = (string)dr["StandardReferenceID"],
+                        ItemID = (string)dr["ItemID"],
+                        ItemName = (string)dr["ItemName"],
+                        Note = (string)dr["Note"],
+                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
+                        IsActive = bool.Parse((string)dr["IsActive"]),
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
+                        ItemIcon = (byte[])dr["ItemIcon"]
+                    };
+                    response.Add(asri);
+                }
+
+                return Ok(response);
             }
             catch (Exception e)
             {

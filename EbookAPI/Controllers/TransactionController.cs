@@ -9,6 +9,9 @@ using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using static UangKuAPI.BusinessObjects.Helper.Converter;
 using UangKuAPI.BusinessObjects.Filter;
 using System.Linq.Expressions;
+using UangKuAPI.BusinessObjects.Entity;
+using Models = UangKuAPI.BusinessObjects.Model;
+using System.Data;
 
 namespace UangKuAPI.Controllers
 {
@@ -42,7 +45,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"{transaction.TransNo} Already Exist");
                 }
 
-                var tr = new Transaction
+                var tr = new Models.Transaction
                 {
                     TransNo = transaction.TransNo, SRTransaction = transaction.SRTransaction, SRTransItem = transaction.SRTransItem,
                     Amount = transaction.Amount, Description = transaction.Description, Photo = StringToByte(transaction.Photo),
@@ -64,7 +67,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("PatchTransaction", Name = "PatchTransaction")]
-        public async Task<IActionResult> PatchTransaction([FromBody] Transaction2 transaction)
+        public async Task<IActionResult> PatchTransaction([FromBody] Models.Transaction2 transaction)
         {
             try
             {
@@ -135,7 +138,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllTransaction", Name = "GetAllTransaction")]
-        public async Task<ActionResult<Transaction>> GetAllTransaction([FromQuery] TransactionFilter filter)
+        public async Task<ActionResult<Models.Transaction>> GetAllTransaction([FromQuery] TransactionFilter filter)
         {
             try
             {
@@ -146,68 +149,110 @@ namespace UangKuAPI.Controllers
 
                 DateTime startDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, 1);
                 DateTime endDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-                var pageNumber = filter.PageNumber;
-                var pageSize = filter.PageSize;
 
-                var tr = await _context.Transaction
-                    .Where(t => t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate)
-                    .ToListAsync();
+                var tQ = new TransactionQuery("tQ");
+                var transQ = new AppstandardreferenceitemQuery("transQ");
+                var itemQ = new AppstandardreferenceitemQuery("itemQ");
 
-                if (!tr.Any())
-                {
-                    return NotFound($"Transaction {filter.PersonID} From {DateFormat.DateTimeNow(Dateshortmonth, startDate)} Until {DateFormat.DateTimeNow(Dateshortmonth, endDate)} Not Found");
-                }
-
-                var query = (from t in _context.Transaction
-                             join trans in _context.AppStandardReferenceItems
-                                on new { StandardReferenceID = "Transaction", ItemID = t.SRTransaction }
-                                equals new { trans.StandardReferenceID, trans.ItemID }
-                             join item in _context.AppStandardReferenceItems
-                                 on new { ItemID = t.SRTransItem}
-                                 equals new { item.ItemID }
-                             where t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate
-                             select new Transaction
-                             {
-                                        TransNo = t.TransNo, Amount = t.Amount, Description = t.Description, Photo = t.Photo,
-                                        TransType = t.TransType, PersonID = t.PersonID, TransDate = t.TransDate,
-                                        SRTransaction = trans.ItemName, SRTransItem = item.ItemName
-                             })
-                                   .Skip((pageNumber - 1) * pageSize)
-                                   .Take(pageSize);
+                tQ.Select(tQ.TransNo, tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID,
+                    tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"))
+                    .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
+                    .InnerJoin(itemQ).On(itemQ.StandardReferenceID == "Expenditure" && itemQ.ItemID == tQ.SRTransItem)
+                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= startDate && tQ.TransDate <= endDate);
 
                 if (!string.IsNullOrEmpty(filter.OrderBy))
                 {
-                    var orderByMap = new Dictionary<string, Expression<Func<Transaction, object>>>
-                        {
-                            { "OrderByTransaction-001", t => t.TransNo },
-                            { "OrderByTransaction-002", t => t.TransType },
-                            { "OrderByTransaction-003", t => t.TransDate }
-                        };
-                    if (orderByMap.TryGetValue(filter.OrderBy ?? string.Empty, out var orderByExpression))
+                    switch (filter.OrderBy)
                     {
-                        query = (filter.IsAscending ?? false)
-                            ? query.OrderBy(t => orderByExpression)
-                            : query.OrderByDescending(t => orderByExpression);
-                    }
-                    else
-                    {
-                        // Default ordering if the provided OrderBy key is not found
-                        query = (filter.IsAscending ?? false)
-                            ? query.OrderBy(t => t.TransDate)
-                            : query.OrderByDescending(t => t.TransDate);
+                        case "OrderByTransaction-001":
+                            if (filter.IsAscending ?? false)
+                            {
+                                tQ.OrderBy(tQ.TransNo.Ascending);
+                            }
+                            else
+                            {
+                                tQ.OrderBy(tQ.TransNo.Descending);
+                            }
+                            break;
+
+                        case "OrderByTransaction-002":
+                            if (filter.IsAscending ?? false)
+                            {
+                                tQ.OrderBy(tQ.TransType.Ascending);
+                            }
+                            else
+                            {
+                                tQ.OrderBy(tQ.TransType.Descending);
+                            }
+                            break;
+
+                        case "OrderByTransaction-003":
+                            if (filter.IsAscending ?? false)
+                            {
+                                tQ.OrderBy(tQ.TransDate.Ascending);
+                            }
+                            else
+                            {
+                                tQ.OrderBy(tQ.TransDate.Descending);
+                            }
+                            break;
+
+                        default:
+                            if (filter.IsAscending ?? false)
+                            {
+                                tQ.OrderBy(tQ.TransDate.Ascending);
+                            }
+                            else
+                            {
+                                tQ.OrderBy(tQ.TransDate.Descending);
+                            }
+                            break;
                     }
                 }
                 else
                 {
-                    query = query.OrderByDescending(t => t.TransDate);
+                    if (filter.IsAscending ?? false)
+                    {
+                        tQ.OrderBy(tQ.TransDate.Ascending);
+                    }
+                    else
+                    {
+                        tQ.OrderBy(tQ.TransDate.Descending);
+                    }
                 }
 
-                var pagedData = await query.ToListAsync();
-                var totalRecord = await _context.Transaction
-                    .Where(t => t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate)
-                    .CountAsync();
+                DataTable dtRecord = tQ.LoadDataTable();
+
+                tQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize);
+                DataTable dt = tQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var pagedData = new List<Models.Transaction>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var trans = new Models.Transaction
+                    {
+                        TransNo = (string)dr["TransNo"],
+                        Amount = (decimal)dr["Amount"],
+                        Description = (string)dr["Description"],
+                        Photo = (byte[])dr["Photo"],
+                        TransType = (string)dr["TransType"],
+                        PersonID = (string)dr["PersonID"],
+                        TransDate = (DateTime)dr["TransDate"],
+                        SRTransaction = (string)dr["SRTransaction"],
+                        SRTransItem = (string)dr["SRTransItem"]
+                    };
+                    pagedData.Add(trans);
+                }
+                var totalRecord = dtRecord.Rows.Count;
                 var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
-                
+
                 string? prevPageLink = filter.PageNumber > 1
                     ? Url.Link("GetAllTransaction", new { PageNumber = filter.PageNumber - 1, filter.PageSize })
                     : null;
@@ -216,7 +261,7 @@ namespace UangKuAPI.Controllers
                     ? Url.Link("GetAllTransaction", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var response = new PageResponse<List<Transaction>>(pagedData, filter.PageNumber, filter.PageSize)
+                var response = new PageResponse<List<Models.Transaction>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
@@ -226,9 +271,7 @@ namespace UangKuAPI.Controllers
                     Succeeded = pagedData.Count > 0
                 };
 
-                return pagedData.Count > 0
-                    ? Ok(response)
-                    : NotFound("PersonID Not Found");
+                return Ok(response);
             }
             catch (Exception e)
             {
@@ -238,7 +281,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllPDFTransaction", Name = "GetAllPDFTransaction")]
-        public async Task<ActionResult<List<Transaction>>> GetAllPDFTransaction([FromQuery] TransactionFilter filter)
+        public async Task<ActionResult<List<Models.Transaction>>> GetAllPDFTransaction([FromQuery] TransactionFilter filter)
         {
             try
             {
@@ -250,52 +293,103 @@ namespace UangKuAPI.Controllers
                 DateTime startDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, 1);
                 DateTime endDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
 
-                var query = (from t in _context.Transaction
-                                   join trans in _context.AppStandardReferenceItems
-                                      on new { StandardReferenceID = "Transaction", ItemID = t.SRTransaction }
-                                      equals new { trans.StandardReferenceID, trans.ItemID }
-                                    join item in _context.AppStandardReferenceItems
-                                        on new { ItemID = t.SRTransItem}
-                                        equals new { item.ItemID }
-                                    where t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate
-                                   select new Transaction
-                                   {
-                                        TransNo = t.TransNo, Amount = t.Amount, Description = t.Description, Photo = t.Photo,
-                                        TransType = t.TransType, PersonID = t.PersonID, TransDate = t.TransDate,
-                                        SRTransaction = trans.ItemName, SRTransItem = item.ItemName
-                                   });
+                var tQ = new TransactionQuery("tQ");
+                var transQ = new AppstandardreferenceitemQuery("transQ");
+                var itemQ = new AppstandardreferenceitemQuery("itemQ");
+
+                tQ.Select(tQ.TransNo, tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID,
+                    tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"))
+                    .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
+                    .InnerJoin(itemQ).On(itemQ.ItemID == tQ.SRTransItem)
+                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= startDate && tQ.TransDate <= endDate);
 
                 if (!string.IsNullOrEmpty(filter.OrderBy))
                 {
-                    var orderByMap = new Dictionary<string, Expression<Func<Transaction, object>>>
-                        {
-                            { "OrderByTransaction-001", t => t.TransNo },
-                            { "OrderByTransaction-002", t => t.TransType },
-                            { "OrderByTransaction-003", t => t.TransDate }
-                        };
-                    if (orderByMap.TryGetValue(filter.OrderBy ?? string.Empty, out var orderByExpression))
+                    switch (filter.OrderBy)
                     {
-                        query = (filter.IsAscending ?? false)
-                            ? query.OrderBy(t => orderByExpression)
-                            : query.OrderByDescending(t => orderByExpression);
-                    }
-                    else
-                    {
-                        // Default ordering if the provided OrderBy key is not found
-                        query = (filter.IsAscending ?? false)
-                            ? query.OrderBy(t => t.TransDate)
-                            : query.OrderByDescending(t => t.TransDate);
+                        case "OrderByTransaction-001":
+                            if (filter.IsAscending ?? false)
+                            {
+                                tQ.OrderBy(tQ.TransNo.Ascending);
+                            }
+                            else
+                            {
+                                tQ.OrderBy(tQ.TransNo.Descending);
+                            }
+                            break;
+
+                        case "OrderByTransaction-002":
+                            if (filter.IsAscending ?? false)
+                            {
+                                tQ.OrderBy(tQ.TransType.Ascending);
+                            }
+                            else
+                            {
+                                tQ.OrderBy(tQ.TransType.Descending);
+                            }
+                            break;
+
+                        case "OrderByTransaction-003":
+                            if (filter.IsAscending ?? false)
+                            {
+                                tQ.OrderBy(tQ.TransDate.Ascending);
+                            }
+                            else
+                            {
+                                tQ.OrderBy(tQ.TransDate.Descending);
+                            }
+                            break;
+
+                        default:
+                            if (filter.IsAscending ?? false)
+                            {
+                                tQ.OrderBy(tQ.TransDate.Ascending);
+                            }
+                            else
+                            {
+                                tQ.OrderBy(tQ.TransDate.Descending);
+                            }
+                            break;
                     }
                 }
                 else
                 {
-                    query = query.OrderByDescending(t => t.TransDate);
+                    if (filter.IsAscending ?? false)
+                    {
+                        tQ.OrderBy(tQ.TransDate.Ascending);
+                    }
+                    else
+                    {
+                        tQ.OrderBy(tQ.TransDate.Descending);
+                    }
+                }
+                DataTable dt = tQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
                 }
 
-                var pagedData = await query.ToListAsync();
-                return pagedData.Count > 0
-                    ? Ok(pagedData)
-                    : NotFound("PersonID Not Found");
+                var response = new List<Models.Transaction>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var trans = new Models.Transaction
+                    {
+                        TransNo = (string)dr["TransNo"],
+                        Amount = (decimal)dr["Amount"],
+                        Description = (string)dr["Description"],
+                        Photo = (byte[])dr["Photo"],
+                        TransType = (string)dr["TransType"],
+                        PersonID = (string)dr["PersonID"],
+                        TransDate = (DateTime)dr["TransDate"],
+                        SRTransaction = (string)dr["SRTransaction"],
+                        SRTransItem = (string)dr["SRTransItem"]
+                    };
+                    response.Add(trans);
+                }
+
+                return Ok(response);
             }
             catch (Exception e)
             {
@@ -305,7 +399,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetTransactionNo", Name = "GetTransactionNo")]
-        public async Task<ActionResult<Transaction>> GetTransactionNo([FromQuery] TransactionFilter filter)
+        public async Task<ActionResult<Models.Transaction>> GetTransactionNo([FromQuery] TransactionFilter filter)
         {
             try
             {
@@ -322,7 +416,7 @@ namespace UangKuAPI.Controllers
                                     on new { ItemID = t.SRTransItem }
                                     equals new { item.ItemID }
                                 where t.TransNo == filter.TransNo
-                                select new Transaction
+                                select new Models.Transaction
                                 {
                                     TransNo = t.TransNo, Amount = t.Amount, Description = t.Description, Photo = t.Photo,
                                     TransType = t.TransType, PersonID = t.PersonID, TransDate = t.TransDate,
@@ -331,8 +425,8 @@ namespace UangKuAPI.Controllers
                                 .ToListAsync();
 
                 return response == null || response.Count == 0 || !response.Any() 
-                    ? (ActionResult<Transaction>)NotFound($"{filter.TransNo} Not Found") 
-                    : (ActionResult<Transaction>)Ok(response);
+                    ? (ActionResult<Models.Transaction>)NotFound($"{filter.TransNo} Not Found") 
+                    : (ActionResult<Models.Transaction>)Ok(response);
             }
             catch (Exception e)
             {

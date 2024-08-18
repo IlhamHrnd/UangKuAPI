@@ -1,4 +1,5 @@
 ﻿using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Helper;
 
 namespace EbookAPI.Encryptor
 {
@@ -23,9 +24,18 @@ namespace EbookAPI.Encryptor
             {
                 return enkripsi;
             }
-            var firstEncrypt = UangKuAPI.BusinessObjects.Helper.SecureAES.DataEncrypt(enkripsi, _key01);
-            var secondEncrypt = UangKuAPI.BusinessObjects.Helper.SecureCrypto.Crypto_Encrypt(firstEncrypt, _key02, _key03);
-            return secondEncrypt;
+
+            try
+            {
+                var firstEncrypt = SecureAES.DataEncrypt(enkripsi, _key01);
+                var secondEncrypt = SecureCrypto.Crypto_Encrypt(firstEncrypt, _key02, _key03);
+                return secondEncrypt;
+            }
+            catch
+            {
+                var firstEncrypt = SecureAES.DataEncrypt(enkripsi, _key01);
+                return firstEncrypt;
+            }
         }
 
         //Untuk Men Dekripsi Data
@@ -35,9 +45,18 @@ namespace EbookAPI.Encryptor
             {
                 return dekripsi;
             }
-            var firstDecrypt = UangKuAPI.BusinessObjects.Helper.SecureCrypto.Crypto_Decrypt(dekripsi, _key02, _key03);
-            var secondDecrypt = UangKuAPI.BusinessObjects.Helper.SecureAES.DataDecrypt(firstDecrypt, _key01);
-            return secondDecrypt;
+
+            try
+            {
+                var firstDecrypt = SecureCrypto.Crypto_Decrypt(dekripsi, _key02, _key03);
+                var secondDecrypt = SecureAES.DataDecrypt(firstDecrypt, _key01);
+                return secondDecrypt;
+            }
+            catch
+            {
+                var firstDecrypt = SecureAES.DataDecrypt(dekripsi, _key01);
+                return firstDecrypt;
+            }
         }
     }
 }

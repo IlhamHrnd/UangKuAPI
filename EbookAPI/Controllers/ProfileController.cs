@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
-using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using static UangKuAPI.BusinessObjects.Helper.Converter;
+using BusinessObjects;
+using Models = UangKuAPI.BusinessObjects.Model;
+using System.Data;
 
 namespace UangKuAPI.Controllers
 {
@@ -22,7 +24,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetPersonID", Name = "GetPersonID")]
-        public async Task<ActionResult<Profile>> GetPersonID([FromQuery] ProfileFilter filter)
+        public async Task<ActionResult<Models.Profile>> GetPersonID([FromQuery] ProfileFilter filter)
         {
             try
             {
@@ -31,40 +33,45 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"PersonID Is Required");
                 }
 
-                var response = await _context.Profile
-                    .Select(p => new Profile
-                    {
-                        PersonID = p.PersonID, FirstName = p.FirstName, MiddleName = p.MiddleName, LastName = p.LastName,
-                        PlaceOfBirth = p.PlaceOfBirth, Photo = p.Photo, Address = p.Address, Province = p.Province,
-                        City = p.City, Subdistrict = p.Subdistrict, District = p.District, PostalCode = p.PostalCode,
-                        LastUpdateDateTime = p.LastUpdateDateTime, LastUpdateByUser = p.LastUpdateByUser, BirthDate = p.BirthDate
-                    })
-                    .Where(p => p.PersonID == filter.PersonID)
-                    .ToListAsync();
+                var pQ = new ProfileQuery("pQ");
 
-                if (response == null || response.Count == 0 || !response.Any())
+                pQ.Select(pQ.PersonID, pQ.FirstName, pQ.MiddleName, pQ.LastName, pQ.PlaceOfBirth, pQ.Photo,
+                    pQ.Address, pQ.Province, pQ.City, pQ.Subdistrict, pQ.District, pQ.PostalCode, pQ.LastUpdateDateTime,
+                    pQ.LastUpdateByUser, pQ.BirthDate)
+                    .Where(pQ.PersonID == filter.PersonID);
+                DataTable dt = pQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
                 {
-                    return NotFound("PersonID Not Found");
-                }
-                foreach (var item in response)
-                {
-                    if (!string.IsNullOrEmpty(item.PersonID))
-                    {
-                        item.FirstName = Encryptor.DataEncrypt(item.FirstName);
-                        item.MiddleName = Encryptor.DataEncrypt(item.MiddleName);
-                        item.LastName = Encryptor.DataEncrypt(item.LastName);
-                        item.PlaceOfBirth = Encryptor.DataEncrypt(item.PlaceOfBirth);
-                        item.Address = Encryptor.DataEncrypt(item.Address);
-                        item.Province = Encryptor.DataEncrypt(item.Province);
-                        item.City = Encryptor.DataEncrypt(item.City);
-                        item.District = Encryptor.DataEncrypt(item.District);
-                        item.Subdistrict = Encryptor.DataEncrypt(item.Subdistrict);
-                    }
+                    return BadRequest($"Data Not Found");
                 }
 
-                return response == null || response.Count == 0 || !response.Any()
-                    ? (ActionResult<Profile>)NotFound("Province Not Found")
-                    : (ActionResult<Profile>)Ok(response);
+                var response = new List<Models.Profile>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var profile = new Models.Profile
+                    {
+                        PersonID = (string)dr["PersonID"],
+                        FirstName = Encryptor.DataDecrypt((string)dr["FirstName"]),
+                        MiddleName = Encryptor.DataDecrypt((string)dr["MiddleName"]),
+                        LastName = Encryptor.DataDecrypt((string)dr["LastName"]),
+                        PlaceOfBirth = Encryptor.DataDecrypt((string)dr["PlaceOfBirth"]),
+                        Photo = (byte[])dr["Photo"],
+                        Address = Encryptor.DataDecrypt((string)dr["Address"]),
+                        Province = Encryptor.DataDecrypt((string)dr["Province"]),
+                        City = Encryptor.DataDecrypt((string)dr["City"]),
+                        District = Encryptor.DataDecrypt((string)dr["District"]),
+                        Subdistrict = Encryptor.DataDecrypt((string)dr["Subdistrict"]),
+                        PostalCode = (int)dr["PostalCode"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUser = (string)dr["LastUpdateByUser"],
+                        BirthDate = (DateTime)dr["BirthDate"]
+                    };
+                    response.Add(profile);
+                }
+
+                return Ok(response);
             }
             catch (Exception e)
             {
@@ -91,7 +98,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"{profile.PersonID} Already Exist");
                 }
 
-                var prof = new Profile
+                var prof = new Models.Profile
                 {
                     PersonID = profile.PersonID, FirstName = Encryptor.DataEncrypt(profile.FirstName), MiddleName = Encryptor.DataEncrypt(profile.MiddleName),
                     LastName = Encryptor.DataEncrypt(profile.LastName), BirthDate = profile.BirthDate, PlaceOfBirth = Encryptor.DataEncrypt(profile.PlaceOfBirth),
