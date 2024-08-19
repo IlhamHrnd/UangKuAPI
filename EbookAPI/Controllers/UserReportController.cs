@@ -3,10 +3,13 @@ using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
-using UangKuAPI.Filter;
 using UangKuAPI.Helper;
-using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
+using static UangKuAPI.BusinessObjects.Helper.DateFormat;
+using static UangKuAPI.BusinessObjects.Helper.Converter;
+using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Entity;
+using System.Data;
 
 namespace UangKuAPI.Controllers
 {
@@ -53,7 +56,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPost("PostUserReport", Name = "PostUserReport")]
-        public async Task<IActionResult> PostUserReport([FromBody] PostUserReport report)
+        public async Task<IActionResult> PostUserReport([FromBody] UserReport2 report)
         {
             try
             {
@@ -61,27 +64,29 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Report Are Required");
                 }
-                string createddate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-                string updatedate = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-                string errordate = DateFormat.DateTimeNow(Longyearpattern, report.DateErrorOccured);
-                string reportStatus = "ReportStatus-001";
 
-                var query = $@"INSERT INTO `UserReport`(`ReportNo`, `DateErrorOccured`, `SRErrorLocation`, `SRErrorPossibility`, 
-                                `ErrorCronologic`, `Picture`, `CreatedDateTime`, `CreatedByUserID`, 
-                                `LastUpdateDateTime`, `LastUpdateByUserID`, `PersonID`, `SRReportStatus`)
-                                VALUES('{report.ReportNo}', '{errordate}', '{report.SRErrorLocation}', '{report.SRErrorPossibility}',
-                                '{report.ErrorCronologic}', '{report.Picture}', '{createddate}', '{report.CreatedByUserID}',
-                                '{updatedate}', '{report.LastUpdateByUserID}', '{report.PersonID}', '{reportStatus}');";
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
+                var addUser = await _context.Report
+                    .FirstOrDefaultAsync(ur => ur.ReportNo == report.ReportNo);
 
-                if (rowsAffected > 0)
+                if (addUser != null)
                 {
-                    return Ok($"Report No {report.ReportNo} Created Successfully");
+                    return BadRequest($"{report.ReportNo} Already Exist");
                 }
-                else
+
+                var newReport = new UserReport
                 {
-                    return BadRequest($"Failed To Insert Data For Report No {report.ReportNo}");
-                }
+                    ReportNo = report.ReportNo, DateErrorOccured = report.DateErrorOccured, SRErrorLocation = report.SRErrorLocation,
+                    ErrorCronologic = report.ErrorCronologic, Picture = StringToByte(report.Picture), CreatedDateTime = DateFormat.DateTimeNow(),
+                    CreatedByUserID = report.CreatedByUserID, LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserID = report.LastUpdateByUserID,
+                    PersonID = report.PersonID, SRReportStatus = "ReportStatus-001", SRErrorPossibility = report.SRErrorPossibility
+                };
+                _context.Report.Add(newReport);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+
+                return rowsAffected > 0
+                    ? Ok($"User {report.ReportNo} Created Successfully")
+                    : BadRequest($"Failed To Insert Data For ReportNo {report.ReportNo}");
             }
             catch (Exception e)
             {
@@ -90,55 +95,53 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("PatchUserReport", Name = "PatchUserReport")]
-        public async Task<IActionResult> PatchUserReport([FromQuery] bool IsApproved, [FromQuery] string ReportNo, [FromBody] PatchUserReport patch)
+        public async Task<IActionResult> PatchUserReport([FromBody] UserReport2 report)
         {
             try
             {
-                var dateTime = DateFormat.DateTimeNow();
-
-                int approved = IsApproved ? 1 : 0;
-
-                if (string.IsNullOrEmpty(ReportNo))
+                if (string.IsNullOrEmpty(report.ReportNo))
                 {
                     return BadRequest($"Report No Is Required");
                 }
 
-                var report = await _context.Report
-                    .Where(r => r.ReportNo == ReportNo)
-                    .FirstOrDefaultAsync();
+                var _report = await _context.Report
+                    .FirstOrDefaultAsync(ur => ur.ReportNo == report.ReportNo);
 
                 if (report == null)
                 {
-                    return NotFound($"{ReportNo} Not Found");
+                    return NotFound($"{report.ReportNo} Not Found");
                 }
 
-                report.IsApprove = IsApproved;
-                report.SRReportStatus = patch.SRReportStatus;
-                report.LastUpdateDateTime = DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, dateTime.Day);
-                report.LastUpdateByUserID = patch.LastUpdateByUserID;
-
-                if (IsApproved)
+                if (report.IsApprove == null)
                 {
-                    report.ApprovedDateTime = DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, dateTime.Day);
-                    report.ApprovedByUserID = patch.ApprovedByUserID;
+                    _report.IsApprove = null;
+                }
+                else if (report.IsApprove ?? false)
+                {
+                    _report.IsApprove = report.IsApprove;
+                    _report.ApprovedByUserID = report.ApprovedByUserID;
+                    _report.ApprovedDateTime = DateFormat.DateTimeNow();
+                    _report.VoidByUserID = string.Empty;
+                    _report.VoidDateTime = null;
                 }
                 else
                 {
-                    report.VoidDateTime = DateFormat.DateTimeNowDate(dateTime.Year, dateTime.Month, dateTime.Day);
-                    report.VoidByUserID = patch.VoidByUserID;
+                    _report.IsApprove = report.IsApprove;
+                    _report.VoidByUserID = report.VoidByUserID;
+                    _report.VoidDateTime = DateFormat.DateTimeNow();
+                    _report.ApprovedByUserID = string.Empty;
+                    _report.ApprovedDateTime = null;
                 }
+                _report.SRReportStatus = report.SRReportStatus;
+                _report.LastUpdateDateTime = DateFormat.DateTimeNow();
+                _report.LastUpdateByUserID = report.LastUpdateByUserID;
+                _context.Update(_report);
 
-                _context.Update(report);
-                var response = await _context.SaveChangesAsync();
+                int rowsAffected = await _context.SaveChangesAsync();
 
-                if (response > 0)
-                {
-                    return Ok($"{ReportNo} Successfully Update");
-                }
-                else
-                {
-                    return NotFound($"{ReportNo} Not Found");
-                }
+                return rowsAffected > 0
+                    ? Ok($"User {report.ReportNo} Update Successfully")
+                    : BadRequest($"Failed To Update Data For ReportNo {report.ReportNo}");
             }
             catch (Exception e)
             {
@@ -148,63 +151,71 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserReport", Name = "GetUserReport")]
-        public async Task<ActionResult<GetUserReport>> GetUserReport([FromQuery] UserReportFilter filter)
+        public async Task<ActionResult<UserReport>> GetUserReport([FromQuery] UserReportFilter filter)
         {
             try
             {
-                var validFilter = new UserReportFilter(filter.PageNumber, filter.PageSize, filter.PersonID);
-                var pageNumber = validFilter.PageNumber;
-                var pageSize = validFilter.PageSize;
-                var pagedData = await _context.Report
-                    .Join(
-                        _context.AppStandardReferenceItems.Where(asri => asri.StandardReferenceID == "ErrorLocation"),
-                        ur => ur.SRErrorLocation,
-                        asri => asri.ItemID,
-                        (ur, asri) => new { ur, ErrorLocationItemName = asri.ItemName }
-                    )
-                    .Join(
-                        _context.AppStandardReferenceItems.Where(asri => asri.StandardReferenceID == "ErrorPossibility"),
-                        combined => combined.ur.SRErrorPossibility,
-                        asri => asri.ItemID,
-                        (combined, asri) => new { combined.ur, combined.ErrorLocationItemName, ErrorPossibilityItemName = asri.ItemName }
-                    )
-                    .Join(
-                        _context.AppStandardReferenceItems.Where(asri => asri.StandardReferenceID == "ReportStatus"),
-                        combined => combined.ur.SRReportStatus,
-                        asri => asri.ItemID,
-                        (combined, asri) => new { combined.ur, combined.ErrorLocationItemName, combined.ErrorPossibilityItemName, ReportStatusItemName = asri.ItemName }
-                    )
-                    .Select(result => new GetUserReport
-                    {
-                        ReportNo = result.ur.ReportNo, DateErrorOccured = result.ur.DateErrorOccured,
-                        SRErrorLocation = result.ErrorLocationItemName, SRErrorPossibility = result.ErrorPossibilityItemName,
-                        ErrorCronologic = result.ur.ErrorCronologic, Picture = result.ur.Picture,
-                        IsApprove = result.ur.IsApprove, SRReportStatus = result.ReportStatusItemName,
-                        CreatedDateTime = result.ur.CreatedDateTime, CreatedByUserID = result.ur.CreatedByUserID,
-                        PersonID = result.ur.PersonID
-                    })
-                    .Where(r => (string.IsNullOrEmpty(filter.PersonID) || r.PersonID == filter.PersonID))
-                    .OrderByDescending(r => r.CreatedDateTime)
-                    .AsNoTracking()
-                    .ToListAsync();
+                var urQ = new UserreportQuery("urQ");
+                var elQ = new AppstandardreferenceitemQuery("elQ");
+                var epQ = new AppstandardreferenceitemQuery("epQ");
+                var rsQ = new AppstandardreferenceitemQuery("rsQ");
 
-                if (pagedData == null || pagedData.Count == 0 || !pagedData.Any())
+                urQ.Select(urQ.ReportNo, urQ.DateErrorOccured, urQ.ErrorCronologic, urQ.Picture, urQ.IsApprove,
+                    urQ.CreatedDateTime, urQ.CreatedByUserID, urQ.PersonID, elQ.ItemName.As("SRErrorLocation"),
+                    epQ.ItemName.As("SRErrorPossibility"), rsQ.ItemName.As("SRReportStatus"))
+                    .InnerJoin(elQ).On(elQ.StandardReferenceID == "ErrorLocation" && elQ.ItemID == urQ.SRErrorLocation)
+                    .InnerJoin(epQ).On(epQ.StandardReferenceID == "ErrorPossibility" && epQ.ItemID == urQ.SRErrorPossibility)
+                    .InnerJoin(rsQ).On(rsQ.StandardReferenceID == "ReportStatus" && rsQ.ItemID == urQ.SRReportStatus)
+                    .OrderBy(urQ.CreatedDateTime.Ascending);
+
+                if (!string.IsNullOrEmpty(filter.PersonID))
                 {
-                    return NotFound("Person ID Not Found");
+                    urQ.Where(urQ.PersonID == filter.PersonID);
                 }
 
-                var totalRecord = await _context.Report.CountAsync();
-                var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
+                DataTable dtRecord = urQ.LoadDataTable();
 
-                string? prevPageLink = validFilter.PageNumber > 1
-                    ? Url.Link("GetUserReport", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                urQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize);
+                DataTable dt = urQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var pagedData = new List<UserReport>();
+                
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var report = new UserReport
+                    {
+                        ReportNo = (string)dr["ReportNo"],
+                        DateErrorOccured = (DateTime)dr["DateErrorOccured"],
+                        SRErrorLocation = (string)dr["SRErrorLocation"],
+                        SRErrorPossibility = (string)dr["SRErrorPossibility"],
+                        ErrorCronologic = (string)dr["ErrorCronologic"],
+                        Picture = (byte[]?)dr["Picture"],
+                        IsApprove = dr["IsApprove"] != DBNull.Value ? bool.Parse((string)dr["IsApprove"]) : null,
+                        SRReportStatus = (string)dr["SRReportStatus"],
+                        CreatedDateTime = (DateTime)dr["CreatedDateTime"],
+                        CreatedByUserID = (string)dr["CreatedByUserID"],
+                        PersonID = (string)dr["PersonID"]
+                    };
+                    pagedData.Add(report);
+                }
+                var totalRecord = dtRecord.Rows.Count;
+                var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
+
+                string? prevPageLink = filter.PageNumber > 1
+                    ? Url.Link("GetUserReport", new { PageNumber = filter.PageNumber - 1, filter.PageSize })
                     : null;
 
-                string? nextPageLink = validFilter.PageNumber < totalPages
-                    ? Url.Link("GetUserReport", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                string? nextPageLink = filter.PageNumber < totalPages
+                    ? Url.Link("GetUserReport", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var response = new PageResponse<List<GetUserReport>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
+                var response = new PageResponse<List<UserReport>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
@@ -222,49 +233,63 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReportNo", Name = "GetReportNo")]
-        public async Task<ActionResult<GetUserReport>> GetReportNo([FromQuery] string ReportNo, [FromQuery] bool IsAdmin)
+        public async Task<ActionResult<UserReport>> GetReportNo([FromQuery] UserReportFilter filter)
         {
             try
             {
-                if (string.IsNullOrEmpty(ReportNo))
+                if (string.IsNullOrEmpty(filter.ReportNo))
                 {
                     return BadRequest($"ReportNo Is Required");
                 }
 
-                var query = await _context.Report
-                    .Where(r => r.ReportNo == ReportNo)
-                    .Select(r => IsAdmin
-                        ? new UserReport
-                        {
-                            ReportNo = r.ReportNo, DateErrorOccured = r.DateErrorOccured,
-                            SRErrorLocation = r.SRErrorLocation, SRErrorPossibility = r.SRErrorPossibility,
-                            ErrorCronologic = r.ErrorCronologic, Picture = r.Picture,
-                            IsApprove = r.IsApprove, SRReportStatus = r.SRReportStatus,
-                            ApprovedDateTime = r.ApprovedDateTime, ApprovedByUserID = r.ApprovedByUserID,
-                            VoidDateTime = r.VoidDateTime, VoidByUserID = r.VoidByUserID,
-                            CreatedDateTime = r.CreatedDateTime, CreatedByUserID = r.CreatedByUserID,
-                            LastUpdateDateTime = r.LastUpdateDateTime, LastUpdateByUserID = r.LastUpdateByUserID,
-                            PersonID = r.PersonID
-                        }
-                        : new UserReport
-                        {
-                            ReportNo = r.ReportNo, DateErrorOccured = r.DateErrorOccured,
-                            SRErrorLocation = r.SRErrorLocation, SRErrorPossibility = r.SRErrorPossibility,
-                            ErrorCronologic = r.ErrorCronologic, Picture = r.Picture,
-                            IsApprove = r.IsApprove, SRReportStatus = r.SRReportStatus,
-                            CreatedDateTime = r.CreatedDateTime, CreatedByUserID = r.CreatedByUserID,
-                            PersonID = r.PersonID
-                        })
-                    .AsNoTracking()
-                    .ToListAsync();
+                var urQ = new UserreportQuery("urQ");
+                var elQ = new AppstandardreferenceitemQuery("elQ");
+                var epQ = new AppstandardreferenceitemQuery("epQ");
+                var rsQ = new AppstandardreferenceitemQuery("rsQ");
 
+                urQ.Select(urQ.ReportNo, urQ.DateErrorOccured, urQ.ErrorCronologic, urQ.Picture, urQ.IsApprove,
+                    urQ.ApprovedDateTime, urQ.ApprovedByUserID, urQ.VoidDateTime, urQ.VoidByUserID, urQ.LastUpdateDateTime,
+                    urQ.LastUpdateByUserID, urQ.CreatedDateTime, urQ.CreatedByUserID, urQ.PersonID, elQ.ItemName.As("SRErrorLocation"),
+                    epQ.ItemName.As("SRErrorPossibility"), rsQ.ItemName.As("SRReportStatus"))
+                    .InnerJoin(elQ).On(elQ.StandardReferenceID == "ErrorLocation" && elQ.ItemID == urQ.SRErrorLocation)
+                    .InnerJoin(epQ).On(epQ.StandardReferenceID == "ErrorPossibility" && epQ.ItemID == urQ.SRErrorPossibility)
+                    .InnerJoin(rsQ).On(rsQ.StandardReferenceID == "ReportStatus" && rsQ.ItemID == urQ.SRReportStatus)
+                    .OrderBy(urQ.CreatedDateTime.Ascending)
+                    .Where(urQ.ReportNo == filter.ReportNo);
+                DataTable dt = urQ.LoadDataTable();
 
-                if (query == null || query.Count == 0 || !query.Any())
+                if (dt.Rows.Count == 0)
                 {
-                    return NotFound($"{ReportNo} Not Found");
+                    return NotFound($"Data Not Found");
                 }
 
-                return Ok(query);
+                var response = new List<UserReport>();
+                
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var report = new UserReport
+                    {
+                        ReportNo = (string)dr["ReportNo"],
+                        DateErrorOccured = (DateTime)dr["DateErrorOccured"],
+                        SRErrorLocation = (string)dr["SRErrorLocation"],
+                        SRErrorPossibility = (string)dr["SRErrorPossibility"],
+                        ErrorCronologic = (string)dr["ErrorCronologic"],
+                        IsApprove = dr["IsApprove"] != DBNull.Value ? bool.Parse((string)dr["IsApprove"]) : null,
+                        SRReportStatus = (string)dr["SRReportStatus"],
+                        ApprovedDateTime = filter.IsAdmin ? (dr["ApprovedDateTime"] != DBNull.Value ? (DateTime)dr["ApprovedDateTime"] : null) : null,
+                        ApprovedByUserID = filter.IsAdmin ? (dr["ApprovedByUserID"] != DBNull.Value ? (string)dr["ApprovedByUserID"] : null) : null,
+                        VoidDateTime = filter.IsAdmin ? (dr["VoidDateTime"] != DBNull.Value ? (DateTime)dr["VoidDateTime"] : null) : null,
+                        VoidByUserID = filter.IsAdmin ? (dr["VoidByUserID"] != DBNull.Value ? (string)dr["VoidByUserID"] : null) : null,
+                        CreatedDateTime = (DateTime)dr["CreatedDateTime"],
+                        CreatedByUserID = (string)dr["CreatedByUserID"],
+                        LastUpdateDateTime = filter.IsAdmin ? (dr["LastUpdateDateTime"] != DBNull.Value ? (DateTime)dr["LastUpdateDateTime"] : null) : null,
+                        LastUpdateByUserID = filter.IsAdmin ? (dr["LastUpdateByUserID"] != DBNull.Value ? (string)dr["LastUpdateByUserID"] : null) : null,
+                        PersonID = (string)dr["PersonID"]
+                    };
+                    response.Add(report);
+                }
+
+                return Ok(response);
             }
             catch (Exception e)
             {

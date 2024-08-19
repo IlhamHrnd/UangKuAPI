@@ -184,7 +184,8 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"{pic.PictureID} Not Found");
                 }
-                _context.Remove(pic);
+                pic.IsDeleted = filter.IsDeleted;
+                _context.Update(pic);
 
                 int rowsAffected = await _context.SaveChangesAsync();
                 return rowsAffected > 0
