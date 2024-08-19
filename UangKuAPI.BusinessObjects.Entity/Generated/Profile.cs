@@ -29,7 +29,7 @@ using EntitySpaces.DynamicQuery;
 
 
 
-namespace BusinessObjects
+namespace UangKuAPI.BusinessObjects.Entity
 {
 	/// <summary>
 	/// Encapsulates the 'Profile' table

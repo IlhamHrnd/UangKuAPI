@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using UangKuAPI.BusinessObjects.Filter;
 using UangKuAPI.BusinessObjects.Entity;
 using System.Data;
-using BusinessObjects;
 using Models = UangKuAPI.BusinessObjects.Model;
 
 namespace UangKuAPI.Controllers

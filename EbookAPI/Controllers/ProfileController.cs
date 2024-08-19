@@ -6,9 +6,9 @@ using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
 using static UangKuAPI.BusinessObjects.Helper.Converter;
-using BusinessObjects;
 using Models = UangKuAPI.BusinessObjects.Model;
 using System.Data;
+using UangKuAPI.BusinessObjects.Entity;
 
 namespace UangKuAPI.Controllers
 {
