@@ -8,7 +8,6 @@ using static UangKuAPI.BusinessObjects.Helper.Helper;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using static UangKuAPI.BusinessObjects.Helper.Converter;
 using UangKuAPI.BusinessObjects.Filter;
-using System.Linq.Expressions;
 using UangKuAPI.BusinessObjects.Entity;
 using Models = UangKuAPI.BusinessObjects.Model;
 using System.Data;

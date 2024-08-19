@@ -46,11 +46,5 @@ namespace UangKuAPI.Helper
             var result = BusinessObjects.Helper.DateFormat.DateTimeNow(null);
             return result;
         }
-
-        public static string DateTimeIsNull(DateTime? dateTime)
-        {
-            string result = BusinessObjects.Helper.DateFormat.DateTimeNow(Yearmonthdate, dateTime);
-            return result;
-        }
     }
 }
