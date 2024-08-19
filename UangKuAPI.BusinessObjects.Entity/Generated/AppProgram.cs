@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/18/2024 9:50:03 AM
+Date Generated       : 8/19/2024 10:20:53 PM
 ===============================================================================
 */
 
@@ -437,6 +437,66 @@ namespace UangKuAPI.BusinessObjects.Entity
 			}
 		}
 		
+		/// <summary>
+		/// Maps to AppProgram.LastUpdateDateTime
+		/// </summary>
+		[DataMember(EmitDefaultValue=false)]
+		virtual public System.DateTime? LastUpdateDateTime
+		{
+			get
+			{
+				return base.GetSystemDateTime(AppprogramMetadata.ColumnNames.LastUpdateDateTime);
+			}
+			
+			set
+			{
+				if(base.SetSystemDateTime(AppprogramMetadata.ColumnNames.LastUpdateDateTime, value))
+				{
+					OnPropertyChanged(AppprogramMetadata.PropertyNames.LastUpdateDateTime);
+				}
+			}
+		}
+		
+		/// <summary>
+		/// Maps to AppProgram.LastUpdateByUserID
+		/// </summary>
+		[DataMember(EmitDefaultValue=false)]
+		virtual public System.String LastUpdateByUserID
+		{
+			get
+			{
+				return base.GetSystemString(AppprogramMetadata.ColumnNames.LastUpdateByUserID);
+			}
+			
+			set
+			{
+				if(base.SetSystemString(AppprogramMetadata.ColumnNames.LastUpdateByUserID, value))
+				{
+					OnPropertyChanged(AppprogramMetadata.PropertyNames.LastUpdateByUserID);
+				}
+			}
+		}
+		
+		/// <summary>
+		/// Maps to AppProgram.IsUsedBySystem
+		/// </summary>
+		[DataMember(EmitDefaultValue=false)]
+		virtual public System.SByte? IsUsedBySystem
+		{
+			get
+			{
+				return base.GetSystemSByte(AppprogramMetadata.ColumnNames.IsUsedBySystem);
+			}
+			
+			set
+			{
+				if(base.SetSystemSByte(AppprogramMetadata.ColumnNames.IsUsedBySystem, value))
+				{
+					OnPropertyChanged(AppprogramMetadata.PropertyNames.IsUsedBySystem);
+				}
+			}
+		}
+		
 		#endregion
 		
 		#region Housekeeping methods
@@ -460,7 +520,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 				if (this.query == null)
 				{
 					this.query = new AppprogramQuery("AppProgram");
-                    InitQuery(this.query);
+					InitQuery(this.query);
 				}
 
 				return this.query;
@@ -528,7 +588,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 				if (this.query == null)
 				{
 					this.query = new AppprogramQuery("AppProgram");
-                    InitQuery(this.query);
+					InitQuery(this.query);
 				}
 
 				return this.query;
@@ -547,7 +607,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 			if (this.query == null)
 			{
 				this.query = new AppprogramQuery("AppProgram");
-                this.InitQuery(query);
+				this.InitQuery(query);
 			}
 			return this.query;
 		}
@@ -605,6 +665,9 @@ namespace UangKuAPI.BusinessObjects.Entity
 				case "IsProgramUnVoidAble": return this.IsProgramUnVoidAble;
 				case "IsProgramPrintAble": return this.IsProgramPrintAble;
 				case "IsVisible": return this.IsVisible;
+				case "LastUpdateDateTime": return this.LastUpdateDateTime;
+				case "LastUpdateByUserID": return this.LastUpdateByUserID;
+				case "IsUsedBySystem": return this.IsUsedBySystem;
 
                 default: return null;
             }
@@ -682,6 +745,21 @@ namespace UangKuAPI.BusinessObjects.Entity
 		public esQueryItem IsVisible
 		{
 			get { return new esQueryItem(this, AppprogramMetadata.ColumnNames.IsVisible, esSystemType.SByte); }
+		} 
+		
+		public esQueryItem LastUpdateDateTime
+		{
+			get { return new esQueryItem(this, AppprogramMetadata.ColumnNames.LastUpdateDateTime, esSystemType.DateTime); }
+		} 
+		
+		public esQueryItem LastUpdateByUserID
+		{
+			get { return new esQueryItem(this, AppprogramMetadata.ColumnNames.LastUpdateByUserID, esSystemType.String); }
+		} 
+		
+		public esQueryItem IsUsedBySystem
+		{
+			get { return new esQueryItem(this, AppprogramMetadata.ColumnNames.IsUsedBySystem, esSystemType.SByte); }
 		} 
 		
 		#endregion
@@ -782,6 +860,20 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c.IsNullable = true;
 			m_columns.Add(c);
 				
+			c = new esColumnMetadata(AppprogramMetadata.ColumnNames.LastUpdateDateTime, 14, typeof(System.DateTime), esSystemType.DateTime);
+			c.PropertyName = AppprogramMetadata.PropertyNames.LastUpdateDateTime;
+			m_columns.Add(c);
+				
+			c = new esColumnMetadata(AppprogramMetadata.ColumnNames.LastUpdateByUserID, 15, typeof(System.String), esSystemType.String);
+			c.PropertyName = AppprogramMetadata.PropertyNames.LastUpdateByUserID;
+			c.CharacterMaxLength = 50;
+			m_columns.Add(c);
+				
+			c = new esColumnMetadata(AppprogramMetadata.ColumnNames.IsUsedBySystem, 16, typeof(System.SByte), esSystemType.SByte);
+			c.PropertyName = AppprogramMetadata.PropertyNames.IsUsedBySystem;
+			c.NumericPrecision = 1;
+			m_columns.Add(c);
+				
 		}
 		#endregion	
 	
@@ -822,6 +914,9 @@ namespace UangKuAPI.BusinessObjects.Entity
 			 public const string IsProgramUnVoidAble = "IsProgramUnVoidAble";
 			 public const string IsProgramPrintAble = "IsProgramPrintAble";
 			 public const string IsVisible = "IsVisible";
+			 public const string LastUpdateDateTime = "LastUpdateDateTime";
+			 public const string LastUpdateByUserID = "LastUpdateByUserID";
+			 public const string IsUsedBySystem = "IsUsedBySystem";
 		}
 		#endregion	
 		
@@ -842,6 +937,9 @@ namespace UangKuAPI.BusinessObjects.Entity
 			 public const string IsProgramUnVoidAble = "IsProgramUnVoidAble";
 			 public const string IsProgramPrintAble = "IsProgramPrintAble";
 			 public const string IsVisible = "IsVisible";
+			 public const string LastUpdateDateTime = "LastUpdateDateTime";
+			 public const string LastUpdateByUserID = "LastUpdateByUserID";
+			 public const string IsUsedBySystem = "IsUsedBySystem";
 		}
 		#endregion	
 
@@ -899,7 +997,10 @@ namespace UangKuAPI.BusinessObjects.Entity
 				meta.AddTypeMap("IsProgramVoidAble", new esTypeMap("BIT", "System.SByte"));
 				meta.AddTypeMap("IsProgramUnVoidAble", new esTypeMap("BIT", "System.SByte"));
 				meta.AddTypeMap("IsProgramPrintAble", new esTypeMap("BIT", "System.SByte"));
-				meta.AddTypeMap("IsVisible", new esTypeMap("BIT", "System.SByte"));			
+				meta.AddTypeMap("IsVisible", new esTypeMap("BIT", "System.SByte"));
+				meta.AddTypeMap("LastUpdateDateTime", new esTypeMap("DATETIME", "System.DateTime"));
+				meta.AddTypeMap("LastUpdateByUserID", new esTypeMap("VARCHAR", "System.String"));
+				meta.AddTypeMap("IsUsedBySystem", new esTypeMap("BIT", "System.SByte"));			
 				
 				
 				

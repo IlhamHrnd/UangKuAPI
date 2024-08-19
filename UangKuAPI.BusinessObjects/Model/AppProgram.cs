@@ -20,5 +20,8 @@ namespace UangKuAPI.BusinessObjects.Model
         public bool? IsProgramUnVoidAble { get; set; }
         public bool? IsProgramPrintAble { get; set; }
         public bool? IsVisible { get; set; }
+        public DateTime LastUpdateDateTime { get; set; }
+        public string? LastUpdateByUserID { get; set; }
+        public bool IsUsedBySystem { get; set; }
     }
 }
