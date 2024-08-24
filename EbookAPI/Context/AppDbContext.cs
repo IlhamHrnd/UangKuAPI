@@ -96,7 +96,7 @@ namespace UangKuAPI.Context
             if (!optionsBuilder.IsConfigured)
             {
                 optionsBuilder.UseMySql("Server=103.185.53.118; Database=yolodevc_UangKu; User Id=yolodevc_API; Password=YoloAdmin@123",
-                    new MariaDbServerVersion("10.6.15-MariaDB-cll-lve"));
+                    new MariaDbServerVersion("10.6.15-mariadb"));
             }
         }
     }

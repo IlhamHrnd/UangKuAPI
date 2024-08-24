@@ -13,7 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(builder.Configuration.GetConnectionString("DatabaseConnection"),
-        new MariaDbServerVersion("10.4.28-MariaDB"))
+        new MariaDbServerVersion("10.6.15-mariadb"))
     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
     .LogTo(Console.WriteLine, LogLevel.Information)
     .EnableSensitiveDataLogging()

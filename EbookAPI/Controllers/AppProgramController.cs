@@ -6,6 +6,8 @@ using UangKuAPI.Context;
 using System.Data;
 using EbookAPI.Wrapper;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
+using Microsoft.EntityFrameworkCore;
+using UangKuAPI.Helper;
 
 namespace UangKuAPI.Controllers
 {
@@ -228,6 +230,93 @@ namespace UangKuAPI.Controllers
 
                 filter.LastID++;
                 return Ok(programID);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpPost("PostProgram", Name = "PostProgram")]
+        public async Task<IActionResult> PostProgram([FromBody] Models.AppProgram ap)
+        {
+            try
+            {
+                if (ap == null)
+                {
+                    return BadRequest($"Program Are Required");
+                }
+
+                var program = await _context.AppPrograms
+                    .Where(p => p.ProgramID == ap.ProgramID)
+                    .ToListAsync();
+
+                if (program.Any())
+                {
+                    return BadRequest($"{ap.ProgramID} Already Exist");
+                }
+
+                var p = new Models.AppProgram
+                {
+                    ProgramID = ap.ProgramID, ProgramName = ap.ProgramName, Note = ap.Note, IsProgram = ap.IsProgram, IsProgramAddAble = ap.IsProgramAddAble,
+                    IsProgramEditAble = ap.IsProgramEditAble, IsProgramDeleteAble = ap.IsProgramDeleteAble, IsProgramViewAble = ap.IsProgramViewAble,
+                    IsProgramApprovalAble = ap.IsProgramApprovalAble, IsProgramUnApprovalAble = ap.IsProgramUnApprovalAble, IsProgramVoidAble = ap.IsProgramVoidAble,
+                    IsProgramUnVoidAble = ap.IsProgramUnVoidAble, IsProgramPrintAble = ap.IsProgramPrintAble, IsVisible = ap.IsVisible, LastUpdateDateTime = DateFormat.DateTimeNow(),
+                    LastUpdateByUserID = ap.LastUpdateByUserID, IsUsedBySystem = ap.IsUsedBySystem,
+                };
+                _context.Add(p);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"Transaction No {ap.ProgramID} Created Successfully")
+                    : BadRequest($"Failed To Insert Data For ProgramID No {ap.ProgramID}");
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpPatch("PatchProgram", Name = "PatchProgram")]
+        public async Task<IActionResult> PatchProgram([FromBody] Models.AppProgram ap)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(ap.ProgramID))
+                {
+                    return BadRequest($"ProgramID Is Required");
+                }
+
+                var program = await _context.AppPrograms
+                    .FirstOrDefaultAsync(p => p.ProgramID == ap.ProgramID);
+
+                if (program == null)
+                {
+                    return BadRequest($"{ap.ProgramID} Not Found");
+                }
+
+                program.ProgramName = ap.ProgramName;
+                program.Note = ap.Note;
+                program.IsProgram = ap.IsProgram;
+                program.IsProgramAddAble = ap.IsProgramAddAble;
+                program.IsProgramEditAble = ap.IsProgramEditAble;
+                program.IsProgramDeleteAble = ap.IsProgramDeleteAble;
+                program.IsProgramViewAble = ap.IsProgramViewAble;
+                program.IsProgramApprovalAble = ap.IsProgramApprovalAble;
+                program.IsProgramUnApprovalAble = ap.IsProgramUnApprovalAble;
+                program.IsProgramVoidAble = ap.IsProgramVoidAble;
+                program.IsProgramUnVoidAble = ap.IsProgramUnVoidAble;
+                program.IsProgramPrintAble = ap.IsProgramPrintAble;
+                program.IsVisible = ap.IsVisible;
+                program.LastUpdateDateTime = DateFormat.DateTimeNow();
+                program.LastUpdateByUserID = ap.LastUpdateByUserID;
+                program.IsUsedBySystem = ap.IsUsedBySystem;
+                _context.Update(program);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+                return rowsAffected > 0
+                    ? Ok($"{ap.ProgramID} Updated Successfully")
+                    : BadRequest($"Failed To Update Data For ProgramID {ap.ProgramID}");
             }
             catch (Exception e)
             {

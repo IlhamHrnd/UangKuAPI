@@ -221,9 +221,6 @@ namespace UangKuAPI.Controllers
         {
             try
             {
-                string date = DateFormat.DateTimeNow(Longyearpattern, DateTime.Now);
-                int use = ap.IsUsedBySystem == true ? 1 : 0;
-
                 if (string.IsNullOrEmpty(ap.ParameterID))
                 {
                     return BadRequest($"ParameterID Is Required");
