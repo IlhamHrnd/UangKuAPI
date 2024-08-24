@@ -22,7 +22,7 @@ namespace EbookAPI.Controllers
         }
 
         [HttpGet("GetAllUser", Name = "GetAllUser")]
-        public async Task<ActionResult<Models.User>> GetAllUser([FromQuery] UserFilter filter)
+        public async Task<ActionResult<PageResponse<Models.User>>> GetAllUser([FromQuery] UserFilter filter)
         {
             try
             {
@@ -96,7 +96,7 @@ namespace EbookAPI.Controllers
         }
 
         [HttpGet("GetLoginUserName", Name = "GetLoginUserName")]
-        public async Task<ActionResult<Models.User>> GetLoginUserName([FromQuery] UserFilter filter)
+        public async Task<ActionResult<List<Models.User>>> GetLoginUserName([FromQuery] UserFilter filter)
         {
             try
             {

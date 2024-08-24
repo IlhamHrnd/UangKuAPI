@@ -22,7 +22,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllReferenceID", Name = "GetAllReferenceID")]
-        public async Task<ActionResult<AppStandardReference>> GetAllReferenceID([FromQuery] AppStandardReferenceFilter filter)
+        public async Task<ActionResult<PageResponse<AppStandardReference>>> GetAllReferenceID([FromQuery] AppStandardReferenceFilter filter)
         {
             try
             {
@@ -90,7 +90,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReferenceID", Name = "GetReferenceID")]
-        public async Task<ActionResult<AppStandardReference>> GetReferenceID([FromQuery] AppStandardReferenceFilter filter)
+        public async Task<ActionResult<List<AppStandardReference>>> GetReferenceID([FromQuery] AppStandardReferenceFilter filter)
         {
             try
             {

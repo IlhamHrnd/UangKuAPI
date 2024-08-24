@@ -151,7 +151,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserReport", Name = "GetUserReport")]
-        public async Task<ActionResult<UserReport>> GetUserReport([FromQuery] UserReportFilter filter)
+        public async Task<ActionResult<PageResponse<UserReport>>> GetUserReport([FromQuery] UserReportFilter filter)
         {
             try
             {
@@ -233,7 +233,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReportNo", Name = "GetReportNo")]
-        public async Task<ActionResult<UserReport>> GetReportNo([FromQuery] UserReportFilter filter)
+        public async Task<ActionResult<List<UserReport>>> GetReportNo([FromQuery] UserReportFilter filter)
         {
             try
             {

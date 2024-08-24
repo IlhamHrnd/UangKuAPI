@@ -22,7 +22,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppProgram", Name = "GetAllAppProgram")]
-        public async Task<ActionResult<Models.AppProgram>> GetAllAppProgram([FromQuery] AppProgramFilter filter)
+        public async Task<ActionResult<PageResponse<Models.AppProgram>>> GetAllAppProgram([FromQuery] AppProgramFilter filter)
         {
             var apQ = new AppprogramQuery("apQ");
 
@@ -93,7 +93,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppProgramWithNoPageFilter", Name = "GetAllAppProgramWithNoPageFilter")]
-        public async Task<ActionResult<Models.AppProgram>> GetAllAppProgramWithNoPageFilter()
+        public async Task<ActionResult<List<Models.AppProgram>>> GetAllAppProgramWithNoPageFilter()
         {
             var apQ = new AppprogramQuery("apQ");
 
@@ -142,7 +142,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAppProgramID", Name = "GetAppProgramID")]
-        public async Task<ActionResult<Models.AppProgram>> GetAppProgramID([FromQuery] AppProgramFilter filter)
+        public async Task<ActionResult<List<Models.AppProgram>>> GetAppProgramID([FromQuery] AppProgramFilter filter)
         {
             if (string.IsNullOrEmpty(filter.ProgramID))
             {

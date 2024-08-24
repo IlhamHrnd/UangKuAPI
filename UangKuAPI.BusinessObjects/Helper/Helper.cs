@@ -75,6 +75,12 @@ namespace UangKuAPI.BusinessObjects.Helper
         public static string Daydatemonthyear { get => daydatemonthyear; set => daydatemonthyear = value; }
     }
 
+    public static class AppConstant
+    {
+        public static string FoundMsg = "Data Found";
+        public static string NotFoundMsg = "Data Not Found";
+    }
+
     public static class Converter
     {
         public static long IntToLong(int data)

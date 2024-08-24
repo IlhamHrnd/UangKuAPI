@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Model;
 using UangKuAPI.Helper;
 using UangKuAPI.BusinessObjects.Filter;
-using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using UangKuAPI.BusinessObjects.Entity;
 using System.Data;
 
@@ -23,7 +22,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppParameter", Name = "GetAllAppParameter")]
-        public async Task<ActionResult<AppParameter>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
+        public async Task<ActionResult<PageResponse<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
         {
             try
             {
@@ -88,7 +87,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllParameterWithNoPageFilter", Name = "GetAllParameterWithNoPageFilter")]
-        public async Task<ActionResult<AppParameter>> GetAllParameterWithNoPageFilter()
+        public async Task<ActionResult<List<AppParameter>>> GetAllParameterWithNoPageFilter()
         {
             try
             {
@@ -131,7 +130,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetParameterID", Name = "GetParameterID")]
-        public async Task<ActionResult<AppParameter>> GetParameterID([FromQuery] AppParameterFilter filter)
+        public async Task<ActionResult<List<AppParameter>>> GetParameterID([FromQuery] AppParameterFilter filter)
         {
             try
             {

@@ -137,7 +137,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllTransaction", Name = "GetAllTransaction")]
-        public async Task<ActionResult<Models.Transaction>> GetAllTransaction([FromQuery] TransactionFilter filter)
+        public async Task<ActionResult<PageResponse<Models.Transaction>>> GetAllTransaction([FromQuery] TransactionFilter filter)
         {
             try
             {
