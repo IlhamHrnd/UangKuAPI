@@ -1,6 +1,7 @@
 using UangKuAPI.Context;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Entity.Helper;
+using UangKuAPI.BusinessObjects.Filter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.Configure<Parameter>(builder.Configuration.GetSection("Parameter"));
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(builder.Configuration.GetConnectionString("DatabaseConnection"),

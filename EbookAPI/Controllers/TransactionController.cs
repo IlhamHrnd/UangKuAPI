@@ -7,6 +7,7 @@ using UangKuAPI.Helper;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
 using static UangKuAPI.BusinessObjects.Helper.DateFormat;
 using static UangKuAPI.BusinessObjects.Helper.Converter;
+using static UangKuAPI.BusinessObjects.Helper.AppConstant;
 using UangKuAPI.BusinessObjects.Filter;
 using UangKuAPI.BusinessObjects.Entity;
 using Models = UangKuAPI.BusinessObjects.Model;
@@ -66,7 +67,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("PatchTransaction", Name = "PatchTransaction")]
-        public async Task<IActionResult> PatchTransaction([FromBody] Models.Transaction2 transaction)
+        public async Task<IActionResult> PatchTransaction([FromBody] Transaction2 transaction)
         {
             try
             {
@@ -146,9 +147,6 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Person ID Is Required");
                 }
 
-                DateTime startDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, 1);
-                DateTime endDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-
                 var tQ = new TransactionQuery("tQ");
                 var transQ = new AppstandardreferenceitemQuery("transQ");
                 var itemQ = new AppstandardreferenceitemQuery("itemQ");
@@ -157,7 +155,7 @@ namespace UangKuAPI.Controllers
                     tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"))
                     .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
                     .InnerJoin(itemQ).On(itemQ.StandardReferenceID == "Expenditure" && itemQ.ItemID == tQ.SRTransItem)
-                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= startDate && tQ.TransDate <= endDate);
+                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
 
                 if (!string.IsNullOrEmpty(filter.OrderBy))
                 {
@@ -266,7 +264,7 @@ namespace UangKuAPI.Controllers
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
                     NextPageLink = nextPageLink,
-                    Message = pagedData.Count > 0 ? "Data Found" : "Data Not Found",
+                    Message = pagedData.Count > 0 ? FoundMsg : NotFoundMsg,
                     Succeeded = pagedData.Count > 0
                 };
 
@@ -289,9 +287,6 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Person ID Is Required");
                 }
 
-                DateTime startDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, 1);
-                DateTime endDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-
                 var tQ = new TransactionQuery("tQ");
                 var transQ = new AppstandardreferenceitemQuery("transQ");
                 var itemQ = new AppstandardreferenceitemQuery("itemQ");
@@ -300,7 +295,7 @@ namespace UangKuAPI.Controllers
                     tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"))
                     .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
                     .InnerJoin(itemQ).On(itemQ.ItemID == tQ.SRTransItem)
-                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= startDate && tQ.TransDate <= endDate);
+                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
 
                 if (!string.IsNullOrEmpty(filter.OrderBy))
                 {
@@ -452,7 +447,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetSumTransaction", Name = "GetSumTransaction")]
-        public async Task<IActionResult> GetSumTransaction([FromQuery] TransactionFilter filter)
+        public ActionResult<List<SumTransaction>> GetSumTransaction([FromQuery] TransactionFilter filter)
         {
             try
             {
@@ -461,24 +456,33 @@ namespace UangKuAPI.Controllers
                     return BadRequest("Person ID Is Required");
                 }
 
-                DateTime startDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, 1);
-                DateTime endDate = filter.StartDate.HasValue ? filter.StartDate.Value : DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+                var tQ = new TransactionQuery("tQ");
+                var transQ = new AppstandardreferenceitemQuery("transQ");
 
-                var response = await (from t in _context.Transaction
-                                join trans in _context.AppStandardReferenceItems
-                                    on new { StandardReferenceID = "Transaction", ItemID = t.SRTransaction }
-                                    equals new { trans.StandardReferenceID, trans.ItemID }
-                                where t.PersonID == filter.PersonID && t.TransDate >= startDate && t.TransDate <= endDate
-                                group t by new {t.SRTransaction, trans.ItemName} into g
-                                select new SumTransaction
-                                {
-                                    Amount = g.Sum(t => t.Amount), SRTransaction = g.Key.ItemName
-                                })
-                                .ToListAsync();
+                tQ.Select(tQ.Amount.Sum(), transQ.ItemName.As("SRTransaction"))
+                    .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
+                    .GroupBy(tQ.SRTransaction)
+                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
+                DataTable dt = tQ.LoadDataTable();
 
-                return response == null || response.Count == 0 || !response.Any()
-                    ? NotFound($"Transaction For {filter.PersonID} Not Found")
-                    : Ok(response);
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Transaction For {filter.PersonID} Not Found");
+                }
+
+                var response = new List<SumTransaction>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var sum = new SumTransaction
+                    {
+                        Amount = (decimal)dr["Amount"],
+                        SRTransaction = (string)dr["SRTransaction"]
+                    };
+                    response.Add(sum);
+                }
+
+                return response;
             }
             catch (Exception e)
             {

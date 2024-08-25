@@ -7,6 +7,8 @@ using UangKuAPI.BusinessObjects.Filter;
 using UangKuAPI.BusinessObjects.Entity;
 using System.Data;
 using Models = UangKuAPI.BusinessObjects.Model;
+using Microsoft.Extensions.Options;
+using static UangKuAPI.BusinessObjects.Helper.AppConstant;
 
 namespace EbookAPI.Controllers
 {
@@ -15,10 +17,12 @@ namespace EbookAPI.Controllers
     public class UserController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly Parameter _param;
 
-        public UserController(AppDbContext context)
+        public UserController(AppDbContext context, IOptions<Parameter> options)
         {
             _context = context;
+            _param = options.Value;
         }
 
         [HttpGet("GetAllUser", Name = "GetAllUser")]
@@ -83,7 +87,9 @@ namespace EbookAPI.Controllers
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
-                    NextPageLink = nextPageLink
+                    NextPageLink = nextPageLink,
+                    Message = pagedData.Count > 0 ? FoundMsg : NotFoundMsg,
+                    Succeeded = pagedData.Count > 0
                 };
 
                 return Ok(response);
@@ -117,12 +123,31 @@ namespace EbookAPI.Controllers
                     .InnerJoin(accessQ).On(accessQ.StandardReferenceID == "Access" && accessQ.ItemID == uQ.SRAccess)
                     .InnerJoin(statusQ).On(statusQ.StandardReferenceID == "Status" && statusQ.ItemID == uQ.SRStatus)
                     .OrderBy(uQ.Username.Ascending)
-                    .Where(uQ.Username == filter.Username && uQ.Password == Encryptor.Encryptor.DataEncrypt(filter.Password));
+                    .Where(uQ.Username == filter.Username && uQ.Password == Encryptor.Encryptor.DataEncrypt(filter.Password, _param.Key01, _param.Key02, _param.Key03));
                 DataTable dt = uQ.LoadDataTable();
 
                 if (dt.Rows.Count == 0)
                 {
-                    return NotFound($"{filter.Username} Not Found");
+                    uQ = new UserQuery("uQ");
+                    sexQ = new AppstandardreferenceitemQuery("sexQ");
+                    accessQ = new AppstandardreferenceitemQuery("accessQ");
+                    statusQ = new AppstandardreferenceitemQuery("statusQ");
+                    dt = new DataTable();
+
+                    uQ.Select(uQ.Username, uQ.ActiveDate, uQ.LastLogin, uQ.LastUpdateDateTime,
+                        uQ.LastUpdateByUser, uQ.PersonID, sexQ.ItemName.As("SexName"), accessQ.ItemName.As("AccessName"),
+                        statusQ.ItemName.As("StatusName"))
+                        .InnerJoin(sexQ).On(sexQ.StandardReferenceID == "Sex" && sexQ.ItemID == uQ.SRSex)
+                        .InnerJoin(accessQ).On(accessQ.StandardReferenceID == "Access" && accessQ.ItemID == uQ.SRAccess)
+                        .InnerJoin(statusQ).On(statusQ.StandardReferenceID == "Status" && statusQ.ItemID == uQ.SRStatus)
+                        .OrderBy(uQ.Username.Ascending)
+                        .Where(uQ.Username == filter.Username && uQ.Password == Encryptor.Encryptor.OldDataEncrypt(filter.Password, _param.Key01));
+                    dt = uQ.LoadDataTable();
+
+                    if (dt.Rows.Count == 0)
+                    {
+                        return NotFound($"{filter.Username} Not Found");
+                    }
                 }
 
                 var user = new List<Models.User>();
@@ -174,8 +199,8 @@ namespace EbookAPI.Controllers
 
                 var newUser = new Models.User
                 {
-                    Username = user.Username, Password = Encryptor.Encryptor.DataEncrypt(user.Password),
-                    SexName = user.SexName, AccessName = user.AccessName, Email = Encryptor.Encryptor.DataEncrypt(user.Email),
+                    Username = user.Username, Password = Encryptor.Encryptor.DataEncrypt(user.Password, _param.Key01, _param.Key02, _param.Key03),
+                    SexName = user.SexName, AccessName = user.AccessName, Email = Encryptor.Encryptor.DataEncrypt(user.Email, _param.Key01, _param.Key02, _param.Key03),
                     StatusName = user.StatusName, ActiveDate = DateFormat.DateTimeNow(), LastLogin = DateFormat.DateTimeNow(),
                     LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUser = user.Username, PersonID = user.PersonID
                 };
@@ -236,14 +261,14 @@ namespace EbookAPI.Controllers
                 }
 
                 var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Username == filter.Username && u.Email == Encryptor.Encryptor.DataEncrypt(filter.Email));
+                    .FirstOrDefaultAsync(u => u.Username == filter.Username && u.Email == Encryptor.Encryptor.DataEncrypt(filter.Email, _param.Key01, _param.Key02, _param.Key03));
 
                 if (user == null)
                 {
                     return BadRequest($"{filter.Username} Not Found");
                 }
 
-                user.Password = Encryptor.Encryptor.DataEncrypt(filter.Password);
+                user.Password = Encryptor.Encryptor.DataEncrypt(filter.Password, _param.Key01, _param.Key02, _param.Key03);
                 user.LastUpdateDateTime = DateFormat.DateTimeNow();
                 user.LastUpdateByUser = filter.Username;
                 _context.Update(user);

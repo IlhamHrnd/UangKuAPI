@@ -18,6 +18,8 @@ namespace UangKuAPI.BusinessObjects.Filter
             IsAscending = false;
             TransType = string.Empty;
             TransNo = string.Empty;
+            StartDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            EndDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
         }
         public TransactionFilter(int pageNumber, int pageSize, string personID, DateTime? startDate, DateTime? endDate, 
             string? orderBy, bool? isAscending, string? transType, string? transNo) : base(pageNumber, pageSize)

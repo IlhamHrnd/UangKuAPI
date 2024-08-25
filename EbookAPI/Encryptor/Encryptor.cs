@@ -1,60 +1,70 @@
-﻿using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Helper;
+﻿using UangKuAPI.BusinessObjects.Helper;
 
 namespace EbookAPI.Encryptor
 {
     public class Encryptor
     {
-        private static string _key01 = string.Empty;
-        private static string _key02 = string.Empty;
-        private static string _key03 = string.Empty;
-
-        public Encryptor(IConfiguration config)
-        {
-            var param = config.GetRequiredSection("Parameter").Get<Parameter>();
-            _key01 = param.Key01;
-            _key02 = param.Key02;
-            _key03 = param.Key03;
-        }
-
         //Untuk Men Enkripsi Data
-        public static string DataEncrypt(string? enkripsi)
+        public static string DataEncrypt(string? enkripsi, string? key01, string? key02, string? key03)
         {
             if (string.IsNullOrEmpty(enkripsi))
             {
-                return enkripsi;
+                return string.Empty;
             }
 
-            try
+            if (string.IsNullOrEmpty(key01) || string.IsNullOrEmpty(key02) || string.IsNullOrEmpty(key03))
             {
-                var firstEncrypt = SecureAES.DataEncrypt(enkripsi, _key01);
-                var secondEncrypt = SecureCrypto.Crypto_Encrypt(firstEncrypt, _key02, _key03);
-                return secondEncrypt;
+                return string.Empty;
             }
-            catch
+
+            var firstEncrypt = SecureAES.DataEncrypt(enkripsi, key01);
+            var secondEncrypt = SecureCrypto.Crypto_Encrypt(firstEncrypt, key02, key03);
+            return secondEncrypt;
+        }
+
+        public static string OldDataEncrypt(string? enkripsi, string? key01)
+        {
+            if (string.IsNullOrEmpty(enkripsi))
             {
-                var firstEncrypt = SecureAES.DataEncrypt(enkripsi, _key01);
-                return firstEncrypt;
+                return string.Empty;
             }
+
+            if (string.IsNullOrEmpty(key01))
+            {
+                return string.Empty;
+            }
+
+            var firstEncrypt = SecureAES.DataEncrypt(enkripsi, key01);
+            return firstEncrypt;
         }
 
         //Untuk Men Dekripsi Data
-        public static string DataDecrypt(string? dekripsi)
+        public static string DataDecrypt(string? dekripsi, string? key01, string? key02, string? key03)
         {
             if (string.IsNullOrEmpty(dekripsi))
             {
-                return dekripsi;
+                return string.Empty;
             }
 
             try
             {
-                var firstDecrypt = SecureCrypto.Crypto_Decrypt(dekripsi, _key02, _key03);
-                var secondDecrypt = SecureAES.DataDecrypt(firstDecrypt, _key01);
+                if (string.IsNullOrEmpty(key01) || string.IsNullOrEmpty(key02) || string.IsNullOrEmpty(key03))
+                {
+                    return string.Empty;
+                }
+
+                var firstDecrypt = SecureCrypto.Crypto_Decrypt(dekripsi, key02, key03);
+                var secondDecrypt = SecureAES.DataDecrypt(firstDecrypt, key01);
                 return secondDecrypt;
             }
             catch
             {
-                var firstDecrypt = SecureAES.DataDecrypt(dekripsi, _key01);
+                if (string.IsNullOrEmpty(key01))
+                {
+                    return string.Empty;
+                }
+
+                var firstDecrypt = SecureAES.DataDecrypt(dekripsi, key01);
                 return firstDecrypt;
             }
         }

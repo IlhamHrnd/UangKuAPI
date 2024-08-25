@@ -6,6 +6,7 @@ using UangKuAPI.Context;
 using System.Data;
 using EbookAPI.Wrapper;
 using static UangKuAPI.BusinessObjects.Helper.Helper;
+using static UangKuAPI.BusinessObjects.Helper.AppConstant;
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.Helper;
 
@@ -86,7 +87,9 @@ namespace UangKuAPI.Controllers
                 TotalPages = totalPages,
                 TotalRecords = totalRecord,
                 PrevPageLink = prevPageLink,
-                NextPageLink = nextPageLink
+                NextPageLink = nextPageLink,
+                Message = pagedData.Count > 0 ? FoundMsg : NotFoundMsg,
+                Succeeded = pagedData.Count > 0
             };
 
             return Ok(response);

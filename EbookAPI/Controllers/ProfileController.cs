@@ -9,6 +9,7 @@ using static UangKuAPI.BusinessObjects.Helper.Converter;
 using Models = UangKuAPI.BusinessObjects.Model;
 using System.Data;
 using UangKuAPI.BusinessObjects.Entity;
+using Microsoft.Extensions.Options;
 
 namespace UangKuAPI.Controllers
 {
@@ -17,10 +18,12 @@ namespace UangKuAPI.Controllers
     public class ProfileController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly Parameter _param;
 
-        public ProfileController(AppDbContext context)
+        public ProfileController(AppDbContext context, IOptions<Parameter> options)
         {
             _context = context;
+            _param = options.Value;
         }
 
         [HttpGet("GetPersonID", Name = "GetPersonID")]
@@ -53,16 +56,16 @@ namespace UangKuAPI.Controllers
                     var profile = new Models.Profile
                     {
                         PersonID = (string)dr["PersonID"],
-                        FirstName = Encryptor.DataDecrypt((string)dr["FirstName"]),
-                        MiddleName = Encryptor.DataDecrypt((string)dr["MiddleName"]),
-                        LastName = Encryptor.DataDecrypt((string)dr["LastName"]),
-                        PlaceOfBirth = Encryptor.DataDecrypt((string)dr["PlaceOfBirth"]),
+                        FirstName = Encryptor.DataDecrypt((string)dr["FirstName"], _param.Key01, _param.Key02, _param.Key03),
+                        MiddleName = Encryptor.DataDecrypt((string)dr["MiddleName"], _param.Key01, _param.Key02, _param.Key03),
+                        LastName = Encryptor.DataDecrypt((string)dr["LastName"], _param.Key01, _param.Key02, _param.Key03),
+                        PlaceOfBirth = Encryptor.DataDecrypt((string)dr["PlaceOfBirth"], _param.Key01, _param.Key02, _param.Key03),
                         Photo = (byte[])dr["Photo"],
-                        Address = Encryptor.DataDecrypt((string)dr["Address"]),
-                        Province = Encryptor.DataDecrypt((string)dr["Province"]),
-                        City = Encryptor.DataDecrypt((string)dr["City"]),
-                        District = Encryptor.DataDecrypt((string)dr["District"]),
-                        Subdistrict = Encryptor.DataDecrypt((string)dr["Subdistrict"]),
+                        Address = Encryptor.DataDecrypt((string)dr["Address"], _param.Key01, _param.Key02, _param.Key03),
+                        Province = Encryptor.DataDecrypt((string)dr["Province"], _param.Key01, _param.Key02, _param.Key03),
+                        City = Encryptor.DataDecrypt((string)dr["City"], _param.Key01, _param.Key02, _param.Key03),
+                        District = Encryptor.DataDecrypt((string)dr["District"], _param.Key01, _param.Key02, _param.Key03),
+                        Subdistrict = Encryptor.DataDecrypt((string)dr["Subdistrict"], _param.Key01, _param.Key02, _param.Key03),
                         PostalCode = (int)dr["PostalCode"],
                         LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
                         LastUpdateByUser = (string)dr["LastUpdateByUser"],
@@ -100,10 +103,10 @@ namespace UangKuAPI.Controllers
 
                 var prof = new Models.Profile
                 {
-                    PersonID = profile.PersonID, FirstName = Encryptor.DataEncrypt(profile.FirstName), MiddleName = Encryptor.DataEncrypt(profile.MiddleName),
-                    LastName = Encryptor.DataEncrypt(profile.LastName), BirthDate = profile.BirthDate, PlaceOfBirth = Encryptor.DataEncrypt(profile.PlaceOfBirth),
-                    Photo = StringToByte(profile.Photo), Address = Encryptor.DataEncrypt(profile.Address), Province = Encryptor.DataEncrypt(profile.Province),
-                    City = Encryptor.DataEncrypt(profile.City), Subdistrict = Encryptor.DataEncrypt(profile.Subdistrict), District = Encryptor.DataEncrypt(profile.District),
+                    PersonID = profile.PersonID, FirstName = Encryptor.DataEncrypt(profile.FirstName, _param.Key01, _param.Key02, _param.Key03), MiddleName = Encryptor.DataEncrypt(profile.MiddleName, _param.Key01, _param.Key02, _param.Key03),
+                    LastName = Encryptor.DataEncrypt(profile.LastName, _param.Key01, _param.Key02, _param.Key03), BirthDate = profile.BirthDate, PlaceOfBirth = Encryptor.DataEncrypt(profile.PlaceOfBirth, _param.Key01, _param.Key02, _param.Key03),
+                    Photo = StringToByte(profile.Photo), Address = Encryptor.DataEncrypt(profile.Address, _param.Key01, _param.Key02, _param.Key03), Province = Encryptor.DataEncrypt(profile.Province, _param.Key01, _param.Key02, _param.Key03),
+                    City = Encryptor.DataEncrypt(profile.City, _param.Key01, _param.Key02, _param.Key03), Subdistrict = Encryptor.DataEncrypt(profile.Subdistrict, _param.Key01, _param.Key02, _param.Key03), District = Encryptor.DataEncrypt(profile.District, _param.Key01, _param.Key02, _param.Key03),
                     PostalCode = profile.PostalCode, LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUser = profile.LastUpdateByUser
                 };
                 _context.Add(prof);
@@ -137,17 +140,17 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"{profile.PersonID} Not Found");
                 }
 
-                person.FirstName = Encryptor.DataEncrypt(profile.FirstName);
-                person.MiddleName = Encryptor.DataEncrypt(profile.MiddleName);
-                person.LastName = Encryptor.DataEncrypt(profile.LastName);
+                person.FirstName = Encryptor.DataEncrypt(profile.FirstName, _param.Key01, _param.Key02, _param.Key03);
+                person.MiddleName = Encryptor.DataEncrypt(profile.MiddleName, _param.Key01, _param.Key02, _param.Key03);
+                person.LastName = Encryptor.DataEncrypt(profile.LastName, _param.Key01, _param.Key02, _param.Key03);
                 person.BirthDate = profile.BirthDate;
-                person.PlaceOfBirth = Encryptor.DataEncrypt(profile.PlaceOfBirth);
+                person.PlaceOfBirth = Encryptor.DataEncrypt(profile.PlaceOfBirth, _param.Key01, _param.Key02, _param.Key03);
                 person.Photo = StringToByte(profile.Photo);
-                person.Address = Encryptor.DataEncrypt(profile.Address);
-                person.Province = Encryptor.DataEncrypt(profile.Province);
-                person.City = Encryptor.DataEncrypt(profile.City);
-                person.District = Encryptor.DataEncrypt(profile.District);
-                person.Subdistrict = Encryptor.DataEncrypt(profile.Subdistrict);
+                person.Address = Encryptor.DataEncrypt(profile.Address, _param.Key01, _param.Key02, _param.Key03);
+                person.Province = Encryptor.DataEncrypt(profile.Province, _param.Key01, _param.Key02, _param.Key03);
+                person.City = Encryptor.DataEncrypt(profile.City, _param.Key01, _param.Key02, _param.Key03);
+                person.District = Encryptor.DataEncrypt(profile.District, _param.Key01, _param.Key02, _param.Key03);
+                person.Subdistrict = Encryptor.DataEncrypt(profile.Subdistrict, _param.Key01, _param.Key02, _param.Key03);
                 person.PostalCode = profile.PostalCode;
                 person.LastUpdateDateTime = DateFormat.DateTimeNow();
                 person.LastUpdateByUser = profile.LastUpdateByUser;

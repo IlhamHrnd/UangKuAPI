@@ -77,8 +77,11 @@ namespace UangKuAPI.BusinessObjects.Helper
 
     public static class AppConstant
     {
-        public static string FoundMsg = "Data Found";
-        public static string NotFoundMsg = "Data Not Found";
+        private static string foundMsg = "Data Found";
+        private static string notFoundMsg = "Data Not Found";
+
+        public static string FoundMsg { get => foundMsg; set => foundMsg = value; }
+        public static string NotFoundMsg { get => notFoundMsg; set => notFoundMsg = value; }
     }
 
     public static class Converter

@@ -10,6 +10,7 @@ using static UangKuAPI.BusinessObjects.Helper.Converter;
 using UangKuAPI.BusinessObjects.Filter;
 using UangKuAPI.BusinessObjects.Entity;
 using System.Data;
+using static UangKuAPI.BusinessObjects.Helper.AppConstant;
 
 namespace UangKuAPI.Controllers
 {
@@ -81,7 +82,9 @@ namespace UangKuAPI.Controllers
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
-                    NextPageLink = nextPageLink
+                    NextPageLink = nextPageLink,
+                    Message = pagedData.Count > 0 ? FoundMsg : NotFoundMsg,
+                    Succeeded = pagedData.Count > 0
                 };
 
                 return Ok(response);
