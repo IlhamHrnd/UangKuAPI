@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/18/2024 9:45:52 AM
+Date Generated       : 8/25/2024 12:40:46 PM
 ===============================================================================
 */
 
@@ -525,11 +525,13 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c = new esColumnMetadata(AppparameterMetadata.ColumnNames.ParameterName, 1, typeof(System.String), esSystemType.String);
 			c.PropertyName = AppparameterMetadata.PropertyNames.ParameterName;
 			c.CharacterMaxLength = 200;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(AppparameterMetadata.ColumnNames.ParameterValue, 2, typeof(System.String), esSystemType.String);
 			c.PropertyName = AppparameterMetadata.PropertyNames.ParameterValue;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(AppparameterMetadata.ColumnNames.SRControl, 3, typeof(System.String), esSystemType.String);

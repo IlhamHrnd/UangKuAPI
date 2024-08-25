@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/17/2024 9:50:25 PM
+Date Generated       : 8/25/2024 1:43:39 PM
 ===============================================================================
 */
 
@@ -717,17 +717,20 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c = new esColumnMetadata(UserwishlistMetadata.ColumnNames.ProductName, 3, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserwishlistMetadata.PropertyNames.ProductName;
 			c.CharacterMaxLength = 100;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserwishlistMetadata.ColumnNames.ProductQuantity, 4, typeof(System.Int32), esSystemType.Int32);
 			c.PropertyName = UserwishlistMetadata.PropertyNames.ProductQuantity;
 			c.NumericPrecision = 11;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserwishlistMetadata.ColumnNames.ProductPrice, 5, typeof(System.Decimal), esSystemType.Decimal);
 			c.PropertyName = UserwishlistMetadata.PropertyNames.ProductPrice;
 			c.NumericPrecision = 10;
 			c.NumericScale = 2;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserwishlistMetadata.ColumnNames.ProductLink, 6, typeof(System.String), esSystemType.String);
@@ -755,10 +758,12 @@ namespace UangKuAPI.BusinessObjects.Entity
 				
 			c = new esColumnMetadata(UserwishlistMetadata.ColumnNames.WishlistDate, 11, typeof(System.DateTime), esSystemType.DateTime);
 			c.PropertyName = UserwishlistMetadata.PropertyNames.WishlistDate;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserwishlistMetadata.ColumnNames.ProductPicture, 12, typeof(System.Byte[]), esSystemType.ByteArray);
 			c.PropertyName = UserwishlistMetadata.PropertyNames.ProductPicture;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserwishlistMetadata.ColumnNames.IsComplete, 13, typeof(System.Int32), esSystemType.Int32);

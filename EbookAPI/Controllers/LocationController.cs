@@ -19,7 +19,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllProvince", Name = "GetAllProvince")]
-        public async Task<ActionResult<List<Models.Province>>> GetAllProvince()
+        public ActionResult<List<Models.Province>> GetAllProvince()
         {
             try
             {
@@ -58,7 +58,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllCities", Name = "GetAllCities")]
-        public async Task<ActionResult<List<Models.Cities>>> GetAllCities([FromQuery] LocationFillter filter)
+        public ActionResult<List<Models.Cities>> GetAllCities([FromQuery] LocationFillter filter)
         {
             try
             {
@@ -101,7 +101,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllDistrict", Name = "GetAllDistrict")]
-        public async Task<ActionResult<List<Models.District>>> GetAllDistrict([FromQuery] LocationFillter filter)
+        public ActionResult<List<Models.District>> GetAllDistrict([FromQuery] LocationFillter filter)
         {
             try
             {
@@ -144,7 +144,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllSubDistrict", Name = "GetAllSubDistrict")]
-        public async Task<ActionResult<List<Models.Subdistrict>>> GetAllSubDistrict([FromQuery] LocationFillter filter)
+        public ActionResult<List<Models.Subdistrict>> GetAllSubDistrict([FromQuery] LocationFillter filter)
         {
             try
             {
@@ -177,7 +177,7 @@ namespace UangKuAPI.Controllers
                     };
                     response.Add(sd);
                 }
-                
+
                 return Ok(response);
             }
             catch (Exception e)
@@ -187,7 +187,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetPostalCode", Name = "GetPostalCode")]
-        public async Task<ActionResult<Models.PostalCodes>> GetPostalCode([FromQuery] LocationFillter filter)
+        public ActionResult<Models.PostalCodes> GetPostalCode([FromQuery] LocationFillter filter)
         {
             try
             {

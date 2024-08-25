@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/18/2024 10:02:37 AM
+Date Generated       : 8/25/2024 1:29:16 PM
 ===============================================================================
 */
 
@@ -733,59 +733,71 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.FirstName, 1, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.FirstName;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.MiddleName, 2, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.MiddleName;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.LastName, 3, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.LastName;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.BirthDate, 4, typeof(System.DateTime), esSystemType.DateTime);
 			c.PropertyName = ProfileMetadata.PropertyNames.BirthDate;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.PlaceOfBirth, 5, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.PlaceOfBirth;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.Photo, 6, typeof(System.Byte[]), esSystemType.ByteArray);
 			c.PropertyName = ProfileMetadata.PropertyNames.Photo;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.Address, 7, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.Address;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.Province, 8, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.Province;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.City, 9, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.City;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.Subdistrict, 10, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.Subdistrict;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.District, 11, typeof(System.String), esSystemType.String);
 			c.PropertyName = ProfileMetadata.PropertyNames.District;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.PostalCode, 12, typeof(System.Int32), esSystemType.Int32);
 			c.PropertyName = ProfileMetadata.PropertyNames.PostalCode;
 			c.NumericPrecision = 11;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(ProfileMetadata.ColumnNames.LastUpdateDateTime, 13, typeof(System.DateTime), esSystemType.DateTime);

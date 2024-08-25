@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/18/2024 10:01:53 AM
+Date Generated       : 8/25/2024 1:18:42 PM
 ===============================================================================
 */
 
@@ -57,11 +57,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 		#endregion
 
 		
-		
-		override protected string GetConnectionName()
-		{
-			return "UangKuAPI.BusinessObjects.Entity";
-		}			
+					
 		
 	
 	}
@@ -75,11 +71,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 	{
 
 		
-		
-		override protected string GetConnectionName()
-		{
-			return "UangKuAPI.BusinessObjects.Entity";
-		}		
+				
 	}
 
 
@@ -103,11 +95,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 			return "CitiesQuery";
 		}
 		
-		
-		override protected string GetConnectionName()
-		{
-			return "UangKuAPI.BusinessObjects.Entity";
-		}			
+					
 	
 		#region Explicit Casts
 		

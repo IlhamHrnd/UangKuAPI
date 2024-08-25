@@ -23,7 +23,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetStandardID", Name = "GetStandardID")]
-        public async Task<ActionResult<List<AppStandardReferenceItem>>> GetStandardID([FromQuery] AppStandardReferenceItemFilter filter)
+        public ActionResult<List<AppStandardReferenceItem>> GetStandardID([FromQuery] AppStandardReferenceItemFilter filter)
         {
             try
             {

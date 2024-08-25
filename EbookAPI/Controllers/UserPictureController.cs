@@ -25,7 +25,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserPicture", Name = "GetUserPicture")]
-        public async Task<ActionResult<PageResponse<UserPicture>>> GetUserPicture([FromQuery] UserPictureFilter filter)
+        public ActionResult<PageResponse<UserPicture>> GetUserPicture([FromQuery] UserPictureFilter filter)
         {
             try
             {

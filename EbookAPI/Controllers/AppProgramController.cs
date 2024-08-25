@@ -22,7 +22,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppProgram", Name = "GetAllAppProgram")]
-        public async Task<ActionResult<PageResponse<Models.AppProgram>>> GetAllAppProgram([FromQuery] AppProgramFilter filter)
+        public ActionResult<PageResponse<Models.AppProgram>> GetAllAppProgram([FromQuery] AppProgramFilter filter)
         {
             var apQ = new AppprogramQuery("apQ");
 
@@ -93,7 +93,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppProgramWithNoPageFilter", Name = "GetAllAppProgramWithNoPageFilter")]
-        public async Task<ActionResult<List<Models.AppProgram>>> GetAllAppProgramWithNoPageFilter()
+        public ActionResult<List<Models.AppProgram>> GetAllAppProgramWithNoPageFilter()
         {
             var apQ = new AppprogramQuery("apQ");
 
@@ -142,7 +142,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAppProgramID", Name = "GetAppProgramID")]
-        public async Task<ActionResult<List<Models.AppProgram>>> GetAppProgramID([FromQuery] AppProgramFilter filter)
+        public ActionResult<List<Models.AppProgram>> GetAppProgramID([FromQuery] AppProgramFilter filter)
         {
             if (string.IsNullOrEmpty(filter.ProgramID))
             {
@@ -179,7 +179,7 @@ namespace UangKuAPI.Controllers
                     LastUpdateByUserID = dr["LastUpdateByUserID"] != DBNull.Value ? (string)dr["LastUpdateByUserID"] : string.Empty,
                     IsProgram = dr["IsProgram"] != DBNull.Value ? bool.Parse((string)dr["IsProgram"]) : null,
                     IsProgramAddAble = dr["IsProgramAddAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramAddAble"]) : null,
-                    IsProgramEditAble = dr["IsProgramEditAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramEditAble"]) : null,                                                                                     
+                    IsProgramEditAble = dr["IsProgramEditAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramEditAble"]) : null,
                     IsProgramDeleteAble = dr["IsProgramDeleteAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramDeleteAble"]) : null,
                     IsProgramViewAble = dr["IsProgramViewAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramViewAble"]) : null,
                     IsProgramApprovalAble = dr["IsProgramApprovalAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramApprovalAble"]) : null,

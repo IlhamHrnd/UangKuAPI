@@ -151,7 +151,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserReport", Name = "GetUserReport")]
-        public async Task<ActionResult<PageResponse<UserReport>>> GetUserReport([FromQuery] UserReportFilter filter)
+        public ActionResult<PageResponse<UserReport>> GetUserReport([FromQuery] UserReportFilter filter)
         {
             try
             {
@@ -185,7 +185,7 @@ namespace UangKuAPI.Controllers
                 }
 
                 var pagedData = new List<UserReport>();
-                
+
                 foreach (DataRow dr in dt.Rows)
                 {
                     var report = new UserReport
@@ -233,7 +233,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReportNo", Name = "GetReportNo")]
-        public async Task<ActionResult<List<UserReport>>> GetReportNo([FromQuery] UserReportFilter filter)
+        public ActionResult<List<UserReport>> GetReportNo([FromQuery] UserReportFilter filter)
         {
             try
             {
@@ -264,7 +264,7 @@ namespace UangKuAPI.Controllers
                 }
 
                 var response = new List<UserReport>();
-                
+
                 foreach (DataRow dr in dt.Rows)
                 {
                     var report = new UserReport

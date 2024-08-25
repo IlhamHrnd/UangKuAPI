@@ -134,7 +134,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserWishlistID", Name = "GetUserWishlistID")]
-        public async Task<ActionResult<List<UserWishlist>>> GetUserWishlistID([FromQuery] UserWishlistFilter filter)
+        public ActionResult<List<UserWishlist>> GetUserWishlistID([FromQuery] UserWishlistFilter filter)
         {
             if (string.IsNullOrEmpty(filter.WishlistID))
             {
@@ -288,7 +288,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserWishlistPerCategory", Name = "GetUserWishlistPerCategory")]
-        public async Task<ActionResult<List<UserWishlistPerCategory>>> GetUserWishlistPerCategory([FromQuery] UserWishlistFilter filter)
+        public ActionResult<List<UserWishlistPerCategory>> GetUserWishlistPerCategory([FromQuery] UserWishlistFilter filter)
         {
             try
             {

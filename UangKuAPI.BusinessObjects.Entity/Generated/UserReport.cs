@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/18/2024 10:04:45 AM
+Date Generated       : 8/25/2024 1:41:50 PM
 ===============================================================================
 */
 
@@ -767,16 +767,6 @@ namespace UangKuAPI.BusinessObjects.Entity
 	}
 
 
-	
-	public partial class Userreport : esUserreport
-	{
-
-		
-		
-	}
-	
-
-
 
 	[Serializable]
 	public partial class UserreportMetadata : esMetadata, IMetadata
@@ -794,6 +784,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 				
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.DateErrorOccured, 1, typeof(System.DateTime), esSystemType.DateTime);
 			c.PropertyName = UserreportMetadata.PropertyNames.DateErrorOccured;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.SRErrorLocation, 2, typeof(System.String), esSystemType.String);
@@ -809,15 +800,18 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.ErrorCronologic, 4, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserreportMetadata.PropertyNames.ErrorCronologic;
 			c.CharacterMaxLength = 150;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.Picture, 5, typeof(System.Byte[]), esSystemType.ByteArray);
 			c.PropertyName = UserreportMetadata.PropertyNames.Picture;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.IsApprove, 6, typeof(System.Int32), esSystemType.Int32);
 			c.PropertyName = UserreportMetadata.PropertyNames.IsApprove;
 			c.NumericPrecision = 11;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.SRReportStatus, 7, typeof(System.String), esSystemType.String);
@@ -833,6 +827,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.ApprovedByUserID, 9, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserreportMetadata.PropertyNames.ApprovedByUserID;
 			c.CharacterMaxLength = 50;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.VoidDateTime, 10, typeof(System.DateTime), esSystemType.DateTime);
@@ -843,6 +838,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.VoidByUserID, 11, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserreportMetadata.PropertyNames.VoidByUserID;
 			c.CharacterMaxLength = 50;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserreportMetadata.ColumnNames.CreatedDateTime, 12, typeof(System.DateTime), esSystemType.DateTime);

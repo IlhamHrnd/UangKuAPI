@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/19/2024 10:20:53 PM
+Date Generated       : 8/25/2024 12:45:33 PM
 ===============================================================================
 */
 
@@ -37,9 +37,9 @@ namespace UangKuAPI.BusinessObjects.Entity
 
 	[Serializable]
 	[DataContract]
-	[KnownType(typeof(AppProgram))]	
-	[XmlType("AppProgram")]
-	public partial class AppProgram : esAppprogram
+	[KnownType(typeof(Appprogram))]	
+	[XmlType("Appprogram")]
+	public partial class Appprogram : esAppprogram
 	{	
 		[DebuggerBrowsable(DebuggerBrowsableState.RootHidden | DebuggerBrowsableState.Never)]
 		protected override esEntityDebuggerView[] Debug
@@ -49,7 +49,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 
 		override public esEntity CreateInstance()
 		{
-			return new AppProgram();
+			return new Appprogram();
 		}
 		
 		#region Static Quick Access Methods
@@ -67,7 +67,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 	[Serializable]
 	[CollectionDataContract]
 	[XmlType("AppprogramCollection")]
-	public partial class AppprogramCollection : esAppprogramCollection, IEnumerable<AppProgram>
+	public partial class AppprogramCollection : esAppprogramCollection, IEnumerable<Appprogram>
 	{
 
 		
@@ -558,7 +558,7 @@ namespace UangKuAPI.BusinessObjects.Entity
 
 
 	[Serializable]
-	abstract public partial class esAppprogramCollection : esEntityCollection<AppProgram>
+	abstract public partial class esAppprogramCollection : esEntityCollection<Appprogram>
 	{
 		#region Housekeeping methods
 		override protected IMetadata Meta

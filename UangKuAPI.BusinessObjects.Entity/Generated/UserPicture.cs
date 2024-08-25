@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/17/2024 7:13:24 PM
+Date Generated       : 8/25/2024 1:40:07 PM
 ===============================================================================
 */
 
@@ -585,16 +585,6 @@ namespace UangKuAPI.BusinessObjects.Entity
 	}
 
 
-	
-	public partial class Userpicture : esUserpicture
-	{
-
-		
-		
-	}
-	
-
-
 
 	[Serializable]
 	public partial class UserpictureMetadata : esMetadata, IMetadata
@@ -617,11 +607,13 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c = new esColumnMetadata(UserpictureMetadata.ColumnNames.PictureName, 2, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserpictureMetadata.PropertyNames.PictureName;
 			c.CharacterMaxLength = 100;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserpictureMetadata.ColumnNames.PictureFormat, 3, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserpictureMetadata.PropertyNames.PictureFormat;
 			c.CharacterMaxLength = 15;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserpictureMetadata.ColumnNames.PersonID, 4, typeof(System.String), esSystemType.String);

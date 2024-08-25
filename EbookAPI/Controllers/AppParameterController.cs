@@ -22,13 +22,13 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppParameter", Name = "GetAllAppParameter")]
-        public async Task<ActionResult<PageResponse<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
+        public ActionResult<PageResponse<AppParameter>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
         {
             try
             {
                 var aQ = new AppparameterQuery("aQ");
 
-                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime, 
+                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime,
                     aQ.LastUpdateByUserID, aQ.SRControl,
                     "<CASE WHEN aQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>")
                     .OrderBy(aQ.ParameterID.Ascending);
@@ -87,7 +87,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllParameterWithNoPageFilter", Name = "GetAllParameterWithNoPageFilter")]
-        public async Task<ActionResult<List<AppParameter>>> GetAllParameterWithNoPageFilter()
+        public ActionResult<List<AppParameter>> GetAllParameterWithNoPageFilter()
         {
             try
             {
@@ -130,7 +130,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetParameterID", Name = "GetParameterID")]
-        public async Task<ActionResult<List<AppParameter>>> GetParameterID([FromQuery] AppParameterFilter filter)
+        public ActionResult<List<AppParameter>> GetParameterID([FromQuery] AppParameterFilter filter)
         {
             try
             {

@@ -137,7 +137,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllTransaction", Name = "GetAllTransaction")]
-        public async Task<ActionResult<PageResponse<Models.Transaction>>> GetAllTransaction([FromQuery] TransactionFilter filter)
+        public ActionResult<PageResponse<Models.Transaction>> GetAllTransaction([FromQuery] TransactionFilter filter)
         {
             try
             {
@@ -280,7 +280,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllPDFTransaction", Name = "GetAllPDFTransaction")]
-        public async Task<ActionResult<List<Models.Transaction>>> GetAllPDFTransaction([FromQuery] TransactionFilter filter)
+        public ActionResult<List<Models.Transaction>> GetAllPDFTransaction([FromQuery] TransactionFilter filter)
         {
             try
             {
@@ -398,7 +398,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetTransactionNo", Name = "GetTransactionNo")]
-        public async Task<ActionResult<Models.Transaction>> GetTransactionNo([FromQuery] TransactionFilter filter)
+        public ActionResult<Models.Transaction> GetTransactionNo([FromQuery] TransactionFilter filter)
         {
             try
             {
@@ -406,26 +406,43 @@ namespace UangKuAPI.Controllers
                 {
                     return BadRequest($"Transaction No Is Required");
                 }
-                
-                var response = await (from t in _context.Transaction
-                                join trans in _context.AppStandardReferenceItems
-                                      on new { StandardReferenceID = "Transaction", ItemID = t.SRTransaction }
-                                      equals new { trans.StandardReferenceID, trans.ItemID }
-                                join item in _context.AppStandardReferenceItems
-                                    on new { ItemID = t.SRTransItem }
-                                    equals new { item.ItemID }
-                                where t.TransNo == filter.TransNo
-                                select new Models.Transaction
-                                {
-                                    TransNo = t.TransNo, Amount = t.Amount, Description = t.Description, Photo = t.Photo,
-                                    TransType = t.TransType, PersonID = t.PersonID, TransDate = t.TransDate,
-                                    SRTransaction = trans.ItemName, SRTransItem = item.ItemName
-                                })
-                                .ToListAsync();
 
-                return response == null || response.Count == 0 || !response.Any() 
-                    ? (ActionResult<Models.Transaction>)NotFound($"{filter.TransNo} Not Found") 
-                    : (ActionResult<Models.Transaction>)Ok(response);
+                var tQ = new TransactionQuery("tQ");
+                var transQ = new AppstandardreferenceitemQuery("transQ");
+                var itemQ = new AppstandardreferenceitemQuery("itemQ");
+
+                tQ.Select(tQ.TransNo, tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID,
+                    tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"))
+                    .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
+                    .InnerJoin(itemQ).On(itemQ.ItemID == tQ.SRTransItem)
+                    .Where(tQ.TransNo == filter.TransNo);
+                DataTable dt = tQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound($"Data Not Found");
+                }
+
+                var response = new List<Models.Transaction>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var trans = new Models.Transaction
+                    {
+                        TransNo = (string)dr["TransNo"],
+                        Amount = (decimal)dr["Amount"],
+                        Description = (string)dr["Description"],
+                        Photo = (byte[])dr["Photo"],
+                        TransType = (string)dr["TransType"],
+                        PersonID = (string)dr["PersonID"],
+                        TransDate = (DateTime)dr["TransDate"],
+                        SRTransaction = (string)dr["SRTransaction"],
+                        SRTransItem = (string)dr["SRTransItem"]
+                    };
+                    response.Add(trans);
+                }
+
+                return Ok(response);
             }
             catch (Exception e)
             {

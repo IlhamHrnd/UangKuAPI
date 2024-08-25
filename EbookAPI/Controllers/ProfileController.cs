@@ -24,7 +24,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetPersonID", Name = "GetPersonID")]
-        public async Task<ActionResult<List<Models.Profile>>> GetPersonID([FromQuery] ProfileFilter filter)
+        public ActionResult<List<Models.Profile>> GetPersonID([FromQuery] ProfileFilter filter)
         {
             try
             {

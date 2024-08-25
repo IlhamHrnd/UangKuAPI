@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 8/18/2024 10:04:27 AM
+Date Generated       : 8/25/2024 1:37:27 PM
 ===============================================================================
 */
 
@@ -697,24 +697,29 @@ namespace UangKuAPI.BusinessObjects.Entity
 			c.PropertyName = TransactionMetadata.PropertyNames.Amount;
 			c.NumericPrecision = 10;
 			c.NumericScale = 2;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(TransactionMetadata.ColumnNames.Description, 5, typeof(System.String), esSystemType.String);
 			c.PropertyName = TransactionMetadata.PropertyNames.Description;
 			c.CharacterMaxLength = 200;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(TransactionMetadata.ColumnNames.Photo, 6, typeof(System.Byte[]), esSystemType.ByteArray);
 			c.PropertyName = TransactionMetadata.PropertyNames.Photo;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(TransactionMetadata.ColumnNames.TransType, 7, typeof(System.String), esSystemType.String);
 			c.PropertyName = TransactionMetadata.PropertyNames.TransType;
 			c.CharacterMaxLength = 15;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(TransactionMetadata.ColumnNames.TransDate, 8, typeof(System.DateTime), esSystemType.DateTime);
 			c.PropertyName = TransactionMetadata.PropertyNames.TransDate;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(TransactionMetadata.ColumnNames.CreatedDateTime, 9, typeof(System.DateTime), esSystemType.DateTime);
