@@ -133,7 +133,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetParameterID", Name = "GetParameterID")]
-        public ActionResult<List<AppParameter>> GetParameterID([FromQuery] AppParameterFilter filter)
+        public ActionResult<AppParameter> GetParameterID([FromQuery] AppParameterFilter filter)
         {
             try
             {
@@ -156,22 +156,17 @@ namespace UangKuAPI.Controllers
                     return NotFound($"Data Not Found");
                 }
 
-                var response = new List<AppParameter>();
-
-                foreach (DataRow dr in dt.Rows)
+                DataRow dr = dt.Rows[0];
+                var response = new AppParameter
                 {
-                    var a = new AppParameter
-                    {
-                        ParameterID = (string)dr["ParameterID"],
-                        ParameterName = (string)dr["ParameterName"],
-                        ParameterValue = (string)dr["ParameterValue"],
-                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
-                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
-                        SRControl = (string)dr["SRControl"]
-                    };
-                    response.Add(a);
-                }
+                    ParameterID = (string)dr["ParameterID"],
+                    ParameterName = (string)dr["ParameterName"],
+                    ParameterValue = (string)dr["ParameterValue"],
+                    LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                    LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
+                    IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
+                    SRControl = (string)dr["SRControl"]
+                };
 
                 return Ok(response);
             }

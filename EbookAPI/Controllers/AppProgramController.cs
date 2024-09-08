@@ -145,7 +145,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAppProgramID", Name = "GetAppProgramID")]
-        public ActionResult<List<Models.AppProgram>> GetAppProgramID([FromQuery] AppProgramFilter filter)
+        public ActionResult<Models.AppProgram> GetAppProgramID([FromQuery] AppProgramFilter filter)
         {
             if (string.IsNullOrEmpty(filter.ProgramID))
             {
@@ -169,32 +169,27 @@ namespace UangKuAPI.Controllers
                 return NotFound($"Data Not Found");
             }
 
-            var response = new List<Models.AppProgram>();
-
-            foreach (DataRow dr in dt.Rows)
+            DataRow dr = dt.Rows[0];
+            var response = new Models.AppProgram
             {
-                var ap = new Models.AppProgram
-                {
-                    ProgramID = (string)dr["ProgramID"],
-                    ProgramName = dr["ProgramName"] != DBNull.Value ? (string)dr["ProgramName"] : string.Empty,
-                    Note = dr["Note"] != DBNull.Value ? (string)dr["Note"] : string.Empty,
-                    LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                    LastUpdateByUserID = dr["LastUpdateByUserID"] != DBNull.Value ? (string)dr["LastUpdateByUserID"] : string.Empty,
-                    IsProgram = dr["IsProgram"] != DBNull.Value ? bool.Parse((string)dr["IsProgram"]) : null,
-                    IsProgramAddAble = dr["IsProgramAddAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramAddAble"]) : null,
-                    IsProgramEditAble = dr["IsProgramEditAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramEditAble"]) : null,
-                    IsProgramDeleteAble = dr["IsProgramDeleteAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramDeleteAble"]) : null,
-                    IsProgramViewAble = dr["IsProgramViewAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramViewAble"]) : null,
-                    IsProgramApprovalAble = dr["IsProgramApprovalAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramApprovalAble"]) : null,
-                    IsProgramUnApprovalAble = dr["IsProgramUnApprovalAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramUnApprovalAble"]) : null,
-                    IsProgramVoidAble = dr["IsProgramVoidAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramVoidAble"]) : null,
-                    IsProgramUnVoidAble = dr["IsProgramUnVoidAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramUnVoidAble"]) : null,
-                    IsProgramPrintAble = dr["IsProgramPrintAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramPrintAble"]) : null,
-                    IsVisible = dr["IsVisible"] != DBNull.Value ? bool.Parse((string)dr["IsVisible"]) : null,
-                    IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"])
-                };
-                response.Add(ap);
-            }
+                ProgramID = (string)dr["ProgramID"],
+                ProgramName = dr["ProgramName"] != DBNull.Value ? (string)dr["ProgramName"] : string.Empty,
+                Note = dr["Note"] != DBNull.Value ? (string)dr["Note"] : string.Empty,
+                LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                LastUpdateByUserID = dr["LastUpdateByUserID"] != DBNull.Value ? (string)dr["LastUpdateByUserID"] : string.Empty,
+                IsProgram = dr["IsProgram"] != DBNull.Value ? bool.Parse((string)dr["IsProgram"]) : null,
+                IsProgramAddAble = dr["IsProgramAddAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramAddAble"]) : null,
+                IsProgramEditAble = dr["IsProgramEditAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramEditAble"]) : null,
+                IsProgramDeleteAble = dr["IsProgramDeleteAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramDeleteAble"]) : null,
+                IsProgramViewAble = dr["IsProgramViewAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramViewAble"]) : null,
+                IsProgramApprovalAble = dr["IsProgramApprovalAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramApprovalAble"]) : null,
+                IsProgramUnApprovalAble = dr["IsProgramUnApprovalAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramUnApprovalAble"]) : null,
+                IsProgramVoidAble = dr["IsProgramVoidAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramVoidAble"]) : null,
+                IsProgramUnVoidAble = dr["IsProgramUnVoidAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramUnVoidAble"]) : null,
+                IsProgramPrintAble = dr["IsProgramPrintAble"] != DBNull.Value ? bool.Parse((string)dr["IsProgramPrintAble"]) : null,
+                IsVisible = dr["IsVisible"] != DBNull.Value ? bool.Parse((string)dr["IsVisible"]) : null,
+                IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"])
+            };
 
             return Ok(response);
         }

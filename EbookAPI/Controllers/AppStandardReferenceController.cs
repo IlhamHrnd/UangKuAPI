@@ -93,7 +93,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReferenceID", Name = "GetReferenceID")]
-        public ActionResult<List<AppStandardReference>> GetReferenceID([FromQuery] AppStandardReferenceFilter filter)
+        public ActionResult<AppStandardReference> GetReferenceID([FromQuery] AppStandardReferenceFilter filter)
         {
             try
             {
@@ -117,23 +117,18 @@ namespace UangKuAPI.Controllers
                     return NotFound($"Data Not Found");
                 }
 
-                var response = new List<AppStandardReference>();
-
-                foreach (DataRow dr in dt.Rows)
+                DataRow dr = dt.Rows[0];
+                var response = new AppStandardReference
                 {
-                    var asr = new AppStandardReference
-                    {
-                        StandardReferenceID = (string)dr["StandardReferenceID"],
-                        StandardReferenceName = (string)dr["StandardReferenceName"],
-                        ItemLength = (int)dr["ItemLength"],
-                        Note = (string)dr["Note"],
-                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                        LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
-                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
-                        IsActive = bool.Parse((string)dr["IsActive"])
-                    };
-                    response.Add(asr);
-                }
+                    StandardReferenceID = (string)dr["StandardReferenceID"],
+                    StandardReferenceName = (string)dr["StandardReferenceName"],
+                    ItemLength = (int)dr["ItemLength"],
+                    Note = (string)dr["Note"],
+                    LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                    LastUpdateByUserID = (string)dr["LastUpdateByUserID"],
+                    IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
+                    IsActive = bool.Parse((string)dr["IsActive"])
+                };
 
                 return Ok(response);
             }

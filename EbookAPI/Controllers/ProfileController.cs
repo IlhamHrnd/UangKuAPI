@@ -27,7 +27,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetPersonID", Name = "GetPersonID")]
-        public ActionResult<List<Models.Profile>> GetPersonID([FromQuery] ProfileFilter filter)
+        public ActionResult<Models.Profile> GetPersonID([FromQuery] ProfileFilter filter)
         {
             try
             {
@@ -49,30 +49,25 @@ namespace UangKuAPI.Controllers
                     return BadRequest($"Data Not Found");
                 }
 
-                var response = new List<Models.Profile>();
-
-                foreach (DataRow dr in dt.Rows)
+                DataRow dr = dt.Rows[0];
+                var response = new Models.Profile
                 {
-                    var profile = new Models.Profile
-                    {
-                        PersonID = (string)dr["PersonID"],
-                        FirstName = Encryptor.DataDecrypt((string)dr["FirstName"], _param.Key01, _param.Key02, _param.Key03),
-                        MiddleName = Encryptor.DataDecrypt((string)dr["MiddleName"], _param.Key01, _param.Key02, _param.Key03),
-                        LastName = Encryptor.DataDecrypt((string)dr["LastName"], _param.Key01, _param.Key02, _param.Key03),
-                        PlaceOfBirth = Encryptor.DataDecrypt((string)dr["PlaceOfBirth"], _param.Key01, _param.Key02, _param.Key03),
-                        Photo = (byte[])dr["Photo"],
-                        Address = Encryptor.DataDecrypt((string)dr["Address"], _param.Key01, _param.Key02, _param.Key03),
-                        Province = Encryptor.DataDecrypt((string)dr["Province"], _param.Key01, _param.Key02, _param.Key03),
-                        City = Encryptor.DataDecrypt((string)dr["City"], _param.Key01, _param.Key02, _param.Key03),
-                        District = Encryptor.DataDecrypt((string)dr["District"], _param.Key01, _param.Key02, _param.Key03),
-                        Subdistrict = Encryptor.DataDecrypt((string)dr["Subdistrict"], _param.Key01, _param.Key02, _param.Key03),
-                        PostalCode = (int)dr["PostalCode"],
-                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                        LastUpdateByUser = (string)dr["LastUpdateByUser"],
-                        BirthDate = (DateTime)dr["BirthDate"]
-                    };
-                    response.Add(profile);
-                }
+                    PersonID = (string)dr["PersonID"],
+                    FirstName = Encryptor.DataDecrypt((string)dr["FirstName"], _param.Key01, _param.Key02, _param.Key03),
+                    MiddleName = Encryptor.DataDecrypt((string)dr["MiddleName"], _param.Key01, _param.Key02, _param.Key03),
+                    LastName = Encryptor.DataDecrypt((string)dr["LastName"], _param.Key01, _param.Key02, _param.Key03),
+                    PlaceOfBirth = Encryptor.DataDecrypt((string)dr["PlaceOfBirth"], _param.Key01, _param.Key02, _param.Key03),
+                    Photo = (byte[])dr["Photo"],
+                    Address = Encryptor.DataDecrypt((string)dr["Address"], _param.Key01, _param.Key02, _param.Key03),
+                    Province = Encryptor.DataDecrypt((string)dr["Province"], _param.Key01, _param.Key02, _param.Key03),
+                    City = Encryptor.DataDecrypt((string)dr["City"], _param.Key01, _param.Key02, _param.Key03),
+                    District = Encryptor.DataDecrypt((string)dr["District"], _param.Key01, _param.Key02, _param.Key03),
+                    Subdistrict = Encryptor.DataDecrypt((string)dr["Subdistrict"], _param.Key01, _param.Key02, _param.Key03),
+                    PostalCode = (int)dr["PostalCode"],
+                    LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                    LastUpdateByUser = (string)dr["LastUpdateByUser"],
+                    BirthDate = (DateTime)dr["BirthDate"]
+                };
 
                 return Ok(response);
             }

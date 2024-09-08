@@ -185,7 +185,7 @@ namespace UangKuAPI.Controllers
 
                 if (pic == null)
                 {
-                    return BadRequest($"{pic.PictureID} Not Found");
+                    return BadRequest($"{filter.PictureID} Not Found");
                 }
                 pic.IsDeleted = filter.IsDeleted;
                 _context.Update(pic);

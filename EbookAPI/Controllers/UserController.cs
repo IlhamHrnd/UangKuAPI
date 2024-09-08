@@ -102,7 +102,7 @@ namespace EbookAPI.Controllers
         }
 
         [HttpGet("GetLoginUserName", Name = "GetLoginUserName")]
-        public ActionResult<List<Models.User>> GetLoginUserName([FromQuery] UserFilter filter)
+        public ActionResult<Models.User> GetLoginUserName([FromQuery] UserFilter filter)
         {
             try
             {
@@ -150,24 +150,19 @@ namespace EbookAPI.Controllers
                     }
                 }
 
-                var user = new List<Models.User>();
-
-                foreach (DataRow dr in dt.Rows)
+                DataRow dr = dt.Rows[0];
+                var user = new Models.User
                 {
-                    var userItem = new Models.User
-                    {
-                        Username = (string)dr["Username"],
-                        ActiveDate = (DateTime)dr["ActiveDate"],
-                        LastLogin = (DateTime)dr["LastLogin"],
-                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                        LastUpdateByUser = (string)dr["LastUpdateByUser"],
-                        PersonID = (string)dr["PersonID"],
-                        SexName = (string)dr["SexName"],
-                        AccessName = (string)dr["AccessName"],
-                        StatusName = (string)dr["StatusName"]
-                    };
-                    user.Add(userItem);
-                }
+                    Username = (string)dr["Username"],
+                    ActiveDate = (DateTime)dr["ActiveDate"],
+                    LastLogin = (DateTime)dr["LastLogin"],
+                    LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                    LastUpdateByUser = (string)dr["LastUpdateByUser"],
+                    PersonID = (string)dr["PersonID"],
+                    SexName = (string)dr["SexName"],
+                    AccessName = (string)dr["AccessName"],
+                    StatusName = (string)dr["StatusName"]
+                };
 
                 return Ok(user);
             }
@@ -314,24 +309,19 @@ namespace EbookAPI.Controllers
                     return NotFound($"{filter.Username} Not Found");
                 }
 
-                var user = new List<Models.User>();
-
-                foreach (DataRow dr in dt.Rows)
+                DataRow dr = dt.Rows[0];
+                var user = new Models.User
                 {
-                    var userItem = new Models.User
-                    {
-                        Username = (string)dr["Username"],
-                        ActiveDate = (DateTime)dr["ActiveDate"],
-                        LastLogin = (DateTime)dr["LastLogin"],
-                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                        LastUpdateByUser = (string)dr["LastUpdateByUser"],
-                        PersonID = (string)dr["PersonID"],
-                        SexName = (string)dr["SexName"],
-                        AccessName = (string)dr["AccessName"],
-                        StatusName = (string)dr["StatusName"]
-                    };
-                    user.Add(userItem);
-                }
+                    Username = (string)dr["Username"],
+                    ActiveDate = (DateTime)dr["ActiveDate"],
+                    LastLogin = (DateTime)dr["LastLogin"],
+                    LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                    LastUpdateByUser = (string)dr["LastUpdateByUser"],
+                    PersonID = (string)dr["PersonID"],
+                    SexName = (string)dr["SexName"],
+                    AccessName = (string)dr["AccessName"],
+                    StatusName = (string)dr["StatusName"]
+                };
 
                 return Ok(user);
             }

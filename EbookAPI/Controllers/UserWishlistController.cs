@@ -137,7 +137,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserWishlistID", Name = "GetUserWishlistID")]
-        public ActionResult<List<UserWishlist>> GetUserWishlistID([FromQuery] UserWishlistFilter filter)
+        public ActionResult<UserWishlist> GetUserWishlistID([FromQuery] UserWishlistFilter filter)
         {
             if (string.IsNullOrEmpty(filter.WishlistID))
             {
@@ -161,25 +161,20 @@ namespace UangKuAPI.Controllers
                 return NotFound($"{filter.WishlistID} Not Found");
             }
 
-            var wishlist = new List<UserWishlist>();
-
-            foreach (DataRow dr in dt.Rows)
+            DataRow dr = dt.Rows[0];
+            var wishlist = new UserWishlist
             {
-                var wish = new UserWishlist
-                {
-                    WishlistID = (string)dr["WishlistID"],
-                    PersonID = (string)dr["PersonID"],
-                    SRProductCategory = (string)dr["SRProductCategory"],
-                    ProductName = (string)dr["ProductName"],
-                    ProductQuantity = (int)dr["ProductQuantity"],
-                    ProductPrice = (decimal)dr["ProductPrice"],
-                    ProductLink = (string)dr["ProductLink"],
-                    LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                    WishlistDate = (DateTime)dr["WishlistDate"],
-                    IsComplete = bool.Parse((string)dr["IsComplete"])
-                };
-                wishlist.Add(wish);
-            }
+                WishlistID = (string)dr["WishlistID"],
+                PersonID = (string)dr["PersonID"],
+                SRProductCategory = (string)dr["SRProductCategory"],
+                ProductName = (string)dr["ProductName"],
+                ProductQuantity = (int)dr["ProductQuantity"],
+                ProductPrice = (decimal)dr["ProductPrice"],
+                ProductLink = (string)dr["ProductLink"],
+                LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                WishlistDate = (DateTime)dr["WishlistDate"],
+                IsComplete = bool.Parse((string)dr["IsComplete"])
+            };
 
             return Ok(wishlist);
         }

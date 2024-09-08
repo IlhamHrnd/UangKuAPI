@@ -236,7 +236,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReportNo", Name = "GetReportNo")]
-        public ActionResult<List<UserReport>> GetReportNo([FromQuery] UserReportFilter filter)
+        public ActionResult<UserReport> GetReportNo([FromQuery] UserReportFilter filter)
         {
             try
             {
@@ -266,31 +266,26 @@ namespace UangKuAPI.Controllers
                     return NotFound($"Data Not Found");
                 }
 
-                var response = new List<UserReport>();
-
-                foreach (DataRow dr in dt.Rows)
+                DataRow dr = dt.Rows[0];
+                var response = new UserReport
                 {
-                    var report = new UserReport
-                    {
-                        ReportNo = (string)dr["ReportNo"],
-                        DateErrorOccured = (DateTime)dr["DateErrorOccured"],
-                        SRErrorLocation = (string)dr["SRErrorLocation"],
-                        SRErrorPossibility = (string)dr["SRErrorPossibility"],
-                        ErrorCronologic = (string)dr["ErrorCronologic"],
-                        IsApprove = dr["IsApprove"] != DBNull.Value ? bool.Parse((string)dr["IsApprove"]) : null,
-                        SRReportStatus = (string)dr["SRReportStatus"],
-                        ApprovedDateTime = filter.IsAdmin ? (dr["ApprovedDateTime"] != DBNull.Value ? (DateTime)dr["ApprovedDateTime"] : null) : null,
-                        ApprovedByUserID = filter.IsAdmin ? (dr["ApprovedByUserID"] != DBNull.Value ? (string)dr["ApprovedByUserID"] : null) : null,
-                        VoidDateTime = filter.IsAdmin ? (dr["VoidDateTime"] != DBNull.Value ? (DateTime)dr["VoidDateTime"] : null) : null,
-                        VoidByUserID = filter.IsAdmin ? (dr["VoidByUserID"] != DBNull.Value ? (string)dr["VoidByUserID"] : null) : null,
-                        CreatedDateTime = (DateTime)dr["CreatedDateTime"],
-                        CreatedByUserID = (string)dr["CreatedByUserID"],
-                        LastUpdateDateTime = filter.IsAdmin ? (dr["LastUpdateDateTime"] != DBNull.Value ? (DateTime)dr["LastUpdateDateTime"] : null) : null,
-                        LastUpdateByUserID = filter.IsAdmin ? (dr["LastUpdateByUserID"] != DBNull.Value ? (string)dr["LastUpdateByUserID"] : null) : null,
-                        PersonID = (string)dr["PersonID"]
-                    };
-                    response.Add(report);
-                }
+                    ReportNo = (string)dr["ReportNo"],
+                    DateErrorOccured = (DateTime)dr["DateErrorOccured"],
+                    SRErrorLocation = (string)dr["SRErrorLocation"],
+                    SRErrorPossibility = (string)dr["SRErrorPossibility"],
+                    ErrorCronologic = (string)dr["ErrorCronologic"],
+                    IsApprove = dr["IsApprove"] != DBNull.Value ? bool.Parse((string)dr["IsApprove"]) : null,
+                    SRReportStatus = (string)dr["SRReportStatus"],
+                    ApprovedDateTime = filter.IsAdmin ? (dr["ApprovedDateTime"] != DBNull.Value ? (DateTime)dr["ApprovedDateTime"] : null) : null,
+                    ApprovedByUserID = filter.IsAdmin ? (dr["ApprovedByUserID"] != DBNull.Value ? (string)dr["ApprovedByUserID"] : null) : null,
+                    VoidDateTime = filter.IsAdmin ? (dr["VoidDateTime"] != DBNull.Value ? (DateTime)dr["VoidDateTime"] : null) : null,
+                    VoidByUserID = filter.IsAdmin ? (dr["VoidByUserID"] != DBNull.Value ? (string)dr["VoidByUserID"] : null) : null,
+                    CreatedDateTime = (DateTime)dr["CreatedDateTime"],
+                    CreatedByUserID = (string)dr["CreatedByUserID"],
+                    LastUpdateDateTime = filter.IsAdmin ? (dr["LastUpdateDateTime"] != DBNull.Value ? (DateTime)dr["LastUpdateDateTime"] : null) : null,
+                    LastUpdateByUserID = filter.IsAdmin ? (dr["LastUpdateByUserID"] != DBNull.Value ? (string)dr["LastUpdateByUserID"] : null) : null,
+                    PersonID = (string)dr["PersonID"]
+                };
 
                 return Ok(response);
             }
