@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.Configure<Parameter>(builder.Configuration.GetSection("Parameter"));
-builder.Services.AddDbContext<EbookAPI.Context.AppDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(conn, new MariaDbServerVersion("10.6.19-mariadb"))
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)

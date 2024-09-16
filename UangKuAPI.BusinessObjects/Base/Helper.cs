@@ -65,11 +65,17 @@ namespace UangKuAPI.BusinessObjects.Base
         private static string notFoundMsg = "Data Not Found";
         private static string requiredMsg = "{0} Is Required";
         private static string alreadyexistMsg = "{0} Already Exist";
+        private static string createdsuccessMsg = "{0} {1} Created Successfully";
+        private static string updatesuccessMsg = "{0} Updated Successfully";
+        private static string failedMsg = "Failed To {0} Data For {1} {2}";
 
         public static string FoundMsg { get => foundMsg; set => foundMsg = value; }
         public static string NotFoundMsg { get => notFoundMsg; set => notFoundMsg = value; }
         public static string RequiredMsg { get => requiredMsg; set => requiredMsg = value; }
         public static string AlreadyExistMsg { get => alreadyexistMsg; set => alreadyexistMsg = value; }
+        public static string CreatedSuccessMsg { get => createdsuccessMsg; set => createdsuccessMsg = value; }
+        public static string UpdateSuccessMsg { get => updatesuccessMsg; set => updatesuccessMsg = value; }
+        public static string FailedMsg { get => failedMsg; set => failedMsg = value; }
     }
 
     public static class Converter

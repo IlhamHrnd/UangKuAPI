@@ -1,6 +1,7 @@
-﻿using EbookAPI.Context;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
+using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
 using UangKuAPI.BusinessObjects.Models;
@@ -46,7 +47,7 @@ namespace UangKuAPI.Controllers
                         TotalRecords = pagedData.Count,
                         PrevPageLink = string.Empty,
                         NextPageLink = string.Empty,
-                        Message = pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                        Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = pagedData.Count > 0
                     };
                     return NotFound(response);
@@ -83,7 +84,7 @@ namespace UangKuAPI.Controllers
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
                     NextPageLink = nextPageLink,
-                    Message = pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                    Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                     Succeeded = pagedData.Count > 0
                 };
                 return Ok(response);
@@ -96,7 +97,7 @@ namespace UangKuAPI.Controllers
                     TotalRecords = pagedData.Count,
                     PrevPageLink = string.Empty,
                     NextPageLink = string.Empty,
-                    Message = $"{(pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg)} - {e.Message}",
+                    Message = $"{(pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
                     Succeeded = pagedData.Count > 0
                 };
                 return BadRequest(response);
@@ -126,7 +127,7 @@ namespace UangKuAPI.Controllers
                         TotalRecords = pagedData.Count,
                         PrevPageLink = string.Empty,
                         NextPageLink = string.Empty,
-                        Message = pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                        Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = pagedData.Count > 0
                     };
                     return NotFound(response);
@@ -142,7 +143,7 @@ namespace UangKuAPI.Controllers
                         LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
                         LastUpdateByUserId = (string)dr["LastUpdateByUserID"],
                         Srcontrol = (string)dr["SRControl"],
-                        IsUsedBySystem = (UInt64)dr["IsUsedBySystem"] == 1 ? true : false
+                        IsUsedBySystem = (UInt64)dr["IsUsedBySystem"] == 1
                     };
                     pagedData.Add(a);
                 }
@@ -150,7 +151,7 @@ namespace UangKuAPI.Controllers
                 response = new Response<List<AppParameter>>
                 {
                     Data = pagedData,
-                    Message = pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                    Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                     Succeeded = pagedData.Count > 0
                 };
                 return Ok(response);
@@ -160,7 +161,7 @@ namespace UangKuAPI.Controllers
                 response = new Response<List<AppParameter>>
                 {
                     Data = pagedData,
-                    Message = $"{(pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg)} - {e.Message}",
+                    Message = $"{(pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
                     Succeeded = pagedData.Count > 0
                 };
                 return BadRequest(response);
@@ -180,7 +181,7 @@ namespace UangKuAPI.Controllers
                     response = new Response<AppParameter>
                     {
                         Data = data,
-                        Message = string.Format(BusinessObjects.Base.AppConstant.RequiredMsg, "ParameterID"),
+                        Message = string.Format(AppConstant.RequiredMsg, "ParameterID"),
                         Succeeded = !string.IsNullOrEmpty(filter.ParameterID)
                     };
                     return BadRequest(response);
@@ -193,7 +194,7 @@ namespace UangKuAPI.Controllers
                     response = new Response<AppParameter>
                     {
                         Data = data,
-                        Message = !string.IsNullOrEmpty(a.ParameterID) ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                        Message = !string.IsNullOrEmpty(a.ParameterID) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = !string.IsNullOrEmpty(a.ParameterID)
                     };
                     return NotFound(response);
@@ -212,7 +213,7 @@ namespace UangKuAPI.Controllers
                 response = new Response<AppParameter>
                 {
                     Data = data,
-                    Message = !string.IsNullOrEmpty(data.ParameterId) ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                    Message = !string.IsNullOrEmpty(data.ParameterId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                     Succeeded = !string.IsNullOrEmpty(filter.ParameterID)
                 };
                 return Ok(response);
@@ -222,41 +223,76 @@ namespace UangKuAPI.Controllers
                 response = new Response<AppParameter>
                 {
                     Data = data,
-                    Message = $"{(!string.IsNullOrEmpty(data.ParameterId) ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg)} - {e.Message}",
+                    Message = $"{(!string.IsNullOrEmpty(data.ParameterId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
                     Succeeded = !string.IsNullOrEmpty(filter.ParameterID)
                 };
                 return BadRequest(response);
             }
         }
 
-        //[HttpPost("PostAppParameter", Name = "PostAppParameter")]
-        //public async Task<IActionResult> PostAppParameter([FromBody] AppParameter ap)
-        //{
-        //    try
-        //    {
-        //        if (ap == null)
-        //            return BadRequest(string.Format(BusinessObjects.Base.AppConstant.RequiredMsg, "ParameterID"));
+        [HttpPost("PostAppParameter", Name = "PostAppParameter")]
+        public async Task<IActionResult> PostAppParameter([FromBody] AppParameter ap)
+        {
+            try
+            {
+                if (ap == null)
+                    return BadRequest(string.Format(AppConstant.RequiredMsg, "AppParameter"));
 
-        //        var data = await _context.Parameter
-        //            .FirstOrDefaultAsync(p => p.ParameterID == ap.ParameterId);
+                var data = await _context.AppParameters
+                    .FirstOrDefaultAsync(p => p.ParameterId == ap.ParameterId);
 
-        //        if (data != null)
-        //            return BadRequest(string.Format(BusinessObjects.Base.AppConstant.AlreadyExistMsg, "ParameterID"));
+                if (data != null)
+                    return BadRequest(string.Format(AppConstant.AlreadyExistMsg, ap.ParameterId));
 
-        //        var p = new AppParameter
-        //        {
-        //            ParameterId = ap.ParameterId, ParameterName = ap.ParameterName, ParameterValue = ap.ParameterValue,
-        //            LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserId = ap.LastUpdateByUserId, IsUsedBySystem = ap.IsUsedBySystem,
-        //            Srcontrol = ap.Srcontrol
-        //        };
-        //        _context.Parameter.Add(p);
-        //        int rows = await _context.SaveChangesAsync();
+                var p = new AppParameter
+                {
+                    ParameterId = ap.ParameterId, ParameterName = ap.ParameterName, ParameterValue = ap.ParameterValue,
+                    LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserId = ap.LastUpdateByUserId, IsUsedBySystem = ap.IsUsedBySystem,
+                    Srcontrol = ap.Srcontrol
+                };
+                _context.AppParameters.Add(p);
+                int rows = await _context.SaveChangesAsync();
 
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-        //    }
-        //}
+                return rows > 0
+                    ? Ok(string.Format(AppConstant.CreatedSuccessMsg, "Parameter", ap.ParameterId))
+                    : BadRequest(string.Format(AppConstant.FailedMsg, "Insert", "ParameterID", ap.ParameterId));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpPatch("UpdateAppParameter", Name = "UpdateAppParameter")]
+        public async Task<IActionResult> UpdateAppParameter([FromBody] AppParameter ap)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(ap.ParameterId))
+                    return BadRequest(string.Format(AppConstant.RequiredMsg, ap.ParameterId));
+
+                var data = await _context.AppParameters
+                    .FirstOrDefaultAsync(p => p.ParameterId == ap.ParameterId);
+
+                if (data == null)
+                    return NotFound(string.Format(AppConstant.NotFoundMsg, ap.ParameterId));
+
+                data.ParameterName = ap.ParameterName;
+                data.ParameterValue = ap.ParameterValue;
+                data.LastUpdateDateTime = DateFormat.DateTimeNow();
+                data.LastUpdateByUserId = ap.LastUpdateByUserId;
+                data.IsUsedBySystem = ap.IsUsedBySystem;
+                _context.Update(data);
+                int rows = await _context.SaveChangesAsync();
+
+                return rows > 0
+                    ? Ok(string.Format(AppConstant.UpdateSuccessMsg, ap.ParameterId))
+                    : BadRequest(string.Format(AppConstant.FailedMsg, "Update", "ParameterID", ap.ParameterId));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
     }
 }
