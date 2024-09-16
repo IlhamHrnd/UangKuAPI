@@ -11,9 +11,9 @@ public partial class AppStandardReference
 
     public int? ItemLength { get; set; }
 
-    public int IsUsedBySystem { get; set; }
+    public bool IsUsedBySystem { get; set; }
 
-    public int IsActive { get; set; }
+    public bool IsActive { get; set; }
 
     public string? Note { get; set; }
 

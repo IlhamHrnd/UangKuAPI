@@ -224,7 +224,7 @@ namespace UangKuAPI.Controllers
                 {
                     Data = data,
                     Message = $"{(!string.IsNullOrEmpty(data.ParameterId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
-                    Succeeded = !string.IsNullOrEmpty(filter.ParameterID)
+                    Succeeded = !string.IsNullOrEmpty(data.ParameterId)
                 };
                 return BadRequest(response);
             }
@@ -269,7 +269,7 @@ namespace UangKuAPI.Controllers
             try
             {
                 if (string.IsNullOrEmpty(ap.ParameterId))
-                    return BadRequest(string.Format(AppConstant.RequiredMsg, ap.ParameterId));
+                    return BadRequest(string.Format(AppConstant.RequiredMsg, "ParameterID"));
 
                 var data = await _context.AppParameters
                     .FirstOrDefaultAsync(p => p.ParameterId == ap.ParameterId);
