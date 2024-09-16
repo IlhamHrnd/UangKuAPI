@@ -1,10 +1,10 @@
 ﻿using EbookAPI.Context;
-using EbookAPI.Wrapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using UangKuAPI.Filter;
-using UangKuAPI.Helper;
-using UangKuAPI.Model;
+using System.Data;
+using UangKuAPI.BusinessObjects.Entity.Generated;
+using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Models;
+using UangKuAPI.BusinessObjects.Response;
 
 namespace UangKuAPI.Controllers
 {
@@ -20,188 +20,243 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllAppParameter", Name = "GetAllAppParameter")]
-        public async Task<ActionResult<List<AppParameter>>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
+        public ActionResult<PageResponse<AppParameter>> GetAllAppParameter([FromQuery] AppParameterFilter filter)
         {
+            var pagedData = new List<AppParameter>();
+            var response = new PageResponse<List<AppParameter>>(pagedData, 0, 0);
+
             try
             {
-                var validFilter = new AppParameterFilter(filter.PageNumber, filter.PageSize);
-                var pageNumber = validFilter.PageNumber;
-                var pageSize = validFilter.PageSize;
-                var pagedData = await _context.Parameter
-                    .Select(p => new AppParameter
+                var aQ = new AppparameterQuery("aQ");
+
+                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime,
+                    aQ.LastUpdateByUserID, aQ.SRControl, aQ.IsUsedBySystem)
+                    .OrderBy(aQ.ParameterID.Ascending);
+                DataTable dtRecord = aQ.LoadDataTable();
+
+                aQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize);
+                DataTable dt = aQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    response = new PageResponse<List<AppParameter>>(pagedData, 0, 0)
                     {
-                        ParameterID = p.ParameterID, ParameterName = p.ParameterName,
-                        ParameterValue = p.ParameterValue, LastUpdateDateTime = p.LastUpdateDateTime,
-                        LastUpdateByUserID = p.LastUpdateByUserID, IsUsedBySystem = p.IsUsedBySystem,
-                        SRControl = p.SRControl
-                    })
-                    .OrderBy(p => p.ParameterID)
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-                var totalRecord = await _context.Parameter.CountAsync();
-                var totalPages = (int)Math.Ceiling((double)totalRecord / validFilter.PageSize);
+                        TotalPages = pagedData.Count,
+                        TotalRecords = pagedData.Count,
+                        PrevPageLink = string.Empty,
+                        NextPageLink = string.Empty,
+                        Message = pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                        Succeeded = pagedData.Count > 0
+                    };
+                    return NotFound(response);
+                }
 
-                string? prevPageLink = validFilter.PageNumber > 1
-                    ? Url.Link("GetAllAppParameter", new { PageNumber = validFilter.PageNumber - 1, validFilter.PageSize })
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var a = new AppParameter
+                    {
+                        ParameterId = (string)dr["ParameterID"],
+                        ParameterName = dr["ParameterName"] != DBNull.Value ? (string)dr["ParameterName"] : string.Empty,
+                        ParameterValue = dr["ParameterValue"] != DBNull.Value ? (string)dr["ParameterValue"] : string.Empty,
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserId = (string)dr["LastUpdateByUserID"],
+                        Srcontrol = (string)dr["SRControl"],
+                        IsUsedBySystem = (UInt64)dr["IsUsedBySystem"] == 1
+                    };
+                    pagedData.Add(a);
+                }
+                var totalRecord = dtRecord.Rows.Count;
+                var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
+
+                string? prevPageLink = filter.PageNumber > 1
+                    ? Url.Link("GetAllAppParameter", new { PageNumber = filter.PageNumber - 1, filter.PageSize })
                     : null;
 
-                string? nextPageLink = validFilter.PageNumber < totalPages
-                    ? Url.Link("GetAllAppParameter", new { PageNumber = validFilter.PageNumber + 1, validFilter.PageSize })
+                string? nextPageLink = filter.PageNumber < totalPages
+                    ? Url.Link("GetAllAppParameter", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                var response = new PageResponse<List<AppParameter>>(pagedData, validFilter.PageNumber, validFilter.PageSize)
+                response = new PageResponse<List<AppParameter>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
-                    NextPageLink = nextPageLink
+                    NextPageLink = nextPageLink,
+                    Message = pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                    Succeeded = pagedData.Count > 0
                 };
-
                 return Ok(response);
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                response = new PageResponse<List<AppParameter>>(pagedData, 0, 0)
+                {
+                    TotalPages = pagedData.Count,
+                    TotalRecords = pagedData.Count,
+                    PrevPageLink = string.Empty,
+                    NextPageLink = string.Empty,
+                    Message = $"{(pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg)} - {e.Message}",
+                    Succeeded = pagedData.Count > 0
+                };
+                return BadRequest(response);
             }
         }
 
         [HttpGet("GetAllParameterWithNoPageFilter", Name = "GetAllParameterWithNoPageFilter")]
-        public async Task<ActionResult<List<AppParameter>>> GetAllParameterWithNoPageFilter()
+        public ActionResult<Response<List<AppParameter>>> GetAllParameterWithNoPageFilter()
         {
+            var pagedData = new List<AppParameter>();
+            var response = new Response<List<AppParameter>>();
+
             try
             {
-                var response = await _context.Parameter
-                    .Select(p => new AppParameter
-                    {
-                        ParameterID = p.ParameterID,
-                        ParameterName = p.ParameterName,
-                        ParameterValue = p.ParameterValue,
-                        LastUpdateDateTime = p.LastUpdateDateTime,
-                        LastUpdateByUserID = p.LastUpdateByUserID,
-                        IsUsedBySystem = p.IsUsedBySystem,
-                        SRControl = p.SRControl
-                    })
-                    .OrderBy(p => p.ParameterID)
-                    .ToListAsync();
+                var aQ = new AppparameterQuery("aQ");
 
+                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime,
+                    aQ.LastUpdateByUserID, aQ.SRControl, aQ.IsUsedBySystem)
+                    .OrderBy(aQ.ParameterID.Ascending);
+                var dt = aQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    response = new PageResponse<List<AppParameter>>(pagedData, 0, 0)
+                    {
+                        TotalPages = pagedData.Count,
+                        TotalRecords = pagedData.Count,
+                        PrevPageLink = string.Empty,
+                        NextPageLink = string.Empty,
+                        Message = pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                        Succeeded = pagedData.Count > 0
+                    };
+                    return NotFound(response);
+                }
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var a = new AppParameter
+                    {
+                        ParameterId = (string)dr["ParameterID"],
+                        ParameterName = dr["ParameterName"] != DBNull.Value ? (string)dr["ParameterName"] : string.Empty,
+                        ParameterValue = dr["ParameterValue"] != DBNull.Value ? (string)dr["ParameterValue"] : string.Empty,
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserId = (string)dr["LastUpdateByUserID"],
+                        Srcontrol = (string)dr["SRControl"],
+                        IsUsedBySystem = (UInt64)dr["IsUsedBySystem"] == 1 ? true : false
+                    };
+                    pagedData.Add(a);
+                }
+
+                response = new Response<List<AppParameter>>
+                {
+                    Data = pagedData,
+                    Message = pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                    Succeeded = pagedData.Count > 0
+                };
                 return Ok(response);
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                response = new Response<List<AppParameter>>
+                {
+                    Data = pagedData,
+                    Message = $"{(pagedData.Count > 0 ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg)} - {e.Message}",
+                    Succeeded = pagedData.Count > 0
+                };
+                return BadRequest(response);
             }
         }
 
         [HttpGet("GetParameterID", Name = "GetParameterID")]
-        public async Task<ActionResult<AppParameter>> GetParameterID([FromQuery] string parameterID)
+        public ActionResult<Response<AppParameter>> GetParameterID([FromQuery] AppParameterFilter filter)
         {
+            var data = new AppParameter();
+            var response = new Response<AppParameter>();
+
             try
             {
-                if (string.IsNullOrEmpty(parameterID))
+                if (string.IsNullOrEmpty(filter.ParameterID))
                 {
-                    return BadRequest($"ParameterID Is Required");
-                }
-
-                var response = await _context.Parameter
-                    .Select(p => new AppParameter
+                    response = new Response<AppParameter>
                     {
-                        ParameterID = p.ParameterID,
-                        ParameterName = p.ParameterName,
-                        ParameterValue = p.ParameterValue,
-                        LastUpdateDateTime = p.LastUpdateDateTime,
-                        LastUpdateByUserID = p.LastUpdateByUserID,
-                        IsUsedBySystem = p.IsUsedBySystem,
-                        SRControl = p.SRControl
-                    })
-                    .Where(p => p.ParameterID == parameterID)
-                    .ToListAsync();
-
-                if (response == null || response.Count == 0 || !response.Any())
-                {
-                    return NotFound("App Parameter Not Found");
+                        Data = data,
+                        Message = string.Format(BusinessObjects.Base.AppConstant.RequiredMsg, "ParameterID"),
+                        Succeeded = !string.IsNullOrEmpty(filter.ParameterID)
+                    };
+                    return BadRequest(response);
                 }
 
+                var a = new Appparameter();
+
+                if (!a.LoadByPrimaryKey(filter.ParameterID))
+                {
+                    response = new Response<AppParameter>
+                    {
+                        Data = data,
+                        Message = !string.IsNullOrEmpty(a.ParameterID) ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                        Succeeded = !string.IsNullOrEmpty(a.ParameterID)
+                    };
+                    return NotFound(response);
+                }
+
+                data = new AppParameter
+                {
+                    ParameterId = a.ParameterID,
+                    ParameterName = a.ParameterName,
+                    ParameterValue = a.ParameterValue,
+                    LastUpdateDateTime = a.LastUpdateDateTime ?? DateTime.Now,
+                    LastUpdateByUserId = a.LastUpdateByUserID,
+                    IsUsedBySystem = a.IsUsedBySystem == 1,
+                    Srcontrol = a.SRControl
+                };
+                response = new Response<AppParameter>
+                {
+                    Data = data,
+                    Message = !string.IsNullOrEmpty(data.ParameterId) ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg,
+                    Succeeded = !string.IsNullOrEmpty(filter.ParameterID)
+                };
                 return Ok(response);
             }
             catch (Exception e)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                response = new Response<AppParameter>
+                {
+                    Data = data,
+                    Message = $"{(!string.IsNullOrEmpty(data.ParameterId) ? BusinessObjects.Base.AppConstant.FoundMsg : BusinessObjects.Base.AppConstant.NotFoundMsg)} - {e.Message}",
+                    Succeeded = !string.IsNullOrEmpty(filter.ParameterID)
+                };
+                return BadRequest(response);
             }
         }
 
-        [HttpPost("PostAppParameter", Name = "PostAppParameter")]
-        public async Task<IActionResult> PostAppParameter([FromBody] AppParameter ap)
-        {
-            try
-            {
-                if (ap == null)
-                {
-                    return BadRequest($"AppParameter Is Required");
-                }
+        //[HttpPost("PostAppParameter", Name = "PostAppParameter")]
+        //public async Task<IActionResult> PostAppParameter([FromBody] AppParameter ap)
+        //{
+        //    try
+        //    {
+        //        if (ap == null)
+        //            return BadRequest(string.Format(BusinessObjects.Base.AppConstant.RequiredMsg, "ParameterID"));
 
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                int use = ap.IsUsedBySystem == true ? 1 : 0;
+        //        var data = await _context.Parameter
+        //            .FirstOrDefaultAsync(p => p.ParameterID == ap.ParameterId);
 
-                var query = $@"INSERT INTO `AppParameter`(`ParameterID`, `ParameterName`, `ParameterValue`, 
-                            `LastUpdateDateTime`, `LastUpdateByUserID`, `IsUsedBySystem`, `SRControl`) 
-                            VALUES ('{ap.ParameterID}','{ap.ParameterName}','{ap.ParameterValue}',
-                            '{date}','{ap.LastUpdateByUserID}','{use}','{ap.SRControl}')";
+        //        if (data != null)
+        //            return BadRequest(string.Format(BusinessObjects.Base.AppConstant.AlreadyExistMsg, "ParameterID"));
 
-                int rowsAffected = await _context.Database.ExecuteSqlRawAsync(query);
+        //        var p = new AppParameter
+        //        {
+        //            ParameterId = ap.ParameterId, ParameterName = ap.ParameterName, ParameterValue = ap.ParameterValue,
+        //            LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserId = ap.LastUpdateByUserId, IsUsedBySystem = ap.IsUsedBySystem,
+        //            Srcontrol = ap.Srcontrol
+        //        };
+        //        _context.Parameter.Add(p);
+        //        int rows = await _context.SaveChangesAsync();
 
-                if (rowsAffected > 0)
-                {
-                    return Ok($"Parameter {ap.ParameterID} Created Successfully");
-                }
-                else
-                {
-                    return BadRequest($"Failed To Insert Data For ParameterID {ap.ParameterID}");
-                }
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-            }
-        }
-
-        [HttpPatch("UpdateAppParameter", Name = "UpdateAppParameter")]
-        public async Task<IActionResult> UpdateAppParameter([FromBody] AppParameter ap)
-        {
-            try
-            {
-                string date = DateFormat.DateTimeNow(DateStringFormat.Longyearpattern, DateTime.Now);
-                int use = ap.IsUsedBySystem == true ? 1 : 0;
-
-                if (string.IsNullOrEmpty(ap.ParameterID))
-                {
-                    return BadRequest($"ParameterID Is Required");
-                }
-
-                var query = $@"UPDATE `AppParameter`
-                                SET `ParameterName` = '{ap.ParameterName}',
-                                `ParameterValue` = '{ap.ParameterValue}',
-                                `LastUpdateDateTime` = '{date}',
-                                `LastUpdateByUserID` = '{ap.LastUpdateByUserID}',
-                                `IsUsedBySystem` = '{use}',
-                                `SRControl` = '{ap.SRControl}'
-                                WHERE `ParameterID` = '{ap.ParameterID}'";
-
-                var response = await _context.Database.ExecuteSqlRawAsync(query);
-
-                if (response > 0)
-                {
-                    return Ok($"{ap.ParameterID} Update Successfully");
-                }
-                else
-                {
-                    return NotFound($"{ap.ParameterID} Not Found");
-                }
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-            }
-        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+        //    }
+        //}
     }
 }

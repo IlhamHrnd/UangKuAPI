@@ -94,8 +94,8 @@ namespace EbookAPI.Context
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseMySql("Server=103.145.226.115; Database=yolodevc_UangKu; User Id=yolodevc_UangAdm; Password=[lLMZ(QMj]l{; Port=3306",
-                    new MariaDbServerVersion("10.6.15-MariaDB-cll-lve"));
+                optionsBuilder.UseMySql("Server=103.185.53.118; Database=yolodevc_UangKu; User Id=yolodevc_API; Password=YoloAdmin@123",
+                    new MariaDbServerVersion("10.6.19-mariadb"));
             }
         }
     }
