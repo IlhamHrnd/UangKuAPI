@@ -1,6 +1,6 @@
-using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
@@ -143,7 +143,12 @@ namespace UangKuAPI.Controllers
                 {
                     StandardReferenceId = asr.StandardReferenceID,
                     StandardReferenceName = !string.IsNullOrEmpty(asr.StandardReferenceName) ? asr.StandardReferenceName : string.Empty,
-                    ItemLength = asr.ItemLength > 0 ? asr.ItemLength : 0
+                    ItemLength = asr.ItemLength > 0 ? asr.ItemLength : 0,
+                    IsUsedBySystem = asr.IsUsedBySystem == 1,
+                    IsActive = asr.IsActive == 1,
+                    Note = asr.Note,
+                    LastUpdateDateTime = asr.LastUpdateDateTime.HasValue ? (DateTime)asr.LastUpdateDateTime : new DateTime(),
+                    LastUpdateByUserId = asr.LastUpdateByUserID
                 };
                 response = new Response<AppStandardReference>
                 {

@@ -13,9 +13,9 @@ public partial class AppStandardReferenceItem
 
     public string? Note { get; set; }
 
-    public int IsUsedBySystem { get; set; }
+    public bool IsUsedBySystem { get; set; }
 
-    public int IsActive { get; set; }
+    public bool IsActive { get; set; }
 
     public DateTime LastUpdateDateTime { get; set; }
 

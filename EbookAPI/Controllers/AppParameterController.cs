@@ -121,12 +121,9 @@ namespace UangKuAPI.Controllers
 
                 if (dt.Rows.Count == 0)
                 {
-                    response = new PageResponse<List<AppParameter>>(pagedData, 0, 0)
+                    response = new Response<List<AppParameter>>
                     {
-                        TotalPages = pagedData.Count,
-                        TotalRecords = pagedData.Count,
-                        PrevPageLink = string.Empty,
-                        NextPageLink = string.Empty,
+                        Data = pagedData,
                         Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = pagedData.Count > 0
                     };
