@@ -2,7 +2,7 @@
 {
     public class AppStandardRerefenceItemFilter : Base.Base
     {
-        public string? StandardReferenceID {  get; set; }
+        public string? StandardReferenceID { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsUsedBySystem { get; set; }
         public AppStandardRerefenceItemFilter() : base()

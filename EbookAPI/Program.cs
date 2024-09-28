@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.Entity.Base;
 
 var builder = WebApplication.CreateBuilder(args);
 

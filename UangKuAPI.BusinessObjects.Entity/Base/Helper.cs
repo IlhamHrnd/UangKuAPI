@@ -1,8 +1,8 @@
 ﻿using EntitySpaces.Interfaces;
 
-namespace UangKuAPI.BusinessObjects.Entity.Base
+namespace UangKuAPI.BusinessObjects.Base
 {
-    public class Helper
+    public partial class Helper
     {
         public static void initES(string connection)
         {

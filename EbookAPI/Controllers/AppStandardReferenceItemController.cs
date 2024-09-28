@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Entity.Generated;
@@ -99,6 +100,91 @@ namespace UangKuAPI.Controllers
                     Succeeded = data.Count > 0
                 };
                 return BadRequest(response);
+            }
+        }
+
+        [HttpPost("CreateAppStandardReferenceItem", Name = "CreateAppStandardReferenceItem")]
+        public async Task<IActionResult> CreateAppStandardReferenceItem([FromBody] AppStandardReferenceItem asri)
+        {
+            try
+            {
+                if (asri == null)
+                    return BadRequest(string.Format(AppConstant.RequiredMsg, "AppStandardReferenceItem"));
+
+                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
+                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var size = Converter.StringToInt(maxSize, 0);
+                var result = Converter.IntToLong(size);
+
+                //Proces Pengecekan Ukuran Icon Jika Ada
+                if (asri.ItemIcon != null && asri.ItemIcon.Length > result)
+                    return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", asri.ItemId, $"The Icon You Uploaded Exceeds The Maximum Size Limit({size})"));
+
+                var data = await _context.AppStandardReferenceItems
+                    .FirstOrDefaultAsync(a => a.StandardReferenceId == asri.StandardReferenceId && a.ItemId == asri.ItemId);
+                
+                if (data != null)
+                    return BadRequest(string.Format(AppConstant.AlreadyExistMsg, asri.ItemId));
+                
+                var a = new AppStandardReferenceItem
+                {
+                    StandardReferenceId = asri.StandardReferenceId, ItemId = asri.ItemId, ItemName = asri.ItemName,
+                    Note = asri.Note, IsUsedBySystem = asri.IsUsedBySystem, IsActive = asri.IsActive,
+                    LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserId = asri.LastUpdateByUserId, ItemIcon = asri.ItemIcon
+                };
+                _context.AppStandardReferenceItems.Add(a);
+                int rows = await _context.SaveChangesAsync();
+
+                return rows > 0
+                    ? Ok(string.Format(AppConstant.CreatedSuccessMsg, "Standard Reference", asri.StandardReferenceId))
+                    : BadRequest(string.Format(AppConstant.FailedMsg, "Insert", "Standard Reference Item", asri.StandardReferenceId));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpPatch("UpdateAppStandardReferenceItem", Name = "UpdateAppStandardReferenceItem")]
+        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromBody] AppStandardReferenceItem asri)
+        {
+            try
+            {
+                if (asri == null)
+                    return BadRequest(string.Format(AppConstant.RequiredMsg, "AppStandardReferenceItem"));
+
+                //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
+                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var size = Converter.StringToInt(maxSize, 0);
+                var result = Converter.IntToLong(size);
+
+                //Proces Pengecekan Ukuran Icon Jika Ada
+                if (asri.ItemIcon != null && asri.ItemIcon.Length > result)
+                    return BadRequest(string.Format(AppConstant.FailedMsg, "Update", asri.ItemId, $"The Icon You Uploaded Exceeds The Maximum Size Limit({size})"));
+
+                var data = await _context.AppStandardReferenceItems
+                    .FirstOrDefaultAsync(a => a.StandardReferenceId == asri.StandardReferenceId && a.ItemId == asri.ItemId);
+
+                if (data == null)
+                    return NotFound(string.Format(AppConstant.NotFoundMsg, $"{asri.StandardReferenceId} - {asri.ItemId}"));
+
+                data.ItemName = asri.ItemName;
+                data.Note = asri.Note;
+                data.IsUsedBySystem = asri.IsUsedBySystem;
+                data.IsActive = asri.IsActive;
+                data.LastUpdateDateTime = DateFormat.DateTimeNow();
+                data.LastUpdateByUserId = asri.LastUpdateByUserId;
+                data.ItemIcon = asri.ItemIcon;
+                _context.Update(data);
+                int rows = await _context.SaveChangesAsync();
+
+                return rows > 0
+                    ? Ok(string.Format(AppConstant.UpdateSuccessMsg, asri.StandardReferenceId))
+                    : BadRequest(string.Format(AppConstant.FailedMsg, "Update", "Standard ReferenceID", asri.StandardReferenceId));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
     }

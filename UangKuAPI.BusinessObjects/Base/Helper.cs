@@ -80,40 +80,161 @@ namespace UangKuAPI.BusinessObjects.Base
 
     public static class Converter
     {
+        public static int StringToInt(string dataString, int dataInt)
+        {
+            int result = !string.IsNullOrEmpty(dataString) ? int.Parse(dataString) : dataInt;
+
+            return result;
+        }
+
+        public static string IntToString(int data)
+        {
+            var result = data.ToString();
+            return result;
+        }
+
         public static long IntToLong(int data)
         {
             long result = data * 1024 * 1024;
             return result;
         }
 
-        public static DateTime StringToDateTime(string value)
+        public static int DecimalToInt(decimal value)
         {
-            DateTime result;
-            if (string.IsNullOrEmpty(value))
+            var values = (int)value;
+            return values;
+        }
+
+        public static string DecimalToString(decimal value)
+        {
+            try
             {
-                result = DateTime.Now;
+                int result = (int)Math.Round(value);
+                var values = result.ToString();
+                return values;
             }
-            else
+            catch (OverflowException)
             {
-                try
-                {
-                    result = DateTime.Parse(value);
-                }
-                catch
-                {
-                    result = DateTime.Now;
-                }
+                return "Value too large";
+            }
+        }
+
+        public static bool StringToBool(string value, bool defaultValue)
+        {
+            bool result;
+
+            try
+            {
+                result = Convert.ToBoolean(value);
+            }
+            catch (Exception)
+            {
+                result = defaultValue;
             }
 
             return result;
         }
 
-        public static byte[]? StringToByte(string? value)
+        public static DateTime StringToDateTime(string value, DateTime defaultValue)
         {
-            var result = string.IsNullOrEmpty(value)
-                ? null
-                : Encoding.UTF8.GetBytes(value);
+            DateTime result;
+
+            try
+            {
+                result = DateTime.Parse(value);
+            }
+            catch
+            {
+                result = defaultValue;
+            }
+
             return result;
+        }
+
+        //Class Untuk Convert Byte[] Ke Base64String
+        public static string ByteToStringImg(byte[] imgPath)
+        {
+            try
+            {
+                string imgString = Convert.ToBase64String(imgPath);
+                return imgString;
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+        }
+
+        //Class Untuk Convert Base64String Ke Byte[]
+        public static byte[] StringToByteImg(string imgPath)
+        {
+            byte[] imgByte = Array.Empty<byte>();
+            try
+            {
+                imgByte = Convert.FromBase64String(imgPath);
+                return imgByte;
+            }
+            catch (Exception)
+            {
+                return imgByte;
+            }
+        }
+
+        //Function Untuk Convert PDF Ke Byte[]
+        public static byte[] PDFToByte(string filePath)
+        {
+            byte[] pdfBytes = File.ReadAllBytes(filePath);
+            return pdfBytes;
+        }
+
+        //Class Untuk Decode Base64 Ke Byte[]
+        public static byte[] DecodeBase64ToBytes(string base64String)
+        {
+            byte[] data = Array.Empty<byte>();
+            try
+            {
+                data = Convert.FromBase64String(base64String);
+                return data;
+            }
+            catch (Exception)
+            {
+                return data;
+            }
+        }
+
+        //Class Untuk Decode Base64 Ke String
+        public static string DecodeBase64ToString(string base64String)
+        {
+            try
+            {
+                byte[] data = Convert.FromBase64String(base64String);
+                string decodedString = Encoding.UTF8.GetString(data);
+                return decodedString;
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+        }
+
+        //Function Untuk StringBuilder
+        public static string BuilderString(params object[] items)
+        {
+            var builder = new StringBuilder();
+
+            for (int i = 0; i < items.Length; i++)
+            {
+                builder.Append(items[i]);
+            }
+            var result = builder.ToString();
+            return result;
+        }
+
+        //Function Untuk IList Jadi List
+        public static List<T> ConvertIListToList<T>(IList<T> inputList)
+        {
+            var list = new List<T>(inputList);
+            return list;
         }
     }
 }
