@@ -5,7 +5,7 @@ namespace UangKuAPI.BusinessObjects.Base
 {
     public class Encryptor
     {
-        public static byte[] AES_Encrypt(byte[] bytesToBeEncrypted, byte[] passwordBytes)
+        private static byte[] AES_Encrypt(byte[] bytesToBeEncrypted, byte[] passwordBytes)
         {
             byte[] encryptedBytes = null;
 
@@ -36,7 +36,7 @@ namespace UangKuAPI.BusinessObjects.Base
             return encryptedBytes;
         }
 
-        public static byte[] AES_Decrypt(byte[] bytesToBeDecrypted, byte[] passwordBytes)
+        private static byte[] AES_Decrypt(byte[] bytesToBeDecrypted, byte[] passwordBytes)
         {
             byte[] decryptedBytes = null;
 
@@ -86,7 +86,7 @@ namespace UangKuAPI.BusinessObjects.Base
         //Untuk Men Dekripsi Data
         public static string DataDecrypt(string? value, string key)
         {
-            if (string.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(value))
                 return string.Empty;
 
             byte[] dataToBeDecrypted = Convert.FromBase64String(value);

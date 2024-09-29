@@ -215,7 +215,7 @@ namespace UangKuAPI.Controllers
                     .FirstOrDefaultAsync(a => a.StandardReferenceId == asr.StandardReferenceId);
 
                 if (data == null)
-                    return NotFound(string.Format(AppConstant.NotFoundMsg, asr.StandardReferenceId));
+                    return NotFound(AppConstant.NotFoundMsg);
 
                 data.StandardReferenceName = asr.StandardReferenceName;
                 data.ItemLength = asr.ItemLength;

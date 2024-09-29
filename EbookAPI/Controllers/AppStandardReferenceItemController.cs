@@ -166,7 +166,7 @@ namespace UangKuAPI.Controllers
                     .FirstOrDefaultAsync(a => a.StandardReferenceId == asri.StandardReferenceId && a.ItemId == asri.ItemId);
 
                 if (data == null)
-                    return NotFound(string.Format(AppConstant.NotFoundMsg, $"{asri.StandardReferenceId} - {asri.ItemId}"));
+                    return NotFound(AppConstant.NotFoundMsg);
 
                 data.ItemName = asri.ItemName;
                 data.Note = asri.Note;

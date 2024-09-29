@@ -272,7 +272,7 @@ namespace UangKuAPI.Controllers
                     .FirstOrDefaultAsync(p => p.ParameterId == ap.ParameterId);
 
                 if (data == null)
-                    return NotFound(string.Format(AppConstant.NotFoundMsg, ap.ParameterId));
+                    return NotFound(AppConstant.NotFoundMsg);
 
                 data.ParameterName = ap.ParameterName;
                 data.ParameterValue = ap.ParameterValue;
