@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace UangKuAPI.BusinessObjects.Base
 {
@@ -235,6 +236,13 @@ namespace UangKuAPI.BusinessObjects.Base
         {
             var list = new List<T>(inputList);
             return list;
+        }
+
+        //Format Penomoran Tanggal
+        public static string NumberingFormat(int number, string format)
+        {
+            var result = number.ToString(format);
+            return result;
         }
     }
 }
