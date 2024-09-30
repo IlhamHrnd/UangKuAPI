@@ -1,6 +1,9 @@
 using System.Data;
+using iText.Kernel.Pdf;
+using iText.Layout;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
@@ -15,10 +18,12 @@ namespace UangKuAPI.Controllers
     {
         private readonly AppDbContext _context;
         private readonly Parameter _param;
-        public TransactionController(AppDbContext context, IOptions<Parameter> param)
+        private readonly IFileProvider _file;
+        public TransactionController(AppDbContext context, IOptions<Parameter> param, IWebHostEnvironment env)
         {
             _context = context;
             _param = param.Value;
+            _file = env.ContentRootFileProvider;
         }
 
         [HttpPost("PostTransaction", Name = "PostTransaction")]
@@ -576,6 +581,313 @@ namespace UangKuAPI.Controllers
                     Data = data,
                     Message = $"{(data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
                     Succeeded = data.Count > 0
+                };
+                return BadRequest(response);
+            }
+        }
+
+        [HttpGet("GenerateReportTransaction", Name = "GenerateReportTransaction")]
+        public ActionResult<Response<byte[]>> GenerateReportTransaction([FromQuery] TransactionFilter filter)
+        {
+            var data = Array.Empty<byte>();
+            var response = new Response<byte[]>();
+
+            try
+            {
+                if (string.IsNullOrEmpty(filter.PersonID))
+                {
+                    response = new Response<byte[]>
+                    {
+                        Data = data,
+                        Message = string.Format(AppConstant.RequiredMsg, "PersonID"),
+                        Succeeded = data.Length > 0
+                    };
+                    return BadRequest(response);
+                }
+
+                var fileName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("BlankPDF");
+                var filePath = Path.Combine("File", fileName);
+                var fileInfo = _file.GetFileInfo(filePath);
+
+                if (!fileInfo.Exists)
+                {
+                    response = new Response<byte[]>
+                    {
+                        Data = data,
+                        Message = string.Format(AppConstant.FailedMsg, "Retrieve", fileName, AppConstant.NotFoundMsg),
+                        Succeeded = data.Length > 0
+                    };
+                    return NotFound(response);
+                }
+
+                #region List Transaksi Yang Akan Diambil
+                var transaction = new List<Transaction>();
+                var tQ = new BusinessObjects.Entity.Generated.TransactionQuery("tQ");
+                var transQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("transQ");
+                var itemQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("itemQ");
+
+                tQ.Select(tQ.TransNo, tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID,
+                    tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"),
+                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID)
+                    .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
+                    .InnerJoin(itemQ).On(itemQ.StandardReferenceID == "Expenditure" && itemQ.ItemID == tQ.SRTransItem)
+                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
+
+                var isAscending = filter.IsAscending ?? false;
+                if (!string.IsNullOrEmpty(filter.OrderBy))
+                {
+                    switch (filter.OrderBy)
+                    {
+                        case "OrderByTransaction-001":
+                            tQ.OrderBy(isAscending ? tQ.TransNo.Ascending : tQ.TransNo.Descending);
+                            break;
+
+                        case "OrderByTransaction-002":
+                            tQ.OrderBy(isAscending ? tQ.TransType.Ascending : tQ.TransType.Descending);
+                            break;
+
+                        case "OrderByTransaction-003":
+                            tQ.OrderBy(isAscending ? tQ.TransDate.Ascending : tQ.TransDate.Descending);
+                            break;
+
+                        default:
+                            tQ.OrderBy(isAscending ? tQ.TransDate.Ascending : tQ.TransDate.Descending);
+                            break;
+                    }
+                }
+                else
+                {
+                    tQ.OrderBy(isAscending ? tQ.TransDate.Ascending : tQ.TransDate.Descending);
+                }
+                var dt = tQ.LoadDataTable();
+
+                if (dt.Rows.Count == 0)
+                {
+                    response = new Response<byte[]>
+                    {
+                        Data = data,
+                        Message = dt.Rows.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                        Succeeded = dt.Rows.Count > 0
+                    };
+                    return NotFound(response);
+                }
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var trans = new Transaction
+                    {
+                        TransNo = (string)dr["TransNo"],
+                        PersonId = (string)dr["PersonID"],
+                        Srtransaction = (string)dr["SRTransaction"],
+                        SrtransItem = (string)dr["SRTransItem"],
+                        Amount = dr["Amount"] != DBNull.Value ? (decimal)dr["Amount"] : 0,
+                        Description = dr["Description"] != DBNull.Value ? (string)dr["Description"] : string.Empty,
+                        Photo = dr["Photo"] != DBNull.Value ? (byte[])dr["Photo"] : null,
+                        TransType = dr["TransType"] != DBNull.Value ? (string)dr["TransType"] : string.Empty,
+                        TransDate = dr["TransDate"] != DBNull.Value ? DateOnly.FromDateTime((DateTime)dr["TransDate"]) : null,
+                        CreatedDateTime = (DateTime)dr["CreatedDateTime"],
+                        CreatedByUserId = (string)dr["CreatedByUserID"],
+                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
+                        LastUpdateByUserId = (string)dr["LastUpdateByUserID"]
+                    };
+                    transaction.Add(trans);
+                }
+                #endregion
+
+                #region List Jumlah Total Pemasukan, Pengeluaran, Total Data Yang Diambil
+                var sum = new List<Transaction>();
+                tQ = new BusinessObjects.Entity.Generated.TransactionQuery("tQ");
+                transQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("transQ");
+
+                tQ.Select(tQ.Amount.Sum(), transQ.ItemName.As("SRTransaction"), tQ.PersonID, tQ.TransType)
+                    .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
+                    .GroupBy(tQ.SRTransaction)
+                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
+                var dts = tQ.LoadDataTable();
+
+                if (dts.Rows.Count == 0)
+                {
+                    response = new Response<byte[]>
+                    {
+                        Data = data,
+                        Message = dts.Rows.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                        Succeeded = dts.Rows.Count > 0
+                    };
+                    return BadRequest(response);
+                }
+
+                decimal income = 0;
+                decimal expenditure = 0;
+                var sumtrans = new Transaction();
+
+                foreach (DataRow dr in dts.Rows)
+                {
+                    sumtrans = new Transaction
+                    {
+                        Srtransaction = (string)dr["SRTransaction"],
+                        Amount = (decimal)dr["Amount"],
+                        PersonId = (string)dr["PersonID"],
+                        TransType = (string)dr["TransType"],
+                        TransDate = DateOnly.FromDateTime(DateFormat.DateTimeNow()),
+                        CreatedDateTime = DateFormat.DateTimeNow(),
+                        CreatedByUserId = _param.User,
+                        LastUpdateDateTime = DateFormat.DateTimeNow(),
+                        LastUpdateByUserId = _param.User
+                    };
+                    sum.Add(sumtrans);
+
+                    switch (dr["SRTransaction"])
+                    {
+                        case "Income":
+                            income = dr["Amount"] != DBNull.Value ? (decimal)dr["Amount"] : 0;
+                            break;
+
+                        case "Expenditure":
+                            expenditure = dr["Amount"] != DBNull.Value ? (decimal)dr["Amount"] : 0;
+                            break;
+                    }
+                }
+                decimal summary = income - expenditure;
+
+                if (summary > 0)
+                {
+                    sumtrans = new Transaction
+                    {
+                        Srtransaction = "Summary",
+                        Amount = summary,
+                        PersonId = filter.PersonID,
+                        TransType = "SU",
+                        TransDate = DateOnly.FromDateTime(DateFormat.DateTimeNow()),
+                        CreatedDateTime = DateFormat.DateTimeNow(),
+                        CreatedByUserId = _param.User,
+                        LastUpdateDateTime = DateFormat.DateTimeNow(),
+                        LastUpdateByUserId = _param.User
+                    };
+                    sum.Add(sumtrans);
+                }
+                #endregion
+
+                #region Proses Generate Reporting
+                var size = GeneratePDFFile.SetPageSize(filePath);
+
+                //Generate PDF
+                PdfWriter writer = new PdfWriter(filePath);
+                PdfDocument pdfdoc = new PdfDocument(writer);
+                Document doc = new Document(pdfdoc, size, false);
+
+                //Header
+                string title = $"{filter.PersonID} Transaction Report";
+                var header = GeneratePDFFile.SetParagraph(title, 20, iText.Layout.Properties.TextAlignment.CENTER);
+                doc.Add(header);
+
+                //Subheader
+                var firstItem = transaction.FirstOrDefault();
+                var lastItem = transaction.LastOrDefault();
+                var firstFormat = Converter.DateOnlyToDateTime(firstItem.TransDate, TimeOnly.MinValue);
+                var lastFormat = Converter.DateOnlyToDateTime(lastItem.TransDate, TimeOnly.MinValue);
+                var firstDate = DateFormat.DateTimeNow(DateFormat.Date, firstFormat);
+                var lastDate = DateFormat.DateTimeNow(DateFormat.Date, lastFormat);
+
+                var subtitle = $"Periode {firstDate} - {lastDate}";
+                var subheader = GeneratePDFFile.SetParagraph(subtitle, 15, iText.Layout.Properties.TextAlignment.CENTER);
+                doc.Add(subheader);
+
+                //Line Separator
+                var ls = GeneratePDFFile.SetLine();
+                doc.Add(ls);
+
+                //New Line
+                var nl = GeneratePDFFile.SetNewLine();
+                doc.Add(nl);
+
+                // Table
+                var culture = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("CurrencyFormat");
+                var tbl = GeneratePDFFile.SetTable(5, true);
+
+                //Table Header
+                tbl.AddHeaderCell(GeneratePDFFile.SetCell(1, true, "Description", iText.Layout.Properties.TextAlignment.CENTER));
+                tbl.AddHeaderCell(GeneratePDFFile.SetCell(1, true, "TransNo", iText.Layout.Properties.TextAlignment.CENTER));
+                tbl.AddHeaderCell(GeneratePDFFile.SetCell(1, true, "Income", iText.Layout.Properties.TextAlignment.CENTER));
+                tbl.AddHeaderCell(GeneratePDFFile.SetCell(1, true, "Expenditure", iText.Layout.Properties.TextAlignment.CENTER));
+                tbl.AddHeaderCell(GeneratePDFFile.SetCell(1, true, "Trans Date", iText.Layout.Properties.TextAlignment.CENTER));
+
+                //Table Data
+                foreach (var item in transaction)
+                {
+                    var amountFormat = item.Amount != null ? Converter.Currency((decimal)item.Amount, culture) : string.Empty;
+                    var description = !string.IsNullOrEmpty(item.Description) ? item.Description : item.SrtransItem;
+                    var transDate = DateFormat.DateTimeNow(DateFormat.Date, Converter.DateOnlyToDateTime(item.TransDate, TimeOnly.MinValue));
+                    var textAlignment = item.TransType == "IN" ? iText.Layout.Properties.TextAlignment.RIGHT : iText.Layout.Properties.TextAlignment.LEFT;
+
+                    //Add Item To Cell
+                    tbl.AddCell(GeneratePDFFile.SetCell(1, false, description, iText.Layout.Properties.TextAlignment.LEFT));
+                    tbl.AddCell(GeneratePDFFile.SetCell(1, false, item.TransNo, iText.Layout.Properties.TextAlignment.LEFT));
+                    tbl.AddCell(GeneratePDFFile.SetCell(1, false, item.TransType == "IN" ? amountFormat : string.Empty, iText.Layout.Properties.TextAlignment.RIGHT));
+                    tbl.AddCell(GeneratePDFFile.SetCell(1, false, item.TransType == "OU" ? amountFormat : string.Empty, iText.Layout.Properties.TextAlignment.RIGHT));
+                    tbl.AddCell(GeneratePDFFile.SetCell(1, false, transDate, iText.Layout.Properties.TextAlignment.RIGHT));
+                }
+
+                //Table Footer
+                var sumIncome = sum.FirstOrDefault(item => item.Srtransaction == "Income");
+                var sumExpenditure = sum.FirstOrDefault(item => item.Srtransaction == "Expenditure");
+                var sumSummary = sum.FirstOrDefault(item => item.Srtransaction == "Summary");
+
+                var _income = sumIncome != null ? Converter.Currency(sumIncome.Amount ?? 0, culture) : string.Empty;
+                var _expenditure = sumIncome != null ? Converter.Currency(sumExpenditure.Amount ?? 0, culture) : string.Empty;
+                var _summary = sumSummary != null ? Converter.Currency(sumSummary.Amount ?? 0, culture) : string.Empty;
+
+                tbl.AddFooterCell(GeneratePDFFile.SetCell(1, true, "Summary", iText.Layout.Properties.TextAlignment.CENTER));
+                tbl.AddFooterCell(GeneratePDFFile.SetCell(1, true, string.Empty, iText.Layout.Properties.TextAlignment.LEFT));
+                tbl.AddFooterCell(GeneratePDFFile.SetCell(1, true, _income, iText.Layout.Properties.TextAlignment.RIGHT));
+                tbl.AddFooterCell(GeneratePDFFile.SetCell(1, true, _expenditure, iText.Layout.Properties.TextAlignment.RIGHT));
+                tbl.AddFooterCell(GeneratePDFFile.SetCell(1, true, _summary, iText.Layout.Properties.TextAlignment.RIGHT));
+                doc.Add(tbl);
+
+                var addHeader = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("IsAddHeader");
+                var isAddHeader = Converter.StringToBool(addHeader, false);
+                if (isAddHeader)
+                {
+
+                }
+
+                var addFooter = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("IsAddFooter");
+                var isAddFooter = Converter.StringToBool(addFooter, false);
+                if (isAddFooter)
+                {
+                    var date = DateFormat.DateTimeNow(DateFormat.Dateshortmonthhourminute, null);
+                    string footer = $"Generated On {date}";
+                    var parFooter = GeneratePDFFile.SetParagraph(footer, 10, iText.Layout.Properties.TextAlignment.CENTER);
+                    GeneratePDFFile.SetFooterPages(parFooter, pdfdoc, doc);
+                }
+
+                var addPageNumber = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("IsAddPageNumber");
+                var isAddPageNumber = Converter.StringToBool(addPageNumber, false);
+                if (isAddPageNumber)
+                {
+                    GeneratePDFFile.SetPagesNumber(pdfdoc, doc);
+                }
+
+                //Close Doc
+                doc.Close();
+                #endregion
+
+                var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                response = new Response<byte[]>
+                {
+                    Data = fileBytes,
+                    Message = fileBytes.Length > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = fileBytes.Length > 0
+                };
+                return Ok(response);
+                //return File(fileBytes, "application/pdf", $"{filter.PersonID} Transaction Report");
+            }
+            catch (Exception e)
+            {
+                response = new Response<byte[]>
+                {
+                    Data = data,
+                    Message = $"{(data.Length > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
+                    Succeeded = data.Length > 0
                 };
                 return BadRequest(response);
             }
