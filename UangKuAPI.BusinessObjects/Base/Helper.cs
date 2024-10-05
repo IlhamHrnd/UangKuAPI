@@ -227,8 +227,8 @@ namespace UangKuAPI.BusinessObjects.Base
         //Fungsi Format DateOnly Ke DateTime
         public static DateTime DateOnlyToDateTime(DateOnly? dateOnly, TimeOnly? timeOnly)
         {
-            var date = dateOnly.HasValue ? dateOnly.Value : DateOnly.MinValue;
-            var time = timeOnly.HasValue ? timeOnly.Value : TimeOnly.MinValue;
+            var date = dateOnly ?? DateOnly.MinValue;
+            var time = timeOnly ?? TimeOnly.MinValue;
             var result = date.ToDateTime(time);
             return result;
         }

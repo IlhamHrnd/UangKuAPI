@@ -122,33 +122,34 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 		}
 		
 		#region LoadByPrimaryKey
-		public virtual bool LoadByPrimaryKey(System.String itemID)
+		public virtual bool LoadByPrimaryKey(System.String referenceID,  System.String itemID)
 		{
 			if(this.es.Connection.SqlAccessType == esSqlAccessType.DynamicSQL)
-				return LoadByPrimaryKeyDynamic(itemID);
+				return LoadByPrimaryKeyDynamic(referenceID, itemID);
 			else
-				return LoadByPrimaryKeyStoredProcedure(itemID);
+				return LoadByPrimaryKeyStoredProcedure(referenceID, itemID);
 		}
 
-		public virtual bool LoadByPrimaryKey(esSqlAccessType sqlAccessType, System.String itemID)
+		public virtual bool LoadByPrimaryKey(esSqlAccessType sqlAccessType, System.String referenceID,  System.String itemID)
 		{
 			if (sqlAccessType == esSqlAccessType.DynamicSQL)
-				return LoadByPrimaryKeyDynamic(itemID);
+				return LoadByPrimaryKeyDynamic(referenceID, itemID);
 			else
-				return LoadByPrimaryKeyStoredProcedure(itemID);
+				return LoadByPrimaryKeyStoredProcedure(referenceID, itemID);
 		}
 
-		private bool LoadByPrimaryKeyDynamic(System.String itemID)
+		private bool LoadByPrimaryKeyDynamic(System.String referenceID,  System.String itemID)
 		{
 			AppstandardreferenceitemQuery query = new AppstandardreferenceitemQuery("Appstandardreferenceitem");
-			query.Where(query.ItemID == ItemID);
+			query.Where(query.StandardReferenceID == referenceID, query.ItemID == itemID);
 			return this.Load(query);
 		}
 
-		private bool LoadByPrimaryKeyStoredProcedure(System.String itemID)
+		private bool LoadByPrimaryKeyStoredProcedure(System.String referenceID,  System.String itemID)
 		{
 			esParameters parms = new esParameters();
-			parms.Add("ItemID", ItemID);
+			parms.Add("StandardReferenceID", referenceID);
+			parms.Add("ItemID", itemID);
 			return this.Load(esQueryType.StoredProcedure, this.es.spLoadByPrimaryKey, parms);
 		}
 		#endregion

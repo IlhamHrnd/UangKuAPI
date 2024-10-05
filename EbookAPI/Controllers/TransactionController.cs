@@ -103,8 +103,8 @@ namespace UangKuAPI.Controllers
                 data.LastUpdateDateTime = DateFormat.DateTimeNow();
                 data.LastUpdateByUserId = trans.LastUpdateByUserId;
                 data.TransType = trans.TransType;
-                trans.TransDate = trans.TransDate;
-                _context.Update(trans);
+                data.TransDate = trans.TransDate;
+                _context.Update(data);
                 int rows = await _context.SaveChangesAsync();
 
                 return rows > 0
@@ -630,8 +630,8 @@ namespace UangKuAPI.Controllers
                     tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"),
                     tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID)
                     .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
-                    .InnerJoin(itemQ).On(itemQ.StandardReferenceID == "Expenditure" && itemQ.ItemID == tQ.SRTransItem)
-                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
+                    .InnerJoin(itemQ).On(itemQ.ItemID == tQ.SRTransItem)
+                    .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate && itemQ.StandardReferenceID.In("Expenditure", "Income"));
 
                 var isAscending = filter.IsAscending ?? false;
                 if (!string.IsNullOrEmpty(filter.OrderBy))
