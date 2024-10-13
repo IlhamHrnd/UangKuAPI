@@ -15,7 +15,7 @@ public partial class UserPicture
 
     public string PersonId { get; set; } = null!;
 
-    public int IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 
     public string CreatedByUserId { get; set; } = null!;
 

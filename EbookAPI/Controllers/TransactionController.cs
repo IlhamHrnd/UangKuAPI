@@ -118,7 +118,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetNewTransactionNo", Name = "GetNewTransactionNo")]
-        public ActionResult<Response<string>> GetNewTransactionNo([FromQuery] TransactionFilter filter)
+        public ActionResult<Response<string>> GetNewTransactionNo([FromQuery] TransTypeFilter filter)
         {
             var data = string.Empty;
             var response = new Response<string>();

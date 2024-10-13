@@ -10,7 +10,6 @@ namespace UangKuAPI.BusinessObjects.Filter
         public string? OrderBy { get; set; }
         public bool? IsAscending { get; set; }
         public string? TransNo { get; set; }
-        public string TransType { get; set; }
         public TransactionFilter()
         {
             PersonID = string.Empty;
@@ -19,9 +18,8 @@ namespace UangKuAPI.BusinessObjects.Filter
             OrderBy = string.Empty;
             IsAscending = true;
             TransNo = string.Empty;
-            TransType = string.Empty;
         }
-        public TransactionFilter(int pageNumber, int pageSize, string personID, DateTime? startDate, DateTime? endDate, string? orderBy, bool? isAscending, string transNo, string transType) : base(pageNumber, pageSize)
+        public TransactionFilter(int pageNumber, int pageSize, string personID, DateTime? startDate, DateTime? endDate, string? orderBy, bool? isAscending, string transNo) : base(pageNumber, pageSize)
         {
             PersonID = !string.IsNullOrEmpty(personID) ? personID : string.Empty;
             StartDate = startDate ?? DateFormat.DateTimeNowDate(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -29,7 +27,6 @@ namespace UangKuAPI.BusinessObjects.Filter
             OrderBy = !string.IsNullOrEmpty(orderBy) ? orderBy : string.Empty;
             IsAscending = isAscending;
             TransNo = !string.IsNullOrEmpty(transNo) ? transNo : string.Empty;
-            TransType = !string.IsNullOrEmpty(transType) ? transType : string.Empty;
         }
     }
 }
