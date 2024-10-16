@@ -108,7 +108,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReferenceID", Name = "GetReferenceID")]
-        public ActionResult<Response<Appstandardreference>> GetReferenceID([FromQuery] AppStandardReferenceFilter filter)
+        public ActionResult<Response<AppStandardReference>> GetReferenceID([FromQuery] AppStandardReferenceFilter filter)
         {
             var data = new AppStandardReference();
             var response = new Response<AppStandardReference>();

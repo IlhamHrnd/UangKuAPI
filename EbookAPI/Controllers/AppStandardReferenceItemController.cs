@@ -21,20 +21,23 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetAllReferenceItemID", Name = "GetAllReferenceItemID")]
-        public ActionResult<Response<List<AppStandardReferenceItem>>> GetAllReferenceItemID([FromQuery] AppStandardRerefenceItemFilter filter)
+        public ActionResult<PageResponse<AppStandardReferenceItem>> GetAllReferenceItemID([FromQuery] AppStandardRerefenceItemFilter filter)
         {
             var data = new List<AppStandardReferenceItem>();
-            var response = new Response<List<AppStandardReferenceItem>>();
+            var response = new PageResponse<List<AppStandardReferenceItem>>(data, 0, 0);
 
             try
             {
                 if (string.IsNullOrEmpty(filter.StandardReferenceID))
                 {
-                    response = new Response<List<AppStandardReferenceItem>>
+                    response = new PageResponse<List<AppStandardReferenceItem>>(data, 0, 0)
                     {
-                        Data = data,
+                        TotalPages = data.Count,
+                        TotalRecords = data.Count,
+                        PrevPageLink = string.Empty,
+                        NextPageLink = string.Empty,
                         Message = string.Format(AppConstant.RequiredMsg, "Standard ReferenceID"),
-                        Succeeded = !string.IsNullOrEmpty(filter.StandardReferenceID)
+                        Succeeded = data.Count > 0
                     };
                     return BadRequest(response);
                 }
@@ -57,9 +60,12 @@ namespace UangKuAPI.Controllers
 
                 if (dt.Rows.Count == 0)
                 {
-                    response = new Response<List<AppStandardReferenceItem>>
+                    response = new PageResponse<List<AppStandardReferenceItem>>(data, 0, 0)
                     {
-                        Data = data,
+                        TotalPages = data.Count,
+                        TotalRecords = data.Count,
+                        PrevPageLink = string.Empty,
+                        NextPageLink = string.Empty,
                         Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = data.Count > 0
                     };
@@ -83,9 +89,12 @@ namespace UangKuAPI.Controllers
                     data.Add(asri);
                 }
 
-                response = new Response<List<AppStandardReferenceItem>>
+                response = new PageResponse<List<AppStandardReferenceItem>>(data, filter.PageNumber, filter.PageSize)
                 {
-                    Data = data,
+                    TotalPages = data.Count,
+                    TotalRecords = data.Count,
+                    PrevPageLink = string.Empty,
+                    NextPageLink = string.Empty,
                     Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                     Succeeded = data.Count > 0
                 };
@@ -93,9 +102,12 @@ namespace UangKuAPI.Controllers
             }
             catch (Exception e)
             {
-                response = new Response<List<AppStandardReferenceItem>>
+                response = new PageResponse<List<AppStandardReferenceItem>>(data, 0, 0)
                 {
-                    Data = data,
+                    TotalPages = data.Count,
+                    TotalRecords = data.Count,
+                    PrevPageLink = string.Empty,
+                    NextPageLink = string.Empty,
                     Message = $"{(data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
                     Succeeded = data.Count > 0
                 };
