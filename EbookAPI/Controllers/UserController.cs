@@ -34,14 +34,15 @@ namespace UangKuAPI.Controllers
                 var accessQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("accessQ");
                 var statusQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("statusQ");
 
-                uQ.Select(uQ.Username, uQ.ActiveDate, uQ.LastLogin, uQ.LastUpdateDateTime, uQ.LastUpdateByUser,
-                    uQ.PersonID, sexQ.ItemName.As("SexName"), accessQ.ItemName.As("AccessName"), statusQ.ItemName.As("StatusName"))
+                uQ.Select(uQ.Username)
                     .InnerJoin(sexQ).On(sexQ.StandardReferenceID == "Sex" && sexQ.ItemID == uQ.SRSex)
                     .InnerJoin(accessQ).On(accessQ.StandardReferenceID == "Access" && accessQ.ItemID == uQ.SRAccess)
                     .InnerJoin(statusQ).On(statusQ.StandardReferenceID == "Status" && statusQ.ItemID == uQ.SRStatus);
                 DataTable dtRecord = uQ.LoadDataTable();
 
-                uQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                uQ.Select(uQ.ActiveDate, uQ.LastLogin, uQ.LastUpdateDateTime, uQ.LastUpdateByUser, uQ.PersonID, 
+                    sexQ.ItemName.As("SexName"), accessQ.ItemName.As("AccessName"), statusQ.ItemName.As("StatusName"))
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
                     .Take(filter.PageSize);
                 DataTable dt = uQ.LoadDataTable();
 

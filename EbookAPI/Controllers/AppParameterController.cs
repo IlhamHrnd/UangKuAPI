@@ -30,12 +30,12 @@ namespace UangKuAPI.Controllers
             {
                 var aQ = new AppparameterQuery("aQ");
 
-                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime,
-                    aQ.LastUpdateByUserID, aQ.SRControl, aQ.IsUsedBySystem)
+                aQ.Select(aQ.ParameterID)
                     .OrderBy(aQ.ParameterID.Ascending);
                 DataTable dtRecord = aQ.LoadDataTable();
 
-                aQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                aQ.Select(aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime, aQ.LastUpdateByUserID, aQ.SRControl, aQ.IsUsedBySystem)
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
                     .Take(filter.PageSize);
                 DataTable dt = aQ.LoadDataTable();
 

@@ -30,14 +30,14 @@ namespace UangKuAPI.Controllers
             {
                 var asrQ = new AppstandardreferenceQuery("asrQ");
 
-                asrQ.Select(asrQ.StandardReferenceID, asrQ.StandardReferenceName, asrQ.ItemLength, asrQ.Note,
-                    asrQ.LastUpdateDateTime, asrQ.LastUpdateByUserID,
-                    "<CASE WHEN asrQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>",
-                    "<CASE WHEN asrQ.IsActive = 1 THEN 'true' ELSE 'false' END AS 'IsActive'>")
+                asrQ.Select(asrQ.StandardReferenceID)
                     .OrderBy(asrQ.StandardReferenceID.Ascending);
                 DataTable dtRecord = asrQ.LoadDataTable();
 
-                asrQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                asrQ.Select(asrQ.StandardReferenceName, asrQ.ItemLength, asrQ.Note, asrQ.LastUpdateDateTime, asrQ.LastUpdateByUserID,
+                    "<CASE WHEN asrQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>",
+                    "<CASE WHEN asrQ.IsActive = 1 THEN 'true' ELSE 'false' END AS 'IsActive'>")
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
                     .Take(filter.PageSize);
                 DataTable dt = asrQ.LoadDataTable();
 

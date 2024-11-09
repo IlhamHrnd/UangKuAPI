@@ -194,12 +194,16 @@ namespace UangKuAPI.Controllers
                 var transQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("transQ");
                 var itemQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("itemQ");
 
-                tQ.Select(tQ.TransNo, tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID,
-                    tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"),
-                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID)
+                tQ.Select(tQ.TransNo)
                     .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
                     .InnerJoin(itemQ).On(itemQ.StandardReferenceID == "Expenditure" && itemQ.ItemID == tQ.SRTransItem)
                     .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
+                DataTable dtRecord = tQ.LoadDataTable();
+
+                tQ.Select(tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID, tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"),
+                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID)
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize);
 
                 var isAscending = filter.IsAscending ?? false;
                 if (!string.IsNullOrEmpty(filter.OrderBy))
@@ -224,13 +228,7 @@ namespace UangKuAPI.Controllers
                     }
                 }
                 else
-                {
                     tQ.OrderBy(isAscending ? tQ.TransDate.Ascending : tQ.TransDate.Descending);
-                }
-                DataTable dtRecord = tQ.LoadDataTable();
-
-                tQ.Skip((filter.PageNumber - 1) * filter.PageSize)
-                    .Take(filter.PageSize);
                 DataTable dt = tQ.LoadDataTable();
 
                 if (dt.Rows.Count == 0)
@@ -360,9 +358,7 @@ namespace UangKuAPI.Controllers
                     }
                 }
                 else
-                {
                     tQ.OrderBy(isAscending ? tQ.TransDate.Ascending : tQ.TransDate.Descending);
-                }
                 var dt = tQ.LoadDataTable();
 
                 if (dt.Rows.Count == 0)
@@ -656,9 +652,7 @@ namespace UangKuAPI.Controllers
                     }
                 }
                 else
-                {
                     tQ.OrderBy(isAscending ? tQ.TransDate.Ascending : tQ.TransDate.Descending);
-                }
                 var dt = tQ.LoadDataTable();
 
                 if (dt.Rows.Count == 0)

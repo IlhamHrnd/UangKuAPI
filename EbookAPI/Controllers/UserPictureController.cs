@@ -43,8 +43,7 @@ namespace UangKuAPI.Controllers
 
                 var upQ = new BusinessObjects.Entity.Generated.UserpictureQuery("upQ");
 
-                upQ.Select(upQ.PictureID, upQ.Picture, upQ.PictureName, upQ.PictureFormat, upQ.PersonID, upQ.IsDeleted,
-                    upQ.CreatedByUserID, upQ.CreatedDateTime, upQ.LastUpdateByUserID, upQ.LastUpdateDateTime)
+                upQ.Select(upQ.PictureID)
                     .Where(upQ.PersonID == filter.PersonID)
                     .OrderBy(upQ.PictureID.Descending);
 
@@ -52,7 +51,9 @@ namespace UangKuAPI.Controllers
                     upQ.Where(upQ.IsDeleted == filter.IsDelete);
                 DataTable dtRecord = upQ.LoadDataTable();
 
-                upQ.Skip((filter.PageNumber - 1) * filter.PageSize)
+                upQ.Select(upQ.Picture, upQ.PictureName, upQ.PictureFormat, upQ.PersonID, upQ.IsDeleted, upQ.CreatedByUserID, 
+                    upQ.CreatedDateTime, upQ.LastUpdateByUserID, upQ.LastUpdateDateTime)
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
                     .Take(filter.PageSize);
                 DataTable dt = upQ.LoadDataTable();
 
