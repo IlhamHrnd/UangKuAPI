@@ -41,7 +41,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var upQ = new BusinessObjects.Entity.Generated.UserpictureQuery("upQ");
+                var upQ = new UserpictureQuery("upQ");
 
                 upQ.Select(upQ.PictureID)
                     .Where(upQ.PersonID == filter.PersonID)
@@ -208,7 +208,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetNewPictureID", Name = "GetNewPictureID")]
-        public ActionResult<Response<string>> GetNewPictureID([FromQuery] TransTypeFilter filter)
+        public ActionResult<Response<string>> GetNewPictureID([FromQuery] UserPictureFilter filter)
         {
             var data = string.Empty;
             var response = new Response<string>();
