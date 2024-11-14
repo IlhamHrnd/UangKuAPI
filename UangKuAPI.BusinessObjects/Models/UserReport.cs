@@ -17,7 +17,7 @@ public partial class UserReport
 
     public byte[]? Picture { get; set; }
 
-    public int? IsApprove { get; set; }
+    public bool? IsApprove { get; set; }
 
     public string SrreportStatus { get; set; } = null!;
 
