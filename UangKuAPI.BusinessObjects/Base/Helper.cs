@@ -233,6 +233,13 @@ namespace UangKuAPI.BusinessObjects.Base
             return result;
         }
 
+        //Fungsi Format DateTime Ke DateOnly
+        public static DateOnly DateTimeToDateOnly(DateTime dateTime)
+        {
+            var result = DateOnly.FromDateTime(dateTime);
+            return result;
+        }
+
         //Function Untuk StringBuilder
         public static string BuilderString(params object[] items)
         {
