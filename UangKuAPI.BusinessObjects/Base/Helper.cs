@@ -158,6 +158,12 @@ namespace UangKuAPI.BusinessObjects.Base
             return result;
         }
 
+        public static ulong? SbyteToUlong(sbyte? value)
+        {
+            ulong? result = value.HasValue && value.Value > 0 ? (ulong)value.Value : null;
+            return result;
+        }
+
         //Class Untuk Convert Byte[] Ke Base64String
         public static string ByteToStringImg(byte[] imgPath)
         {
