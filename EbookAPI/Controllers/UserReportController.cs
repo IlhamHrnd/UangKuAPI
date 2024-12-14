@@ -208,9 +208,7 @@ namespace UangKuAPI.Controllers
                 }
 
                 if (isAdmin)
-                {
                     urQ.Select(urQ.ApprovedDateTime, urQ.ApprovedByUserID, urQ.VoidDateTime, urQ.VoidByUserID, urQ.LastUpdateDateTime, urQ.LastUpdateByUserID);
-                }
 
                 urQ.Select(urQ.DateErrorOccured, urQ.ErrorCronologic, urQ.Picture, urQ.IsApprove,
                     urQ.CreatedDateTime, urQ.CreatedByUserID, urQ.PersonID, locQ.ItemName.As("SRErrorLocation"),

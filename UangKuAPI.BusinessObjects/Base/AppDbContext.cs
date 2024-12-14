@@ -61,6 +61,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UserDocument> UserDocuments { get; set; }
+
     public virtual DbSet<UserPicture> UserPictures { get; set; }
 
     public virtual DbSet<UserReport> UserReports { get; set; }
@@ -336,6 +338,36 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Srstatus)
                 .HasMaxLength(10)
                 .HasColumnName("SRStatus");
+        });
+
+        modelBuilder.Entity<UserDocument>(entity =>
+        {
+            entity.HasKey(e => new { e.DocumentId, e.PersonId })
+                .HasName("PRIMARY")
+                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+            entity.ToTable("UserDocument");
+
+            entity.Property(e => e.DocumentId)
+                .HasMaxLength(50)
+                .HasColumnName("DocumentID");
+            entity.Property(e => e.PersonId)
+                .HasMaxLength(50)
+                .HasColumnName("PersonID");
+            entity.Property(e => e.CreatedByUserId)
+                .HasMaxLength(50)
+                .HasColumnName("CreatedByUserID");
+            entity.Property(e => e.CreatedDateTime).HasColumnType("datetime");
+            entity.Property(e => e.DocumentDate).HasColumnType("datetime");
+            entity.Property(e => e.FileExtention).HasMaxLength(4);
+            entity.Property(e => e.FileName).HasMaxLength(1000);
+            entity.Property(e => e.FilePath).HasMaxLength(1000);
+            entity.Property(e => e.IsDeleted).HasColumnType("bit(1)");
+            entity.Property(e => e.LastUpdateByUserId)
+                .HasMaxLength(50)
+                .HasColumnName("LastUpdateByUserID");
+            entity.Property(e => e.LastUpdateDateTime).HasColumnType("datetime");
+            entity.Property(e => e.Note).HasMaxLength(50);
         });
 
         modelBuilder.Entity<UserPicture>(entity =>
