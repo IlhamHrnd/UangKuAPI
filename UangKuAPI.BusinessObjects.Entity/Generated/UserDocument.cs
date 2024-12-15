@@ -8,7 +8,7 @@
 ===============================================================================
 EntitySpaces Version : 2019.1.1218.0
 EntitySpaces Driver  : MySql
-Date Generated       : 12/14/2024 9:13:36 PM
+Date Generated       : 12/15/2024 2:12:26 PM
 ===============================================================================
 */
 
@@ -684,16 +684,19 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 			c = new esColumnMetadata(UserDocumentMetadata.ColumnNames.FileName, 2, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserDocumentMetadata.PropertyNames.FileName;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserDocumentMetadata.ColumnNames.FileExtention, 3, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserDocumentMetadata.PropertyNames.FileExtention;
-			c.CharacterMaxLength = 3;
+			c.CharacterMaxLength = 4;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserDocumentMetadata.ColumnNames.Note, 4, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserDocumentMetadata.PropertyNames.Note;
 			c.CharacterMaxLength = 50;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserDocumentMetadata.ColumnNames.DocumentDate, 5, typeof(System.DateTime), esSystemType.DateTime);
@@ -703,6 +706,7 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 			c = new esColumnMetadata(UserDocumentMetadata.ColumnNames.FilePath, 6, typeof(System.String), esSystemType.String);
 			c.PropertyName = UserDocumentMetadata.PropertyNames.FilePath;
 			c.CharacterMaxLength = 1000;
+			c.IsNullable = true;
 			m_columns.Add(c);
 				
 			c = new esColumnMetadata(UserDocumentMetadata.ColumnNames.IsDeleted, 7, typeof(System.SByte), esSystemType.SByte);

@@ -9,15 +9,15 @@ public partial class UserDocument
 
     public string PersonId { get; set; } = null!;
 
-    public string FileName { get; set; } = null!;
+    public string? FileName { get; set; }
 
-    public string FileExtention { get; set; } = null!;
+    public string? FileExtention { get; set; }
 
-    public string Note { get; set; } = null!;
+    public string? Note { get; set; }
 
     public DateTime DocumentDate { get; set; }
 
-    public string FilePath { get; set; } = null!;
+    public string? FilePath { get; set; }
 
     public ulong IsDeleted { get; set; }
 

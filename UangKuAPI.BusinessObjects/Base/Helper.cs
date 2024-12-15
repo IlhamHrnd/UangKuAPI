@@ -278,6 +278,16 @@ namespace UangKuAPI.BusinessObjects.Base
             CultureInfo info = new CultureInfo(culture);
             return amount.ToString("C", info);
         }
+
+        public static bool IsAllowDocumentType(List<string> list, string extention)
+        {
+            foreach (var item in list)
+            {
+                if (item == extention)
+                    return true;
+            }
+            return false;
+        }
     }
 
     public static class GeneratePDFFile

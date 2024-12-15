@@ -199,7 +199,6 @@ namespace UangKuAPI.Controllers
                 return rows > 0
                     ? Ok(string.Format(AppConstant.UpdateSuccessMsg, picture.PictureId))
                     : BadRequest(string.Format(AppConstant.FailedMsg, "Delete", "Picture", picture.PictureId));
-
             }
             catch (Exception e)
             {

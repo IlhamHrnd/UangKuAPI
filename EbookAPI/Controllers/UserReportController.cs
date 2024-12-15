@@ -99,7 +99,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("PatchUserReport", Name = "PatchUserReport")]
-        public async Task<IActionResult> PatchUserReport([FromQuery] UserReportFilter filter, [FromBody] UserReport report)
+        public async Task<IActionResult> PatchUserReport([FromBody] UserReport report)
         {
             if (report == null)
                 return BadRequest(string.Format(AppConstant.RequiredMsg, "Report"));
@@ -117,11 +117,11 @@ namespace UangKuAPI.Controllers
             data.LastUpdateDateTime = DateFormat.DateTimeNow();
             data.LastUpdateByUserId = report.LastUpdateByUserId;
 
-            if (filter.IsApproved.HasValue)
+            if (report.IsApprove.HasValue)
             {
-                data.IsApprove = filter.IsApproved;
+                data.IsApprove = report.IsApprove;
 
-                if (filter.IsApproved ?? false)
+                if (report.IsApprove ?? false)
                 {
                     data.ApprovedDateTime = DateFormat.DateTimeNow();
                     data.ApprovedByUserId = report.ApprovedByUserId;
