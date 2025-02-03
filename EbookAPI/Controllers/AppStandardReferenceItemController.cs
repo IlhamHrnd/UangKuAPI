@@ -199,5 +199,54 @@ namespace UangKuAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
+
+        [HttpGet("GetNewItemID", Name = "GetNewItemID")]
+        public ActionResult<Response<string>> GetNewItemID([FromQuery] AppStandardRerefenceItemFilter filter)
+        {
+            var data = string.Empty;
+            var response = new Response<string>();
+
+            try
+            {
+                if (string.IsNullOrEmpty(filter.StandardReferenceID))
+                {
+                    response = new Response<string>
+                    {
+                        Data = data,
+                        Message = string.Format(AppConstant.RequiredMsg, "Standard ReferenceID"),
+                        Succeeded = !string.IsNullOrEmpty(data)
+                    };
+                    return BadRequest(response);
+                }
+
+                int number = 1;
+                string formattedNumber;
+
+                do
+                {
+                    formattedNumber = Converter.NumberingFormat(number, "D3");
+                    data = $"{filter.StandardReferenceID}-{formattedNumber}";
+                    number++;
+                } while (_context.AppStandardReferenceItems.Any(asri => asri.ItemId == data));
+
+                response = new Response<string>
+                {
+                    Data = data,
+                    Message = !string.IsNullOrEmpty(data) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = !string.IsNullOrEmpty(data)
+                };
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                response = new Response<string>
+                {
+                    Data = data,
+                    Message = $"{(!string.IsNullOrEmpty(data) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
+                    Succeeded = !string.IsNullOrEmpty(data)
+                };
+                return BadRequest(response);
+            }
+        }
     }
 }

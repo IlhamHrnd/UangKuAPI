@@ -236,5 +236,47 @@ namespace UangKuAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
+
+        [HttpGet("GetNewStandardReferenceID", Name = "GetNewStandardReferenceID")]
+        public ActionResult<Response<string>> GetNewStandardReferenceID([FromQuery] AppStandardReferenceFilter filter)
+        {
+            var data = string.Empty;
+            var response = new Response<string>();
+
+            try
+            {
+                if (string.IsNullOrEmpty(filter.ReferenceID))
+                {
+                    response = new Response<string>
+                    {
+                        Data = data,
+                        Message = string.Format(AppConstant.RequiredMsg, "ReferenceID"),
+                        Succeeded = !string.IsNullOrEmpty(data)
+                    };
+                    return BadRequest(response);
+                }
+
+                var asr = new Appstandardreference();
+                data = asr.LoadByPrimaryKey(filter.ReferenceID) ? asr.StandardReferenceID : string.Empty;
+
+                response = new Response<string>
+                {
+                    Data = string.IsNullOrEmpty(data) ? filter.ReferenceID : string.Empty,
+                    Message = !string.IsNullOrEmpty(data) ? string.Format(AppConstant.AlreadyExistMsg, "ReferenceID") : AppConstant.FoundMsg,
+                    Succeeded = string.IsNullOrEmpty(data)
+                };
+                return !string.IsNullOrEmpty(data) ? BadRequest(response) : Ok(response);
+            }
+            catch (Exception e)
+            {
+                response = new Response<string>
+                {
+                    Data = data,
+                    Message = $"{(!string.IsNullOrEmpty(data) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",
+                    Succeeded = !string.IsNullOrEmpty(data)
+                };
+                return BadRequest(response);
+            }
+        }
     }
 }
