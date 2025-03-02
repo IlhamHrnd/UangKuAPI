@@ -196,7 +196,7 @@ namespace UangKuAPI.Controllers
 
                 tQ.Select(tQ.TransNo)
                     .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
-                    .InnerJoin(itemQ).On(itemQ.StandardReferenceID == "Expenditure" && itemQ.ItemID == tQ.SRTransItem)
+                    .InnerJoin(itemQ).On(itemQ.StandardReferenceID.In("Expenditure", "Income") && itemQ.ItemID == tQ.SRTransItem)
                     .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
                 DataTable dtRecord = tQ.LoadDataTable();
 
@@ -332,7 +332,7 @@ namespace UangKuAPI.Controllers
                     tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"),
                     tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID)
                     .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
-                    .InnerJoin(itemQ).On(itemQ.StandardReferenceID == "Expenditure" && itemQ.ItemID == tQ.SRTransItem)
+                    .InnerJoin(itemQ).On(itemQ.StandardReferenceID.In("Expenditure", "Income") && itemQ.ItemID == tQ.SRTransItem)
                     .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
 
                 var isAscending = filter.IsAscending ?? false;
