@@ -2,10 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
+using UangKuAPI.EntitySpaces.Generated;
 
 namespace UangKuAPI.Controllers
 {
@@ -13,9 +13,9 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class AppParameterController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
 
-        public AppParameterController(AppDbContext context)
+        public AppParameterController(BaseFramework context)
         {
             _context = context;
         }

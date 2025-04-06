@@ -1,12 +1,11 @@
-using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using System.Data;
 using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
 
 namespace UangKuAPI.Controllers
 {
@@ -14,9 +13,9 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class UserPictureController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
         private readonly IFileProvider _file;
-        public UserPictureController(AppDbContext context, IWebHostEnvironment env)
+        public UserPictureController(BaseFramework context, IWebHostEnvironment env)
         {
             _context = context;
             _file = env.ContentRootFileProvider;
@@ -44,7 +43,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var upQ = new UserpictureQuery("upQ");
+                var upQ = new G.UserpictureQuery("upQ");
 
                 upQ.Select(upQ.PictureID)
                     .Where(upQ.PersonID == filter.PersonID)
@@ -79,7 +78,7 @@ namespace UangKuAPI.Controllers
                     var pictureData = Array.Empty<byte>();
                     if (dr["Picture"] is not byte[] photo || photo.Length == 0)
                     {
-                        var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("PictureDirectory");
+                        var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("PictureDirectory");
                         var filePath = Path.Combine(folderName, (string)dr["PersonID"], (string)dr["PictureName"]);
                         var fileInfo = _file.GetFileInfo(filePath);
                         if (fileInfo.Exists)
@@ -149,7 +148,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "Picture"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
 
@@ -157,7 +156,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", picture.PictureId, $"The Image You Uploaded Exceeds The Maximum Size Limit({size})"));
 
                 //Proses Mencari Data MaxPicture Yang Menyimpan Jumlah Maksimal Gambar Yang Bisa Di Upload User
-                var maxPicture = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxPicture");
+                var maxPicture = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxPicture");
                 var limit = Converter.StringToInt(maxPicture, 0);
                 int pictureCount = await _context.UserPictures
                     .CountAsync(up => up.PersonId == picture.PersonId && up.IsDeleted == false);
@@ -173,7 +172,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", $"{picture.PersonId}-{picture.PictureName}", $"Duplicate Picture For {picture.PictureName} Already Exist"));
 
                 //Proses Pengecekan Folder Suda Ada Atau Belum
-                var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("PictureDirectory");
+                var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("PictureDirectory");
                 if (!Directory.Exists(folderName))
                     Directory.CreateDirectory(folderName);
 

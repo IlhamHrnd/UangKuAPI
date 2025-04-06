@@ -2,8 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
 
 namespace UangKuAPI.Controllers
 {
@@ -11,8 +11,8 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class AppProgramController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        public AppProgramController(AppDbContext context)
+        private readonly BaseFramework _context;
+        public AppProgramController(BaseFramework context)
         {
             _context = context;
         }
@@ -75,8 +75,8 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                var apQ = new BusinessObjects.Entity.Generated.AppProgramQuery("apQ");
-                var apColl = new BusinessObjects.Entity.Generated.AppProgramCollection();
+                var apQ = new G.AppProgramQuery("apQ");
+                var apColl = new G.AppProgramCollection();
 
                 if (filter.IsVisible.HasValue)
                     apQ.Where(apQ.IsVisible == filter.IsVisible.Value);
@@ -179,7 +179,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var ap = new BusinessObjects.Entity.Generated.AppProgram();
+                var ap = new G.AppProgram();
 
                 if (!ap.LoadByPrimaryKey(filter.ProgramID))
                 {

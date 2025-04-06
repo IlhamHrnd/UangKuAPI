@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
 
 namespace UangKuAPI.Controllers
 {
@@ -12,9 +12,9 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class UserDocumentController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
         private readonly IFileProvider _file;
-        public UserDocumentController(AppDbContext context, IWebHostEnvironment env)
+        public UserDocumentController(BaseFramework context, IWebHostEnvironment env)
         {
             _context = context;
             _file = env.ContentRootFileProvider;
@@ -94,8 +94,8 @@ namespace UangKuAPI.Controllers
 
                 //Proses Mengambil List Document Type Yang Boleh Di Upload
                 var listDocType = new List<string>();
-                var asriQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("asriQ");
-                var asriColl = new BusinessObjects.Entity.Generated.AppstandardreferenceitemCollection();
+                var asriQ = new G.AppstandardreferenceitemQuery("asriQ");
+                var asriColl = new G.AppstandardreferenceitemCollection();
                 asriQ.Where(asriQ.StandardReferenceID == "DocumentType", asriQ.IsActive == true, asriQ.IsUsedBySystem == true)
                     .OrderBy(asriQ.ItemName.Ascending);
                 asriColl.Load(asriQ);
@@ -109,14 +109,14 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document Extention Is Not Allow. Document Type : {document.FileExtention}"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran File Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
                 if (document.DocumentData.Length > result)
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document You Uploaded Exceeds The Maximum Size Limit({size})"));
 
                 //Proses Pengecekan Folder Sudah Ada Tau Belum
-                var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("DocumentDirectory");
+                var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("DocumentDirectory");
                 if (!Directory.Exists(folderName))
                     Directory.CreateDirectory(folderName);
 
@@ -176,8 +176,8 @@ namespace UangKuAPI.Controllers
 
                 //Proses Mengambil List Document Type Yang Boleh Di Upload
                 var listDocType = new List<string>();
-                var asriQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("asriQ");
-                var asriColl = new BusinessObjects.Entity.Generated.AppstandardreferenceitemCollection();
+                var asriQ = new G.AppstandardreferenceitemQuery("asriQ");
+                var asriColl = new G.AppstandardreferenceitemCollection();
                 asriQ.Where(asriQ.StandardReferenceID == "DocumentType", asriQ.IsActive == true, asriQ.IsUsedBySystem == true)
                     .OrderBy(asriQ.ItemName.Ascending);
                 asriColl.Load(asriQ);
@@ -191,14 +191,14 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document Extention Is Not Allow. Document Type : {document.FileExtention}"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran File Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
                 if (document.DocumentData.Length > result)
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document You Uploaded Exceeds The Maximum Size Limit({size})"));
 
                 //Proses Pengecekan Folder Sudah Ada Tau Belum
-                var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("DocumentDirectory");
+                var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("DocumentDirectory");
                 if (!Directory.Exists(folderName))
                     Directory.CreateDirectory(folderName);
 
@@ -261,8 +261,8 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var udQ = new BusinessObjects.Entity.Generated.UserDocumentQuery("udQ");
-                var udColl = new BusinessObjects.Entity.Generated.UserDocumentCollection();
+                var udQ = new G.UserDocumentQuery("udQ");
+                var udColl = new G.UserDocumentCollection();
 
                 udQ.Where(udQ.PersonID == filter.PersonID);
 
@@ -270,8 +270,8 @@ namespace UangKuAPI.Controllers
                     udQ.Where(udQ.IsDeleted == filter.IsDeleted.Value);
 
                 //Proses Mengambil List Document Type Yang Boleh Di Upload
-                var asriQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("asriQ");
-                var asriColl = new BusinessObjects.Entity.Generated.AppstandardreferenceitemCollection();
+                var asriQ = new G.AppstandardreferenceitemQuery("asriQ");
+                var asriColl = new G.AppstandardreferenceitemCollection();
                 asriQ.Where(asriQ.StandardReferenceID == "DocumentType", asriQ.IsActive == true, asriQ.IsUsedBySystem == true)
                     .OrderBy(asriQ.ItemName.Ascending);
                 asriColl.Load(asriQ);
@@ -295,7 +295,7 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                bool isAdmin = BusinessObjects.Entity.Custom.User.IsUserAdmin(filter.PersonID);
+                bool isAdmin = EntitySpaces.Custom.User.IsUserAdmin(filter.PersonID);
 
                 foreach (var item in udColl)
                 {
@@ -375,7 +375,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var ud = new BusinessObjects.Entity.Generated.UserDocument();
+                var ud = new G.UserDocument();
 
                 if (!ud.LoadByPrimaryKey(filter.DocumentID, filter.PersonID))
                 {
@@ -401,7 +401,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Find", ud.DocumentID, $"File Not Found"));
 
                 var documentData = System.IO.File.ReadAllBytes(filePath);
-                bool isAdmin = BusinessObjects.Entity.Custom.User.IsUserAdmin(filter.PersonID);
+                bool isAdmin = EntitySpaces.Custom.User.IsUserAdmin(filter.PersonID);
 
                 data = new UserDocumentUpload
                 {

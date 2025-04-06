@@ -1,11 +1,11 @@
-using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
+using UangKuAPI.EntitySpaces.Custom;
 
 namespace UangKuAPI.Controllers
 {
@@ -13,8 +13,8 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class UserReportController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        public UserReportController(AppDbContext context)
+        private readonly BaseFramework _context;
+        public UserReportController(BaseFramework context)
         {
             _context = context;
         }
@@ -70,21 +70,21 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPost("PostUserReport", Name = "PostUserReport")]
-        public async Task<IActionResult> PostUserReport([FromBody] UserReport report)
+        public async Task<IActionResult> PostUserReport([FromBody] EF.UserReport report)
         {
             if (report == null)
                 return BadRequest(string.Format(AppConstant.RequiredMsg, "report"));
                 
             
             //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-            var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+            var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
             var size = Converter.StringToInt(maxSize, 0);
             var result = Converter.IntToLong(size);
 
             if (report.Picture != null && report.Picture.Length > result)
                 return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", report.ReportNo, $"The Image You Uploaded Exceeds The Maximum Size Limit({size})"));
             
-            var ur = new UserReport
+            var ur = new EF.UserReport
             {
                 ReportNo = report.ReportNo, DateErrorOccured = report.DateErrorOccured, SrerrorPossibility = report.SrerrorPossibility, SrerrorLocation = report.SrerrorLocation, ErrorCronologic = report.ErrorCronologic,
                 Picture = report.Picture, CreatedDateTime = DateFormat.DateTimeNow(), CreatedByUserId = report.CreatedByUserId, LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserId = report.LastUpdateByUserId,
@@ -99,7 +99,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("PatchUserReport", Name = "PatchUserReport")]
-        public async Task<IActionResult> PatchUserReport([FromBody] UserReport report)
+        public async Task<IActionResult> PatchUserReport([FromBody] EF.UserReport report)
         {
             if (report == null)
                 return BadRequest(string.Format(AppConstant.RequiredMsg, "Report"));
@@ -142,16 +142,16 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetUserReport", Name = "GetUserReport")]
-        public ActionResult<PageResponse<UserReport>> GetUserReport([FromQuery] UserReportFilter filter)
+        public ActionResult<PageResponse<EF.UserReport>> GetUserReport([FromQuery] UserReportFilter filter)
         {
-            var pagedData = new List<UserReport>();
-            var response = new PageResponse<List<UserReport>>(pagedData, 0, 0);
+            var pagedData = new List<EF.UserReport>();
+            var response = new PageResponse<List<EF.UserReport>>(pagedData, 0, 0);
 
             try
             {
                 if (string.IsNullOrEmpty(filter.PersonID))
                 {
-                    response = new PageResponse<List<UserReport>>(pagedData, 0, 0)
+                    response = new PageResponse<List<EF.UserReport>>(pagedData, 0, 0)
                     {
                         TotalPages = pagedData.Count,
                         TotalRecords = pagedData.Count,
@@ -163,9 +163,9 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                if (!BusinessObjects.Entity.Custom.UserReport.GetPersonID(filter.PersonID))
+                if (!EntitySpaces.Custom.UserReport.GetPersonID(filter.PersonID))
                 {
-                    response = new PageResponse<List<UserReport>>(pagedData, 0, 0)
+                    response = new PageResponse<List<EF.UserReport>>(pagedData, 0, 0)
                     {
                         TotalPages = pagedData.Count,
                         TotalRecords = pagedData.Count,
@@ -177,12 +177,12 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                bool isAdmin = BusinessObjects.Entity.Custom.User.IsUserAdmin(filter.PersonID);
+                bool isAdmin = EntitySpaces.Custom.User.IsUserAdmin(filter.PersonID);
 
-                var urQ = new UserreportQuery("urQ");
-                var locQ = new AppstandardreferenceitemQuery("locQ");
-                var posQ = new AppstandardreferenceitemQuery("posQ");
-                var rptQ = new AppstandardreferenceitemQuery("rptQ");
+                var urQ = new G.UserreportQuery("urQ");
+                var locQ = new G.AppstandardreferenceitemQuery("locQ");
+                var posQ = new G.AppstandardreferenceitemQuery("posQ");
+                var rptQ = new G.AppstandardreferenceitemQuery("rptQ");
 
                 urQ.Select(urQ.ReportNo);
 
@@ -195,7 +195,7 @@ namespace UangKuAPI.Controllers
 
                 if (dtRecord.Rows.Count == 0)
                 {
-                    response = new PageResponse<List<UserReport>>(pagedData, 0, 0)
+                    response = new PageResponse<List<EF.UserReport>>(pagedData, 0, 0)
                     {
                         TotalPages = pagedData.Count,
                         TotalRecords = pagedData.Count,
@@ -223,7 +223,7 @@ namespace UangKuAPI.Controllers
 
                 foreach (DataRow dr in dt.Rows)
                 {
-                    var rpt = new UserReport
+                    var rpt = new EF.UserReport
                     {
                         ReportNo = (string)dr["ReportNo"],
                         DateErrorOccured = (DateTime)dr["DateErrorOccured"],
@@ -256,7 +256,7 @@ namespace UangKuAPI.Controllers
                     ? Url.Link("GetUserReport", new { filter.PersonID, PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                response = new PageResponse<List<UserReport>>(pagedData, filter.PageNumber, filter.PageSize)
+                response = new PageResponse<List<EF.UserReport>>(pagedData, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
@@ -269,7 +269,7 @@ namespace UangKuAPI.Controllers
             }
             catch (Exception e)
             {
-                response = new PageResponse<List<UserReport>>(pagedData, 0, 0)
+                response = new PageResponse<List<EF.UserReport>>(pagedData, 0, 0)
                 {
                     TotalPages = pagedData.Count,
                     TotalRecords = pagedData.Count,
@@ -283,16 +283,16 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpGet("GetReportNo", Name = "GetReportNo")]
-        public ActionResult<Response<UserReport>> GetReportNo([FromQuery] UserReportFilter filter)
+        public ActionResult<Response<EF.UserReport>> GetReportNo([FromQuery] UserReportFilter filter)
         {
-            var data = new UserReport();
-            var response = new Response<UserReport>();
+            var data = new EF.UserReport();
+            var response = new Response<EF.UserReport>();
 
             try
             {
                 if (string.IsNullOrEmpty(filter.ReportNo))
                 {
-                    response = new Response<UserReport>
+                    response = new Response<EF.UserReport>
                     {
                         Data = data,
                         Message = string.Format(AppConstant.RequiredMsg, "ReportNo"),
@@ -301,10 +301,10 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var ur = new Userreport();
+                var ur = new G.Userreport();
                 if (!ur.LoadByPrimaryKey(filter.ReportNo))
                 {
-                    response = new Response<UserReport>
+                    response = new Response<EF.UserReport>
                     {
                         Data = data,
                         Message = !string.IsNullOrEmpty(ur.ReportNo) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
@@ -313,12 +313,12 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                var ErrorLocation = !string.IsNullOrEmpty(ur.SRErrorLocation) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("ErrorLocation", ur.SRErrorLocation) : string.Empty;
-                var ErrorPossibility = !string.IsNullOrEmpty(ur.SRErrorPossibility) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("ErrorPossibility", ur.SRErrorPossibility) : string.Empty;
-                var ReportStatus = !string.IsNullOrEmpty(ur.SRReportStatus) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("ReportStatus", ur.SRReportStatus) : string.Empty;
+                var ErrorLocation = !string.IsNullOrEmpty(ur.SRErrorLocation) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("ErrorLocation", ur.SRErrorLocation) : string.Empty;
+                var ErrorPossibility = !string.IsNullOrEmpty(ur.SRErrorPossibility) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("ErrorPossibility", ur.SRErrorPossibility) : string.Empty;
+                var ReportStatus = !string.IsNullOrEmpty(ur.SRReportStatus) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("ReportStatus", ur.SRReportStatus) : string.Empty;
 
-                bool isAdmin = BusinessObjects.Entity.Custom.User.IsUserAdmin(filter.PersonID);
-                data = new UserReport
+                bool isAdmin = EntitySpaces.Custom.User.IsUserAdmin(filter.PersonID);
+                data = new EF.UserReport
                 {
                     ReportNo = ur.ReportNo, DateErrorOccured = ur.DateErrorOccured, SrerrorLocation = ErrorLocation, SrerrorPossibility = ErrorPossibility, ErrorCronologic = ur.ErrorCronologic, Picture = ur.Picture,
                     IsApprove = ur.IsApprove.HasValue ? ur.IsApprove == 1 : null, SrreportStatus = ReportStatus, ApprovedDateTime = isAdmin ? ur.ApprovedDateTime : null, ApprovedByUserId = isAdmin ? ur.ApprovedByUserID : string.Empty,
@@ -327,7 +327,7 @@ namespace UangKuAPI.Controllers
                     PersonId = ur.PersonID
                 };
 
-                response = new Response<UserReport>
+                response = new Response<EF.UserReport>
                 {
                     Data = data,
                     Message = !string.IsNullOrEmpty(data.ReportNo) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
@@ -337,7 +337,7 @@ namespace UangKuAPI.Controllers
             }
             catch (Exception e)
             {
-                response = new Response<UserReport>
+                response = new Response<EF.UserReport>
                 {
                     Data = data,
                     Message = $"{(!string.IsNullOrEmpty(data.ReportNo) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg)} - {e.Message}",

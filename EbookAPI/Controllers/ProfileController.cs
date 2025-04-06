@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
 
 namespace UangKuAPI.Controllers
 {
@@ -12,9 +12,9 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class ProfileController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
         private readonly Parameter _param;
-        public ProfileController(AppDbContext context, IOptions<Parameter> param)
+        public ProfileController(BaseFramework context, IOptions<Parameter> param)
         {
             _context = context;
             _param = param.Value;
@@ -39,7 +39,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var p = new BusinessObjects.Entity.Generated.Profile();
+                var p = new G.Profile();
 
                 if (!p.LoadByPrimaryKey(filter.PersonID))
                 {
@@ -100,7 +100,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "Profile"));
                 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
 
@@ -142,7 +142,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "Profile"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
 

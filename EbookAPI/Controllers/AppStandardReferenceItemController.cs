@@ -2,10 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
+using UangKuAPI.EntitySpaces.Custom;
 
 namespace UangKuAPI.Controllers
 {
@@ -13,24 +13,24 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class AppStandardReferenceItemController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
 
-        public AppStandardReferenceItemController(AppDbContext context)
+        public AppStandardReferenceItemController(BaseFramework context)
         {
             _context = context;
         }
 
         [HttpGet("GetAllReferenceItemID", Name = "GetAllReferenceItemID")]
-        public ActionResult<PageResponse<AppStandardReferenceItem>> GetAllReferenceItemID([FromQuery] AppStandardRerefenceItemFilter filter)
+        public ActionResult<PageResponse<EF.AppStandardReferenceItem>> GetAllReferenceItemID([FromQuery] AppStandardRerefenceItemFilter filter)
         {
-            var data = new List<AppStandardReferenceItem>();
-            var response = new PageResponse<List<AppStandardReferenceItem>>(data, 0, 0);
+            var data = new List<EF.AppStandardReferenceItem>();
+            var response = new PageResponse<List<EF.AppStandardReferenceItem>>(data, 0, 0);
 
             try
             {
                 if (string.IsNullOrEmpty(filter.StandardReferenceID))
                 {
-                    response = new PageResponse<List<AppStandardReferenceItem>>(data, 0, 0)
+                    response = new PageResponse<List<EF.AppStandardReferenceItem>>(data, 0, 0)
                     {
                         TotalPages = data.Count,
                         TotalRecords = data.Count,
@@ -42,7 +42,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var asriQ = new AppstandardreferenceitemQuery("asriQ");
+                var asriQ = new G.AppstandardreferenceitemQuery("asriQ");
 
                 asriQ.Select(asriQ.StandardReferenceID, asriQ.ItemID, asriQ.Note, asriQ.LastUpdateDateTime, asriQ.LastUpdateByUserID,
                     asriQ.ItemIcon, asriQ.ItemName,
@@ -60,7 +60,7 @@ namespace UangKuAPI.Controllers
 
                 if (dt.Rows.Count == 0)
                 {
-                    response = new PageResponse<List<AppStandardReferenceItem>>(data, 0, 0)
+                    response = new PageResponse<List<EF.AppStandardReferenceItem>>(data, 0, 0)
                     {
                         TotalPages = data.Count,
                         TotalRecords = data.Count,
@@ -74,7 +74,7 @@ namespace UangKuAPI.Controllers
 
                 foreach (DataRow dr in dt.Rows)
                 {
-                    var asri = new AppStandardReferenceItem
+                    var asri = new EF.AppStandardReferenceItem
                     {
                         StandardReferenceId = (string)dr["StandardReferenceID"],
                         ItemId = (string)dr["ItemID"],
@@ -89,7 +89,7 @@ namespace UangKuAPI.Controllers
                     data.Add(asri);
                 }
 
-                response = new PageResponse<List<AppStandardReferenceItem>>(data, filter.PageNumber, filter.PageSize)
+                response = new PageResponse<List<EF.AppStandardReferenceItem>>(data, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = data.Count,
                     TotalRecords = data.Count,
@@ -102,7 +102,7 @@ namespace UangKuAPI.Controllers
             }
             catch (Exception e)
             {
-                response = new PageResponse<List<AppStandardReferenceItem>>(data, 0, 0)
+                response = new PageResponse<List<EF.AppStandardReferenceItem>>(data, 0, 0)
                 {
                     TotalPages = data.Count,
                     TotalRecords = data.Count,
@@ -116,7 +116,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPost("CreateAppStandardReferenceItem", Name = "CreateAppStandardReferenceItem")]
-        public async Task<IActionResult> CreateAppStandardReferenceItem([FromBody] AppStandardReferenceItem asri)
+        public async Task<IActionResult> CreateAppStandardReferenceItem([FromBody] EF.AppStandardReferenceItem asri)
         {
             try
             {
@@ -124,7 +124,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "AppStandardReferenceItem"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
 
@@ -138,7 +138,7 @@ namespace UangKuAPI.Controllers
                 if (data != null)
                     return BadRequest(string.Format(AppConstant.AlreadyExistMsg, asri.ItemId));
                 
-                var a = new AppStandardReferenceItem
+                var a = new EF.AppStandardReferenceItem
                 {
                     StandardReferenceId = asri.StandardReferenceId, ItemId = asri.ItemId, ItemName = asri.ItemName,
                     Note = asri.Note, IsUsedBySystem = asri.IsUsedBySystem, IsActive = asri.IsActive,
@@ -158,7 +158,7 @@ namespace UangKuAPI.Controllers
         }
 
         [HttpPatch("UpdateAppStandardReferenceItem", Name = "UpdateAppStandardReferenceItem")]
-        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromBody] AppStandardReferenceItem asri)
+        public async Task<IActionResult> UpdateAppStandardReferenceItem([FromBody] EF.AppStandardReferenceItem asri)
         {
             try
             {
@@ -166,7 +166,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "AppStandardReferenceItem"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
 

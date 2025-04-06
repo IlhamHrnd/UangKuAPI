@@ -2,10 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
 
 namespace UangKuAPI.Controllers
 {
@@ -13,9 +12,9 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class AppStandardReferenceController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
 
-        public AppStandardReferenceController(AppDbContext context)
+        public AppStandardReferenceController(BaseFramework context)
         {
             _context = context;
         }
@@ -28,7 +27,7 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                var asrQ = new AppstandardreferenceQuery("asrQ");
+                var asrQ = new G.AppstandardreferenceQuery("asrQ");
 
                 asrQ.Select(asrQ.StandardReferenceID)
                     .OrderBy(asrQ.StandardReferenceID.Ascending);
@@ -126,7 +125,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var asr = new Appstandardreference();
+                var asr = new G.Appstandardreference();
 
                 if (!asr.LoadByPrimaryKey(filter.ReferenceID))
                 {
@@ -256,7 +255,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var asr = new Appstandardreference();
+                var asr = new G.Appstandardreference();
                 data = asr.LoadByPrimaryKey(filter.ReferenceID) ? asr.StandardReferenceID : string.Empty;
 
                 response = new Response<string>

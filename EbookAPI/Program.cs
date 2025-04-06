@@ -1,17 +1,25 @@
+//Global Using
+global using EF = UangKuAPI.EntityFramework.Models;
+global using G = UangKuAPI.EntitySpaces.Generated;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using UangKuAPI.BusinessObjects.Base;
 
+// Add services to the container.
+IConfiguration config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .AddEnvironmentVariables()
+    .Build();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var conn = builder.Configuration.GetConnectionString("DatabaseConnection");
+#region Connection
+var conn = builder.Configuration.GetConnectionString("DatabaseConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.Configure<Parameter>(builder.Configuration.GetSection("Parameter"));
-builder.Services.AddDbContext<AppDbContext>(options =>
+//EntityFramework
+builder.Services.AddDbContext<BaseFramework>(options =>
 {
     options.UseMySql(conn, new MariaDbServerVersion("10.6.19-mariadb"))
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -21,11 +29,32 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 //EntitySpace
-IConfiguration config = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .AddEnvironmentVariables()
-    .Build();
-Helper.initES(conn);
+BaseSpaces.initES(conn);
+#endregion
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "UangKu API",
+        Version = "v1",
+        Description = "An ASP.NET Core Web API for managing UangKu Mobile App",
+        TermsOfService = new Uri("http://mi.rsudtarakanjakarta.rs/"),
+        Contact = new OpenApiContact
+        {
+            Name = "Contact",
+            Url = new Uri("http://mi.rsudtarakanjakarta.rs/")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "License",
+            Url = new Uri("http://mi.rsudtarakanjakarta.rs/")
+        }
+    });
+});
+builder.Services.Configure<Parameter>(builder.Configuration.GetSection("Parameter"));
 
 var app = builder.Build();
 
@@ -37,17 +66,7 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
-if (app.Environment.IsProduction())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage();
-}
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

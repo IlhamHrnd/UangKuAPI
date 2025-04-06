@@ -7,8 +7,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="EntitySpaces.ORM.MySQL" Version="2020.1.15" />
-  </ItemGroup>
-
 </Project>

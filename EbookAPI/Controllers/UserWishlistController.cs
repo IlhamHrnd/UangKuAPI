@@ -5,8 +5,8 @@ using Microsoft.Extensions.Options;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
 
 namespace UangKuAPI.Controllers
 {
@@ -14,10 +14,10 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class UserWishlistController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
         private readonly Parameter _param;
         private readonly IFileProvider _file;
-        public UserWishlistController(AppDbContext context, IOptions<Parameter> param, IWebHostEnvironment env)
+        public UserWishlistController(BaseFramework context, IOptions<Parameter> param, IWebHostEnvironment env)
         {
             _context = context;
             _param = param.Value;
@@ -96,8 +96,8 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var uwQ = new BusinessObjects.Entity.Generated.UserwishlistQuery("uwQ");
-                var catQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("catQ");
+                var uwQ = new G.UserwishlistQuery("uwQ");
+                var catQ = new G.AppstandardreferenceitemQuery("catQ");
 
                 uwQ.Select(uwQ.WishlistID)
                     .InnerJoin(catQ).On(catQ.StandardReferenceID == "Wishlist" && catQ.ItemID == uwQ.SRProductCategory)
@@ -134,7 +134,7 @@ namespace UangKuAPI.Controllers
                     var photoData = Array.Empty<byte>();
                     if (dr["ProductPicture"] is not byte[] photo || photo.Length == 0)
                     {
-                        var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                        var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
                         var wishlistId = dr["WishlistID"] as string ?? string.Empty;
                         var filePath = Path.Combine(folderName, (string)dr["PersonID"], $"{wishlistId.Replace("/", "")}{dr["PhotoExtention"]}");
                         var fileInfo = _file.GetFileInfo(filePath);
@@ -221,7 +221,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var uw = new BusinessObjects.Entity.Generated.Userwishlist();
+                var uw = new G.Userwishlist();
                 if (!uw.LoadByPrimaryKey(filter.WishlistID))
                 {
                     response = new Response<UserWishlist>
@@ -236,7 +236,7 @@ namespace UangKuAPI.Controllers
                 var photoData = Array.Empty<byte>();
                 if (uw.ProductPicture == null || uw.ProductPicture.Length == 0)
                 {
-                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
                     var filePath = Path.Combine(folderName, uw.PersonID, $"{uw.WishlistID.Replace("/", "")}{uw.PhotoExtention}");
                     var fileInfo = _file.GetFileInfo(filePath);
                     if (fileInfo.Exists)
@@ -245,7 +245,7 @@ namespace UangKuAPI.Controllers
                 else
                     photoData = uw.ProductPicture;
 
-                var CategoryName = !string.IsNullOrEmpty(uw.SRProductCategory) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("Wishlist", uw.SRProductCategory) : string.Empty;
+                var CategoryName = !string.IsNullOrEmpty(uw.SRProductCategory) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Wishlist", uw.SRProductCategory) : string.Empty;
                 var wishlistDate = uw.WishlistDate ?? DateFormat.DateTimeNow();
 
                 data = new UserWishlist
@@ -298,7 +298,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "WishlistID"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
 
@@ -315,7 +315,7 @@ namespace UangKuAPI.Controllers
                 if (wishlist.ProductPicture != null && wishlist.ProductPicture.Length > 0)
                 {
                     //Proses Pengecekan Folder Suda Ada Atau Belum
-                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
                     if (!Directory.Exists(folderName))
                         Directory.CreateDirectory(folderName);
 
@@ -367,7 +367,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "WishlistID"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
+                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
                 var size = Converter.StringToInt(maxSize, 0);
                 var result = Converter.IntToLong(size);
 
@@ -384,7 +384,7 @@ namespace UangKuAPI.Controllers
                 if (wishlist.ProductPicture != null && wishlist.ProductPicture.Length > 0)
                 {
                     //Proses Pengecekan Folder Suda Ada Atau Belum
-                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
                     if (!Directory.Exists(folderName))
                         Directory.CreateDirectory(folderName);
 
@@ -446,8 +446,8 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var uwQ = new BusinessObjects.Entity.Generated.UserwishlistQuery("uwQ");
-                var catQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("catQ");
+                var uwQ = new G.UserwishlistQuery("uwQ");
+                var catQ = new G.AppstandardreferenceitemQuery("catQ");
 
                 uwQ.Select(uwQ.SRProductCategory.Count().As("CountProductCategory"), catQ.ItemName, catQ.ItemIcon)
                     .InnerJoin(catQ).On(catQ.StandardReferenceID == "Wishlist" && catQ.ItemID == uwQ.SRProductCategory)

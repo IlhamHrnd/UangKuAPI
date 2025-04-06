@@ -7,9 +7,9 @@ namespace UangKuAPI.BusinessObjects.Base
     {
         private static byte[] AES_Encrypt(byte[] bytesToBeEncrypted, byte[] passwordBytes)
         {
-            byte[] encryptedBytes = null;
+            byte[] encryptedBytes = [];
 
-            byte[] saltBytes = new byte[] { 2, 1, 7, 3, 6, 4, 8, 5 };
+            byte[] saltBytes = [2, 1, 7, 3, 6, 4, 8, 5];
 
             using (MemoryStream ms = new MemoryStream())
             {
@@ -38,9 +38,9 @@ namespace UangKuAPI.BusinessObjects.Base
 
         private static byte[] AES_Decrypt(byte[] bytesToBeDecrypted, byte[] passwordBytes)
         {
-            byte[] decryptedBytes = null;
+            byte[] decryptedBytes = [];
 
-            byte[] saltBytes = new byte[] { 2, 1, 7, 3, 6, 4, 8, 5 };
+            byte[] saltBytes = [2, 1, 7, 3, 6, 4, 8, 5];
 
             using (MemoryStream ms = new MemoryStream())
             {

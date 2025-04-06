@@ -1,11 +1,11 @@
-using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
 
 namespace UangKuAPI.Controllers
 {
@@ -13,9 +13,9 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
         private readonly Parameter _param;
-        public UserController(AppDbContext context, IOptions<Parameter> param)
+        public UserController(BaseFramework context, IOptions<Parameter> param)
         {
             _context = context;
             _param = param.Value;
@@ -29,10 +29,10 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                var uQ = new BusinessObjects.Entity.Generated.UserQuery("uQ");
-                var sexQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("sexQ");
-                var accessQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("accessQ");
-                var statusQ = new BusinessObjects.Entity.Generated.AppstandardreferenceitemQuery("statusQ");
+                var uQ = new G.UserQuery("uQ");
+                var sexQ = new G.AppstandardreferenceitemQuery("sexQ");
+                var accessQ = new G.AppstandardreferenceitemQuery("accessQ");
+                var statusQ = new G.AppstandardreferenceitemQuery("statusQ");
 
                 uQ.Select(uQ.Username)
                     .InnerJoin(sexQ).On(sexQ.StandardReferenceID == "Sex" && sexQ.ItemID == uQ.SRSex)
@@ -143,7 +143,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var u = new BusinessObjects.Entity.Generated.User();
+                var u = new G.User();
 
                 if (!u.LoadByPrimaryKey(filter.Username, Encryptor.DataEncrypt(filter.Password, _param.Key01)))
                 {
@@ -156,9 +156,9 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                var SexName = !string.IsNullOrEmpty(u.SRSex) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("Sex", u.SRSex) : string.Empty;
-                var AccessName = !string.IsNullOrEmpty(u.SRAccess) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("Access", u.SRAccess) : string.Empty;
-                var StatusName = !string.IsNullOrEmpty(u.SRStatus) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("Status", u.SRStatus) : string.Empty;
+                var SexName = !string.IsNullOrEmpty(u.SRSex) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Sex", u.SRSex) : string.Empty;
+                var AccessName = !string.IsNullOrEmpty(u.SRAccess) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Access", u.SRAccess) : string.Empty;
+                var StatusName = !string.IsNullOrEmpty(u.SRStatus) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Status", u.SRStatus) : string.Empty;
 
                 data = new User
                 {
@@ -317,7 +317,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var u = new BusinessObjects.Entity.Generated.User();
+                var u = new G.User();
 
                 if (!u.LoadByPrimaryKey(filter.Username))
                 {
@@ -330,9 +330,9 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                var SexName = !string.IsNullOrEmpty(u.SRSex) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("Sex", u.SRSex) : string.Empty;
-                var AccessName = !string.IsNullOrEmpty(u.SRAccess) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("Access", u.SRAccess) : string.Empty;
-                var StatusName = !string.IsNullOrEmpty(u.SRStatus) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("Status", u.SRStatus) : string.Empty;
+                var SexName = !string.IsNullOrEmpty(u.SRSex) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Sex", u.SRSex) : string.Empty;
+                var AccessName = !string.IsNullOrEmpty(u.SRAccess) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Access", u.SRAccess) : string.Empty;
+                var StatusName = !string.IsNullOrEmpty(u.SRStatus) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Status", u.SRStatus) : string.Empty;
 
                 data = new User
                 {

@@ -1,10 +1,9 @@
-using System.Data;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
-using UangKuAPI.BusinessObjects.Models;
 using UangKuAPI.BusinessObjects.Response;
+using UangKuAPI.EntityFramework.Models;
 
 namespace UangKuAPI.Controllers
 {
@@ -12,9 +11,9 @@ namespace UangKuAPI.Controllers
     [ApiController]
     public class LocationController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly BaseFramework _context;
 
-        public LocationController(AppDbContext context)
+        public LocationController(BaseFramework context)
         {
             _context = context;
         }
@@ -27,7 +26,7 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                var pQ = new ProvincesQuery("pQ");
+                var pQ = new G.ProvincesQuery("pQ");
 
                 pQ.Select(pQ.ProvID, pQ.ProvName, pQ.LocationID, pQ.Status)
                     .OrderBy(pQ.ProvName.Ascending);
@@ -95,7 +94,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var cQ = new CitiesQuery("cQ");
+                var cQ = new G.CitiesQuery("cQ");
 
                 cQ.Select(cQ.CityID, cQ.CityName, cQ.ProvID)
                     .Where(cQ.ProvID == filter.ProvID)
@@ -163,7 +162,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var dQ = new DistrictsQuery("dQ");
+                var dQ = new G.DistrictsQuery("dQ");
 
                 dQ.Select(dQ.DisID, dQ.DisName, dQ.CityID)
                     .Where(dQ.CityID == filter.CityID)
@@ -231,7 +230,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var sQ = new SubdistrictsQuery("sQ");
+                var sQ = new G.SubdistrictsQuery("sQ");
 
                 sQ.Select(sQ.SubdisID, sQ.SubdisName, sQ.DisID)
                     .Where(sQ.DisID == filter.DistrictID)
@@ -332,7 +331,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var pc = new Postalcode();
+                var pc = new G.Postalcode();
 
                 if (!pc.LoadByPrimaryKey(filter.ProvID, filter.CityID, filter.DistrictID, filter.SubDisID))
                 {

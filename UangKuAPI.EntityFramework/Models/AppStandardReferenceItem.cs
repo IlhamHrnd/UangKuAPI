@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace UangKuAPI.EntityFramework.Models;
+
+public partial class AppStandardReferenceItem
+{
+    public string StandardReferenceId { get; set; } = null!;
+
+    public string ItemId { get; set; } = null!;
+
+    public string? ItemName { get; set; }
+
+    public string? Note { get; set; }
+
+    public bool IsUsedBySystem { get; set; }
+
+    public bool IsActive { get; set; }
+
+    public DateTime LastUpdateDateTime { get; set; }
+
+    public string LastUpdateByUserId { get; set; } = null!;
+
+    public byte[]? ItemIcon { get; set; }
+}
