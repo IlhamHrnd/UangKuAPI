@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Interface;
 using UangKuAPI.BusinessObjects.Response;
 using UangKuAPI.EntityFramework.Models;
 
@@ -14,10 +15,12 @@ namespace UangKuAPI.Controllers
     {
         private readonly BaseFramework _context;
         private readonly Parameter _param;
-        public ProfileController(BaseFramework context, IOptions<Parameter> param)
+        private readonly IAppParameter _appParameter;
+        public ProfileController(BaseFramework context, IOptions<Parameter> param, IAppParameter appParameter)
         {
             _context = context;
             _param = param.Value;
+            _appParameter = appParameter;
         }
 
         [HttpGet("GetPersonID", Name = "GetPersonID")]
@@ -98,10 +101,9 @@ namespace UangKuAPI.Controllers
             {
                 if (profile == null)
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "Profile"));
-                
+
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 if (profile.Photo != null && profile.Photo.Length > result)
@@ -142,8 +144,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "Profile"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 if (profile.Photo != null && profile.Photo.Length > result)

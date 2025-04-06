@@ -104,11 +104,19 @@ namespace UangKuAPI.BusinessObjects.Base
 
     public static class Converter
     {
-        public static int StringToInt(string dataString, int dataInt)
+        public static int StringToInt(string value)
         {
-            int result = !string.IsNullOrEmpty(dataString) ? int.Parse(dataString) : dataInt;
-
-            return result;
+            try
+            {
+                if (int.TryParse(value, out int result))
+                    return result;
+                else
+                    return 0;
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
         public static string IntToString(int data)
@@ -143,20 +151,15 @@ namespace UangKuAPI.BusinessObjects.Base
             }
         }
 
-        public static bool StringToBool(string value, bool defaultValue)
+        public static bool StringToBool(string value)
         {
-            bool result;
+            if (string.IsNullOrEmpty(value))
+                return false;
 
-            try
-            {
-                result = Convert.ToBoolean(value);
-            }
-            catch (Exception)
-            {
-                result = defaultValue;
-            }
+            if (value.Equals("true", StringComparison.CurrentCultureIgnoreCase) || value.Equals("yes", StringComparison.CurrentCultureIgnoreCase) || value == "1")
+                return true;
 
-            return result;
+            return false;
         }
 
         public static DateTime StringToDateTime(string value, DateTime defaultValue)

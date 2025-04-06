@@ -5,6 +5,8 @@ global using G = UangKuAPI.EntitySpaces.Generated;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using UangKuAPI.BusinessObjects.Base;
+using UangKuAPI.BusinessObjects.Interface;
+using UangKuAPI.BusinessObjects.Query;
 
 // Add services to the container.
 IConfiguration config = new ConfigurationBuilder()
@@ -55,6 +57,13 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.Configure<Parameter>(builder.Configuration.GetSection("Parameter"));
+
+#region Register Interface
+builder.Services.AddScoped<IAppParameter, AppParameter>();
+builder.Services.AddScoped<IAppStandardReferenceItem, AppStandardReferenceItem>();
+builder.Services.AddScoped<IUser, User>();
+builder.Services.AddScoped<IUserReport, UserReport>();
+#endregion
 
 var app = builder.Build();
 

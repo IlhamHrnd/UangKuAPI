@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Interface;
 using UangKuAPI.BusinessObjects.Response;
 using UangKuAPI.EntityFramework.Models;
 
@@ -14,10 +15,14 @@ namespace UangKuAPI.Controllers
     {
         private readonly BaseFramework _context;
         private readonly IFileProvider _file;
-        public UserDocumentController(BaseFramework context, IWebHostEnvironment env)
+        private readonly IAppParameter _appParameter;
+        private readonly IUser _user;
+        public UserDocumentController(BaseFramework context, IWebHostEnvironment env, IAppParameter appParameter, IUser user)
         {
             _context = context;
             _file = env.ContentRootFileProvider;
+            _appParameter = appParameter;
+            _user = user;
         }
 
         [HttpGet("GetNewDocumentID", Name = "GetNewDocumentID")]
@@ -109,14 +114,13 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document Extention Is Not Allow. Document Type : {document.FileExtention}"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran File Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
                 if (document.DocumentData.Length > result)
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document You Uploaded Exceeds The Maximum Size Limit({size})"));
 
                 //Proses Pengecekan Folder Sudah Ada Tau Belum
-                var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("DocumentDirectory");
+                var folderName = _appParameter.ParameterString("DocumentDirectory");
                 if (!Directory.Exists(folderName))
                     Directory.CreateDirectory(folderName);
 
@@ -191,14 +195,13 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document Extention Is Not Allow. Document Type : {document.FileExtention}"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran File Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
                 if (document.DocumentData.Length > result)
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document You Uploaded Exceeds The Maximum Size Limit({size})"));
 
                 //Proses Pengecekan Folder Sudah Ada Tau Belum
-                var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("DocumentDirectory");
+                var folderName = _appParameter.ParameterString("DocumentDirectory");
                 if (!Directory.Exists(folderName))
                     Directory.CreateDirectory(folderName);
 
@@ -295,7 +298,7 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                bool isAdmin = EntitySpaces.Custom.User.IsUserAdmin(filter.PersonID);
+                bool isAdmin = _user.IsUserAdmin(filter.PersonID);
 
                 foreach (var item in udColl)
                 {
@@ -401,7 +404,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Find", ud.DocumentID, $"File Not Found"));
 
                 var documentData = System.IO.File.ReadAllBytes(filePath);
-                bool isAdmin = EntitySpaces.Custom.User.IsUserAdmin(filter.PersonID);
+                bool isAdmin = _user.IsUserAdmin(filter.PersonID);
 
                 data = new UserDocumentUpload
                 {

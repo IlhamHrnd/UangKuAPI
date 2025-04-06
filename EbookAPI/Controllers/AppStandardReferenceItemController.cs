@@ -3,9 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Interface;
 using UangKuAPI.BusinessObjects.Response;
-using UangKuAPI.EntityFramework.Models;
-using UangKuAPI.EntitySpaces.Custom;
 
 namespace UangKuAPI.Controllers
 {
@@ -14,10 +13,11 @@ namespace UangKuAPI.Controllers
     public class AppStandardReferenceItemController : ControllerBase
     {
         private readonly BaseFramework _context;
-
-        public AppStandardReferenceItemController(BaseFramework context)
+        private readonly IAppParameter _appParameter;
+        public AppStandardReferenceItemController(BaseFramework context, IAppParameter appParameter)
         {
             _context = context;
+            _appParameter = appParameter;
         }
 
         [HttpGet("GetAllReferenceItemID", Name = "GetAllReferenceItemID")]
@@ -124,8 +124,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "AppStandardReferenceItem"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 //Proces Pengecekan Ukuran Icon Jika Ada
@@ -166,8 +165,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "AppStandardReferenceItem"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 //Proces Pengecekan Ukuran Icon Jika Ada

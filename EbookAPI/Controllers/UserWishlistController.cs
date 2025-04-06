@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Interface;
 using UangKuAPI.BusinessObjects.Response;
 using UangKuAPI.EntityFramework.Models;
 
@@ -17,11 +18,15 @@ namespace UangKuAPI.Controllers
         private readonly BaseFramework _context;
         private readonly Parameter _param;
         private readonly IFileProvider _file;
-        public UserWishlistController(BaseFramework context, IOptions<Parameter> param, IWebHostEnvironment env)
+        private readonly IAppParameter _appParameter;
+        private readonly IAppStandardReferenceItem _appStandardReferenceItem;
+        public UserWishlistController(BaseFramework context, IOptions<Parameter> param, IWebHostEnvironment env, IAppParameter appParameter, IAppStandardReferenceItem appStandardReferenceItem)
         {
             _context = context;
             _param = param.Value;
             _file = env.ContentRootFileProvider;
+            _appParameter = appParameter;
+            _appStandardReferenceItem = appStandardReferenceItem;
         }
 
         [HttpGet("GetNewUserWishlistID", Name = "GetNewUserWishlistID")]
@@ -134,7 +139,7 @@ namespace UangKuAPI.Controllers
                     var photoData = Array.Empty<byte>();
                     if (dr["ProductPicture"] is not byte[] photo || photo.Length == 0)
                     {
-                        var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                        var folderName = _appParameter.ParameterString("WishlistDirectory");
                         var wishlistId = dr["WishlistID"] as string ?? string.Empty;
                         var filePath = Path.Combine(folderName, (string)dr["PersonID"], $"{wishlistId.Replace("/", "")}{dr["PhotoExtention"]}");
                         var fileInfo = _file.GetFileInfo(filePath);
@@ -236,7 +241,7 @@ namespace UangKuAPI.Controllers
                 var photoData = Array.Empty<byte>();
                 if (uw.ProductPicture == null || uw.ProductPicture.Length == 0)
                 {
-                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    var folderName = _appParameter.ParameterString("WishlistDirectory");
                     var filePath = Path.Combine(folderName, uw.PersonID, $"{uw.WishlistID.Replace("/", "")}{uw.PhotoExtention}");
                     var fileInfo = _file.GetFileInfo(filePath);
                     if (fileInfo.Exists)
@@ -245,14 +250,11 @@ namespace UangKuAPI.Controllers
                 else
                     photoData = uw.ProductPicture;
 
-                var CategoryName = !string.IsNullOrEmpty(uw.SRProductCategory) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Wishlist", uw.SRProductCategory) : string.Empty;
-                var wishlistDate = uw.WishlistDate ?? DateFormat.DateTimeNow();
-
                 data = new UserWishlist
                 {
                     WishlistId = uw.WishlistID,
                     PersonId = uw.PersonID,
-                    SrproductCategory = CategoryName,
+                    SrproductCategory = _appStandardReferenceItem.GetItemName("Wishlist", uw.SRProductCategory),
                     ProductName = uw.ProductName,
                     ProductQuantity = uw.ProductQuantity,
                     ProductPrice = uw.ProductPrice,
@@ -261,7 +263,7 @@ namespace UangKuAPI.Controllers
                     CreatedDateTime = uw.CreatedDateTime ?? DateFormat.DateTimeNow(),
                     LastUpdateByUserId = uw.LastUpdateByUserID,
                     LastUpdateDateTime = uw.LastUpdateDateTime ?? DateFormat.DateTimeNow(),
-                    WishlistDate = Converter.DateTimeToDateOnly(wishlistDate),
+                    WishlistDate = Converter.DateTimeToDateOnly(uw.WishlistDate ?? DateFormat.DateTimeNow()),
                     ProductPicture = photoData,
                     IsComplete = uw.IsComplete ?? 0
                 };
@@ -298,8 +300,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "WishlistID"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 if (wishlist.ProductPicture != null && wishlist.ProductPicture.Length > result)
@@ -315,7 +316,7 @@ namespace UangKuAPI.Controllers
                 if (wishlist.ProductPicture != null && wishlist.ProductPicture.Length > 0)
                 {
                     //Proses Pengecekan Folder Suda Ada Atau Belum
-                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    var folderName = _appParameter.ParameterString("WishlistDirectory");
                     if (!Directory.Exists(folderName))
                         Directory.CreateDirectory(folderName);
 
@@ -367,8 +368,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "WishlistID"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 if (wishlist.ProductPicture != null && wishlist.ProductPicture.Length > result)
@@ -384,7 +384,7 @@ namespace UangKuAPI.Controllers
                 if (wishlist.ProductPicture != null && wishlist.ProductPicture.Length > 0)
                 {
                     //Proses Pengecekan Folder Suda Ada Atau Belum
-                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    var folderName = _appParameter.ParameterString("WishlistDirectory");
                     if (!Directory.Exists(folderName))
                         Directory.CreateDirectory(folderName);
 

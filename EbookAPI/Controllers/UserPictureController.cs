@@ -4,6 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Interface;
 using UangKuAPI.BusinessObjects.Response;
 using UangKuAPI.EntityFramework.Models;
 
@@ -15,10 +16,12 @@ namespace UangKuAPI.Controllers
     {
         private readonly BaseFramework _context;
         private readonly IFileProvider _file;
-        public UserPictureController(BaseFramework context, IWebHostEnvironment env)
+        private readonly IAppParameter _appParameter;
+        public UserPictureController(BaseFramework context, IWebHostEnvironment env, IAppParameter appParameter)
         {
             _context = context;
             _file = env.ContentRootFileProvider;
+            _appParameter = appParameter;
         }
 
         [HttpGet("GetUserPicture", Name = "GetUserPicture")]
@@ -78,7 +81,7 @@ namespace UangKuAPI.Controllers
                     var pictureData = Array.Empty<byte>();
                     if (dr["Picture"] is not byte[] photo || photo.Length == 0)
                     {
-                        var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("PictureDirectory");
+                        var folderName = _appParameter.ParameterString("PictureDirectory");
                         var filePath = Path.Combine(folderName, (string)dr["PersonID"], (string)dr["PictureName"]);
                         var fileInfo = _file.GetFileInfo(filePath);
                         if (fileInfo.Exists)
@@ -148,16 +151,14 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "Picture"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 if (picture.Picture != null && picture.Picture.Length > result)
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", picture.PictureId, $"The Image You Uploaded Exceeds The Maximum Size Limit({size})"));
 
                 //Proses Mencari Data MaxPicture Yang Menyimpan Jumlah Maksimal Gambar Yang Bisa Di Upload User
-                var maxPicture = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxPicture");
-                var limit = Converter.StringToInt(maxPicture, 0);
+                var limit = _appParameter.ParameterInteger("MaxPicture");
                 int pictureCount = await _context.UserPictures
                     .CountAsync(up => up.PersonId == picture.PersonId && up.IsDeleted == false);
 
@@ -172,7 +173,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", $"{picture.PersonId}-{picture.PictureName}", $"Duplicate Picture For {picture.PictureName} Already Exist"));
 
                 //Proses Pengecekan Folder Suda Ada Atau Belum
-                var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("PictureDirectory");
+                var folderName = _appParameter.ParameterString("PictureDirectory");
                 if (!Directory.Exists(folderName))
                     Directory.CreateDirectory(folderName);
 

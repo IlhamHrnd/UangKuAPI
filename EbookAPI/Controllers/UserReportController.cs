@@ -3,9 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Interface;
 using UangKuAPI.BusinessObjects.Response;
-using UangKuAPI.EntityFramework.Models;
-using UangKuAPI.EntitySpaces.Custom;
 
 namespace UangKuAPI.Controllers
 {
@@ -14,9 +13,17 @@ namespace UangKuAPI.Controllers
     public class UserReportController : ControllerBase
     {
         private readonly BaseFramework _context;
-        public UserReportController(BaseFramework context)
+        private readonly IAppParameter _appParameter;
+        private readonly IAppStandardReferenceItem _appStandardReferenceItem;
+        private readonly IUser _user;
+        private readonly IUserReport _userReport;
+        public UserReportController(BaseFramework context, IAppParameter appParameter, IAppStandardReferenceItem appStandardReferenceItem, IUser user, IUserReport userReport)
         {
             _context = context;
+            _appParameter = appParameter;
+            _appStandardReferenceItem = appStandardReferenceItem;
+            _user = user;
+            _userReport = userReport;
         }
 
         [HttpGet("GetNewReportNo", Name = "GetNewReportNo")]
@@ -74,11 +81,10 @@ namespace UangKuAPI.Controllers
         {
             if (report == null)
                 return BadRequest(string.Format(AppConstant.RequiredMsg, "report"));
-                
-            
+
+
             //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-            var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-            var size = Converter.StringToInt(maxSize, 0);
+            var size = _appParameter.ParameterInteger("MaxFileSize");
             var result = Converter.IntToLong(size);
 
             if (report.Picture != null && report.Picture.Length > result)
@@ -163,7 +169,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                if (!EntitySpaces.Custom.UserReport.GetPersonID(filter.PersonID))
+                if (!_userReport.IsUserHasReport(filter.PersonID))
                 {
                     response = new PageResponse<List<EF.UserReport>>(pagedData, 0, 0)
                     {
@@ -177,8 +183,7 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                bool isAdmin = EntitySpaces.Custom.User.IsUserAdmin(filter.PersonID);
-
+                bool isAdmin = _user.IsUserAdmin(filter.PersonID);
                 var urQ = new G.UserreportQuery("urQ");
                 var locQ = new G.AppstandardreferenceitemQuery("locQ");
                 var posQ = new G.AppstandardreferenceitemQuery("posQ");
@@ -313,15 +318,11 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                var ErrorLocation = !string.IsNullOrEmpty(ur.SRErrorLocation) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("ErrorLocation", ur.SRErrorLocation) : string.Empty;
-                var ErrorPossibility = !string.IsNullOrEmpty(ur.SRErrorPossibility) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("ErrorPossibility", ur.SRErrorPossibility) : string.Empty;
-                var ReportStatus = !string.IsNullOrEmpty(ur.SRReportStatus) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("ReportStatus", ur.SRReportStatus) : string.Empty;
-
-                bool isAdmin = EntitySpaces.Custom.User.IsUserAdmin(filter.PersonID);
+                bool isAdmin = _user.IsUserAdmin(filter.PersonID ?? string.Empty);
                 data = new EF.UserReport
                 {
-                    ReportNo = ur.ReportNo, DateErrorOccured = ur.DateErrorOccured, SrerrorLocation = ErrorLocation, SrerrorPossibility = ErrorPossibility, ErrorCronologic = ur.ErrorCronologic, Picture = ur.Picture,
-                    IsApprove = ur.IsApprove.HasValue ? ur.IsApprove == 1 : null, SrreportStatus = ReportStatus, ApprovedDateTime = isAdmin ? ur.ApprovedDateTime : null, ApprovedByUserId = isAdmin ? ur.ApprovedByUserID : string.Empty,
+                    ReportNo = ur.ReportNo, DateErrorOccured = ur.DateErrorOccured, SrerrorLocation = _appStandardReferenceItem.GetItemName("ErrorLocation", ur.SRErrorLocation), SrerrorPossibility = _appStandardReferenceItem.GetItemName("ErrorPossibility", ur.SRErrorPossibility), ErrorCronologic = ur.ErrorCronologic, Picture = ur.Picture,
+                    IsApprove = ur.IsApprove.HasValue ? ur.IsApprove == 1 : null, SrreportStatus = _appStandardReferenceItem.GetItemName("ReportStatus", ur.SRReportStatus), ApprovedDateTime = isAdmin ? ur.ApprovedDateTime : null, ApprovedByUserId = isAdmin ? ur.ApprovedByUserID : string.Empty,
                     VoidDateTime = isAdmin ? ur.VoidDateTime : null, VoidByUserId = isAdmin ? ur.VoidByUserID : string.Empty, CreatedDateTime = ur.CreatedDateTime ?? DateFormat.DateTimeNow(), CreatedByUserId = ur.CreatedByUserID,
                     LastUpdateDateTime = isAdmin ? (ur.LastUpdateDateTime ?? DateFormat.DateTimeNow()) : DateFormat.DateTimeNow(), LastUpdateByUserId = isAdmin ? ur.LastUpdateByUserID : string.Empty,
                     PersonId = ur.PersonID

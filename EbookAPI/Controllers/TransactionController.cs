@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Interface;
 using UangKuAPI.BusinessObjects.Response;
 using UangKuAPI.EntityFramework.Models;
 
@@ -19,11 +20,13 @@ namespace UangKuAPI.Controllers
         private readonly BaseFramework _context;
         private readonly Parameter _param;
         private readonly IFileProvider _file;
-        public TransactionController(BaseFramework context, IOptions<Parameter> param, IWebHostEnvironment env)
+        private readonly IAppParameter _appParameter;
+        public TransactionController(BaseFramework context, IOptions<Parameter> param, IWebHostEnvironment env, IAppParameter appParameter)
         {
             _context = context;
             _param = param.Value;
             _file = env.ContentRootFileProvider;
+            _appParameter = appParameter;
         }
 
         [HttpPost("PostTransaction", Name = "PostTransaction")]
@@ -35,8 +38,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "Transaction"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 if (trans.Photo != null && trans.Photo.Length > result)
@@ -55,7 +57,7 @@ namespace UangKuAPI.Controllers
                 if (trans.Photo != null && trans.Photo.Length > 0)
                 {
                     //Proses Pengecekan Folder Suda Ada Atau Belum
-                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                    var folderName = _appParameter.ParameterString("TransactionDirectory");
                     if (!Directory.Exists(folderName))
                         Directory.CreateDirectory(folderName);
 
@@ -102,8 +104,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(string.Format(AppConstant.RequiredMsg, "Transaction"));
 
                 //Proses Mencari Data MaxSize Yang Menyimpan Jumlah Maksimal Ukuran Gambar Yang Bisa Di Upload User
-                var maxSize = EntitySpaces.Custom.AppParameter.GetAppParameterValue("MaxFileSize");
-                var size = Converter.StringToInt(maxSize, 0);
+                var size = _appParameter.ParameterInteger("MaxFileSize");
                 var result = Converter.IntToLong(size);
 
                 if (trans.Photo != null && trans.Photo.Length > result)
@@ -122,7 +123,7 @@ namespace UangKuAPI.Controllers
                 if (trans.Photo != null && trans.Photo.Length > 0)
                 {
                     //Proses Pengecekan Folder Suda Ada Atau Belum
-                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                    var folderName = _appParameter.ParameterString("TransactionDirectory");
                     if (!Directory.Exists(folderName))
                         Directory.CreateDirectory(folderName);
 
@@ -294,7 +295,7 @@ namespace UangKuAPI.Controllers
                     var photoData = Array.Empty<byte>();
                     if (dr["Photo"] is not byte[] photo || photo.Length == 0)
                     {
-                        var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                        var folderName = _appParameter.ParameterString("TransactionDirectory");
                         var transNo = dr["TransNo"] as string ?? string.Empty;
                         var filePath = Path.Combine(folderName, (string)dr["PersonID"], $"{transNo.Replace("/", "")}{dr["PhotoExtention"]}");
                         var fileInfo = _file.GetFileInfo(filePath);
@@ -434,7 +435,7 @@ namespace UangKuAPI.Controllers
                     var photoData = Array.Empty<byte>();
                     if (dr["Photo"] is not byte[] photo || photo.Length == 0)
                     {
-                        var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                        var folderName = _appParameter.ParameterString("TransactionDirectory");
                         var transNo = dr["TransNo"] as string ?? string.Empty;
                         var filePath = Path.Combine(folderName, (string)dr["PersonID"], $"{transNo.Replace("/", "")}{dr["PhotoExtention"]}");
                         var fileInfo = _file.GetFileInfo(filePath);
@@ -518,7 +519,7 @@ namespace UangKuAPI.Controllers
                 var photoData = Array.Empty<byte>();
                 if (t.Photo == null || t.Photo.Length == 0)
                 {
-                    var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                    var folderName = _appParameter.ParameterString("TransactionDirectory");
                     var filePath = Path.Combine(folderName, t.PersonID, $"{t.TransNo.Replace("/", "")}{t.PhotoExtention}");
                     var fileInfo = _file.GetFileInfo(filePath);
                     if (fileInfo.Exists)
@@ -682,7 +683,7 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var fileName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("BlankPDF");
+                var fileName = _appParameter.ParameterString("BlankPDF");
                 var filePath = Path.Combine("File", fileName);
                 var fileInfo = _file.GetFileInfo(filePath);
 
@@ -752,7 +753,7 @@ namespace UangKuAPI.Controllers
                     var photoData = Array.Empty<byte>();
                     if (dr["Photo"] is not byte[] photo || photo.Length == 0)
                     {
-                        var folderName = EntitySpaces.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                        var folderName = _appParameter.ParameterString("TransactionDirectory");
                         var transNo = dr["TransNo"] as string ?? string.Empty;
                         var folderPath = Path.Combine(folderName, (string)dr["PersonID"], $"{transNo.Replace("/", "")}{dr["PhotoExtention"]}");
                         var folderInfo = _file.GetFileInfo(folderPath);
@@ -889,7 +890,7 @@ namespace UangKuAPI.Controllers
                 doc.Add(nl);
 
                 // Table
-                var culture = EntitySpaces.Custom.AppParameter.GetAppParameterValue("CurrencyFormat");
+                var culture = _appParameter.ParameterString("CurrencyFormat");
                 var tbl = GeneratePDFFile.SetTable(5, true);
 
                 //Table Header
@@ -931,16 +932,12 @@ namespace UangKuAPI.Controllers
                 tbl.AddFooterCell(GeneratePDFFile.SetCell(1, true, _summary, iText.Layout.Properties.TextAlignment.RIGHT));
                 doc.Add(tbl);
 
-                var addHeader = EntitySpaces.Custom.AppParameter.GetAppParameterValue("IsAddHeader");
-                var isAddHeader = Converter.StringToBool(addHeader, false);
-                if (isAddHeader)
+                if (_appParameter.ParameterBoolean("IsAddHeader"))
                 {
 
                 }
 
-                var addFooter = EntitySpaces.Custom.AppParameter.GetAppParameterValue("IsAddFooter");
-                var isAddFooter = Converter.StringToBool(addFooter, false);
-                if (isAddFooter)
+                if (_appParameter.ParameterBoolean("IsAddFooter"))
                 {
                     var date = DateFormat.DateTimeNow(DateFormat.Dateshortmonthhourminute, null);
                     string footer = $"Generated On {date}";
@@ -948,9 +945,7 @@ namespace UangKuAPI.Controllers
                     GeneratePDFFile.SetFooterPages(parFooter, pdfdoc, doc);
                 }
 
-                var addPageNumber = EntitySpaces.Custom.AppParameter.GetAppParameterValue("IsAddPageNumber");
-                var isAddPageNumber = Converter.StringToBool(addPageNumber, false);
-                if (isAddPageNumber)
+                if (_appParameter.ParameterBoolean("IsAddPageNumber"))
                 {
                     GeneratePDFFile.SetPagesNumber(pdfdoc, doc);
                 }

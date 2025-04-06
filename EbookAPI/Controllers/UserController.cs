@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
+using UangKuAPI.BusinessObjects.Interface;
 using UangKuAPI.BusinessObjects.Response;
 using UangKuAPI.EntityFramework.Models;
 
@@ -15,10 +16,12 @@ namespace UangKuAPI.Controllers
     {
         private readonly BaseFramework _context;
         private readonly Parameter _param;
-        public UserController(BaseFramework context, IOptions<Parameter> param)
+        private readonly IAppStandardReferenceItem _appStandardReferenceItem;
+        public UserController(BaseFramework context, IOptions<Parameter> param, IAppStandardReferenceItem appStandardReferenceItem)
         {
             _context = context;
             _param = param.Value;
+            _appStandardReferenceItem = appStandardReferenceItem;
         }
 
         [HttpGet("GetAllUser", Name = "GetAllUser")]
@@ -156,17 +159,13 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                var SexName = !string.IsNullOrEmpty(u.SRSex) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Sex", u.SRSex) : string.Empty;
-                var AccessName = !string.IsNullOrEmpty(u.SRAccess) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Access", u.SRAccess) : string.Empty;
-                var StatusName = !string.IsNullOrEmpty(u.SRStatus) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Status", u.SRStatus) : string.Empty;
-
                 data = new User
                 {
                     Username = u.Username,
-                    Srsex = SexName,
-                    Sraccess = AccessName,
+                    Srsex = _appStandardReferenceItem.GetItemName("Sex", u.SRSex),
+                    Sraccess = _appStandardReferenceItem.GetItemName("Access", u.SRAccess),
                     Email = Encryptor.DataDecrypt(u.Email, _param.Key01),
-                    Srstatus = StatusName,
+                    Srstatus = _appStandardReferenceItem.GetItemName("Status", u.SRStatus),
                     ActiveDate = u.ActiveDate ?? new DateTime(),
                     LastLogin = u.LastLogin ?? new DateTime(),
                     LastUpdateDateTime = u.LastUpdateDateTime ?? new DateTime(),
@@ -330,17 +329,13 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
-                var SexName = !string.IsNullOrEmpty(u.SRSex) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Sex", u.SRSex) : string.Empty;
-                var AccessName = !string.IsNullOrEmpty(u.SRAccess) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Access", u.SRAccess) : string.Empty;
-                var StatusName = !string.IsNullOrEmpty(u.SRStatus) ? EntitySpaces.Custom.AppStandardReferenceItem.GetItemName("Status", u.SRStatus) : string.Empty;
-
                 data = new User
                 {
                     Username = u.Username,
-                    Srsex = SexName,
-                    Sraccess = AccessName,
-                    Email = Encryptor.DataDecrypt(u.Email, _param.Key01),
-                    Srstatus = StatusName,
+                    Srsex = _appStandardReferenceItem.GetItemName("Sex", u.SRSex),
+                    Sraccess = _appStandardReferenceItem.GetItemName("Access", u.SRAccess),
+                    Email = Encryptor.DataDecrypt(u.Email, _param.Key01 ?? string.Empty),
+                    Srstatus = _appStandardReferenceItem.GetItemName("Status", u.SRStatus),
                     ActiveDate = u.ActiveDate ?? new DateTime(),
                     LastLogin = u.LastLogin ?? new DateTime(),
                     LastUpdateDateTime = u.LastUpdateDateTime ?? new DateTime(),
