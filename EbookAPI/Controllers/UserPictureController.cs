@@ -1,6 +1,7 @@
 using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Entity.Generated;
 using UangKuAPI.BusinessObjects.Filter;
@@ -14,9 +15,11 @@ namespace UangKuAPI.Controllers
     public class UserPictureController : ControllerBase
     {
         private readonly AppDbContext _context;
-        public UserPictureController(AppDbContext context)
+        private readonly IFileProvider _file;
+        public UserPictureController(AppDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _file = env.ContentRootFileProvider;
         }
 
         [HttpGet("GetUserPicture", Name = "GetUserPicture")]
@@ -73,10 +76,22 @@ namespace UangKuAPI.Controllers
 
                 foreach (DataRow dr in dt.Rows)
                 {
+                    var pictureData = Array.Empty<byte>();
+                    if (dr["Picture"] is not byte[] photo || photo.Length == 0)
+                    {
+                        var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("PictureDirectory");
+                        var filePath = Path.Combine(folderName, (string)dr["PersonID"], (string)dr["PictureName"]);
+                        var fileInfo = _file.GetFileInfo(filePath);
+                        if (fileInfo.Exists)
+                            pictureData = System.IO.File.ReadAllBytes(filePath);
+                    }
+                    else
+                        pictureData = (byte[])dr["Picture"];
+
                     var up = new UserPicture
                     {
                         PictureId = (string)dr["PictureID"],
-                        Picture = (byte[])dr["Picture"],
+                        Picture = pictureData,
                         PictureName = dr["PictureName"] != DBNull.Value ? (string)dr["PictureName"] : string.Empty,
                         PictureFormat = dr["PictureFormat"] != DBNull.Value ? (string)dr["PictureFormat"] : string.Empty,
                         IsDeleted = (Int32)dr["IsDeleted"] == 1,
@@ -157,18 +172,42 @@ namespace UangKuAPI.Controllers
                 if (nameCount > 0)
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", $"{picture.PersonId}-{picture.PictureName}", $"Duplicate Picture For {picture.PictureName} Already Exist"));
 
+                //Proses Pengecekan Folder Suda Ada Atau Belum
+                var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("PictureDirectory");
+                if (!Directory.Exists(folderName))
+                    Directory.CreateDirectory(folderName);
+
+                var folderUser = Path.Combine(folderName, picture.PersonId);
+                if (!Directory.Exists(folderUser))
+                    Directory.CreateDirectory(folderUser);
+
+                var filePath = Path.Combine(folderName, picture.PersonId, picture.PictureName ?? string.Empty);
+                var fileInfo = _file.GetFileInfo(filePath);
+                if (fileInfo.Exists)
+                    return BadRequest(string.Format(AppConstant.AlreadyExistMsg, picture.PictureName));
+
+                var data = await _context.UserPictures
+                    .FirstOrDefaultAsync(up => up.PictureId == picture.PictureId);
+
+                if (data != null)
+                    return BadRequest(string.Format(AppConstant.AlreadyExistMsg, picture.PictureId));
+
                 var up = new UserPicture
                 {
-                    PictureId = picture.PictureId, Picture = picture.Picture, PictureName = picture.PictureName, PictureFormat = picture.PictureFormat, PersonId = picture.PersonId,
+                    PictureId = picture.PictureId, Picture = Array.Empty<byte>(), PictureName = picture.PictureName, PictureFormat = picture.PictureFormat, PersonId = picture.PersonId,
                     IsDeleted = picture.IsDeleted, CreatedByUserId = picture.CreatedByUserId, CreatedDateTime = DateFormat.DateTimeNow(), LastUpdateByUserId = picture.LastUpdateByUserId,
                     LastUpdateDateTime = DateFormat.DateTimeNow()
                 };
                 _context.UserPictures.Add(up);
                 int rows = await _context.SaveChangesAsync();
 
-                return rows > 0
-                    ? Ok(string.Format(AppConstant.CreatedSuccessMsg, "Picture", picture.PictureId))
-                    : BadRequest(string.Format(AppConstant.FailedMsg, "Insert", "Picture", picture.PictureId));
+                if (rows > 0)
+                {
+                    await System.IO.File.WriteAllBytesAsync(filePath, picture.Picture ?? Array.Empty<byte>());
+                    return Ok(string.Format(AppConstant.CreatedSuccessMsg, "Picture", picture.PictureId));
+                }
+                else
+                    return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", "Picture", picture.PictureId));
             }
             catch (Exception e)
             {

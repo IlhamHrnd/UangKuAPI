@@ -51,18 +51,41 @@ namespace UangKuAPI.Controllers
                 if (data != null)
                     return BadRequest(string.Format(AppConstant.AlreadyExistMsg, trans.TransNo));
 
+                string filePath = string.Empty;
+                if (trans.Photo != null && trans.Photo.Length > 0)
+                {
+                    //Proses Pengecekan Folder Suda Ada Atau Belum
+                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                    if (!Directory.Exists(folderName))
+                        Directory.CreateDirectory(folderName);
+
+                    var folderUser = Path.Combine(folderName, trans.PersonId);
+                    if (!Directory.Exists(folderUser))
+                        Directory.CreateDirectory(folderUser);
+
+                    filePath = Path.Combine(folderName, trans.PersonId, $"{trans.TransNo.Replace("/", "")}{(!string.IsNullOrEmpty(trans.PhotoExtention) ? trans.PhotoExtention : ".png")}");
+                    var fileInfo = _file.GetFileInfo(filePath);
+                    if (fileInfo.Exists)
+                        return BadRequest(string.Format(AppConstant.AlreadyExistMsg, trans.TransNo));
+                }
+
                 var t = new Transaction
                 {
-                    TransNo = trans.TransNo, Srtransaction = trans.Srtransaction, SrtransItem = trans.SrtransItem, Amount = trans.Amount, Description = trans.Description, Photo = trans.Photo,
+                    TransNo = trans.TransNo, Srtransaction = trans.Srtransaction, SrtransItem = trans.SrtransItem, Amount = trans.Amount, Description = trans.Description, Photo = Array.Empty<byte>(),
                     CreatedDateTime = DateFormat.DateTimeNow(), CreatedByUserId = trans.CreatedByUserId, LastUpdateDateTime = DateFormat.DateTimeNow(), LastUpdateByUserId = trans.LastUpdateByUserId,
-                    TransType = trans.TransType, TransDate = trans.TransDate, PersonId = trans.PersonId
+                    TransType = trans.TransType, TransDate = trans.TransDate, PersonId = trans.PersonId, PhotoExtention = !string.IsNullOrEmpty(trans.PhotoExtention) ? trans.PhotoExtention : ".png"
                 };
                 _context.Transactions.Add(t);
                 int rows = await _context.SaveChangesAsync();
 
-                return rows > 0
-                    ? Ok(string.Format(AppConstant.CreatedSuccessMsg, "Transaction", trans.TransNo))
-                    : BadRequest(string.Format(AppConstant.FailedMsg, "Insert", "Transaction", trans.TransNo));
+                if (rows > 0)
+                {
+                    if (!string.IsNullOrEmpty(filePath))
+                        await System.IO.File.WriteAllBytesAsync(filePath, trans.Photo ?? Array.Empty<byte>());
+                    return Ok(string.Format(AppConstant.CreatedSuccessMsg, "Transaction", trans.TransNo));
+                }
+                else
+                    return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", "Transaction", trans.TransNo));
             }
             catch (Exception e)
             {
@@ -95,6 +118,21 @@ namespace UangKuAPI.Controllers
                 if (data == null)
                     return NotFound(AppConstant.NotFoundMsg);
 
+                string filePath = string.Empty;
+                if (trans.Photo != null && trans.Photo.Length > 0)
+                {
+                    //Proses Pengecekan Folder Suda Ada Atau Belum
+                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                    if (!Directory.Exists(folderName))
+                        Directory.CreateDirectory(folderName);
+
+                    var folderUser = Path.Combine(folderName, trans.PersonId);
+                    if (!Directory.Exists(folderUser))
+                        Directory.CreateDirectory(folderUser);
+
+                    filePath = Path.Combine(folderName, trans.PersonId, $"{trans.TransNo.Replace("/", "")}{(!string.IsNullOrEmpty(trans.PhotoExtention) ? trans.PhotoExtention : ".png")}");
+                }
+
                 data.Srtransaction = trans.Srtransaction;
                 data.SrtransItem = trans.SrtransItem;
                 data.Amount = trans.Amount;
@@ -104,12 +142,18 @@ namespace UangKuAPI.Controllers
                 data.LastUpdateByUserId = trans.LastUpdateByUserId;
                 data.TransType = trans.TransType;
                 data.TransDate = trans.TransDate;
+                data.PhotoExtention = !string.IsNullOrEmpty(trans.PhotoExtention) ? trans.PhotoExtention : ".png";
                 _context.Update(data);
                 int rows = await _context.SaveChangesAsync();
 
-                return rows > 0
-                    ? Ok(string.Format(AppConstant.UpdateSuccessMsg, trans.TransNo))
-                    : BadRequest(string.Format(AppConstant.FailedMsg, "Update", "Transaction", trans.TransNo));
+                if (rows > 0)
+                {
+                    if (!string.IsNullOrEmpty(filePath))
+                        await System.IO.File.WriteAllBytesAsync(filePath, trans.Photo ?? Array.Empty<byte>());
+                    return Ok(string.Format(AppConstant.UpdateSuccessMsg, trans.TransNo));
+                }
+                else
+                    return BadRequest(string.Format(AppConstant.FailedMsg, "Update", "Transaction", trans.TransNo));
             }
             catch (Exception e)
             {
@@ -201,7 +245,7 @@ namespace UangKuAPI.Controllers
                 DataTable dtRecord = tQ.LoadDataTable();
 
                 tQ.Select(tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID, tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"),
-                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID)
+                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID, tQ.PhotoExtention)
                     .Skip((filter.PageNumber - 1) * filter.PageSize)
                     .Take(filter.PageSize);
 
@@ -247,6 +291,19 @@ namespace UangKuAPI.Controllers
 
                 foreach (DataRow dr in dt.Rows)
                 {
+                    var photoData = Array.Empty<byte>();
+                    if (dr["Photo"] is not byte[] photo || photo.Length == 0)
+                    {
+                        var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                        var transNo = dr["TransNo"] as string ?? string.Empty;
+                        var filePath = Path.Combine(folderName, (string)dr["PersonID"], $"{transNo.Replace("/", "")}{dr["PhotoExtention"]}");
+                        var fileInfo = _file.GetFileInfo(filePath);
+                        if (fileInfo.Exists)
+                            photoData = System.IO.File.ReadAllBytes(filePath);
+                    }
+                    else
+                        photoData = (byte[])dr["Photo"];
+
                     var t = new Transaction
                     {
                         TransNo = (string)dr["TransNo"],
@@ -255,7 +312,7 @@ namespace UangKuAPI.Controllers
                         SrtransItem = (string)dr["SRTransItem"],
                         Amount = dr["Amount"] != DBNull.Value ? (decimal)dr["Amount"] : 0,
                         Description = dr["Description"] != DBNull.Value ? (string)dr["Description"] : string.Empty,
-                        Photo = dr["Photo"] != DBNull.Value ? (byte[])dr["Photo"] : null,
+                        Photo = photoData,
                         TransType = dr["TransType"] != DBNull.Value ? (string)dr["TransType"] : string.Empty,
                         TransDate = dr["TransDate"] != DBNull.Value ? DateOnly.FromDateTime((DateTime)dr["TransDate"]) : null,
                         CreatedDateTime = (DateTime)dr["CreatedDateTime"],
@@ -330,7 +387,7 @@ namespace UangKuAPI.Controllers
 
                 tQ.Select(tQ.TransNo, tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID,
                     tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"),
-                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID)
+                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID, tQ.PhotoExtention)
                     .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
                     .InnerJoin(itemQ).On(itemQ.StandardReferenceID.In("Expenditure", "Income") && itemQ.ItemID == tQ.SRTransItem)
                     .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate);
@@ -374,6 +431,19 @@ namespace UangKuAPI.Controllers
 
                 foreach (DataRow dr in dt.Rows)
                 {
+                    var photoData = Array.Empty<byte>();
+                    if (dr["Photo"] is not byte[] photo || photo.Length == 0)
+                    {
+                        var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                        var transNo = dr["TransNo"] as string ?? string.Empty;
+                        var filePath = Path.Combine(folderName, (string)dr["PersonID"], $"{transNo.Replace("/", "")}{dr["PhotoExtention"]}");
+                        var fileInfo = _file.GetFileInfo(filePath);
+                        if (fileInfo.Exists)
+                            photoData = System.IO.File.ReadAllBytes(filePath);
+                    }
+                    else
+                        photoData = (byte[])dr["Photo"];
+
                     var t = new Transaction
                     {
                         TransNo = (string)dr["TransNo"],
@@ -382,7 +452,7 @@ namespace UangKuAPI.Controllers
                         SrtransItem = (string)dr["SRTransItem"],
                         Amount = dr["Amount"] != DBNull.Value ? (decimal)dr["Amount"] : 0,
                         Description = dr["Description"] != DBNull.Value ? (string)dr["Description"] : string.Empty,
-                        Photo = dr["Photo"] != DBNull.Value ? (byte[])dr["Photo"] : null,
+                        Photo = photoData,
                         TransType = dr["TransType"] != DBNull.Value ? (string)dr["TransType"] : string.Empty,
                         TransDate = dr["TransDate"] != DBNull.Value ? DateOnly.FromDateTime((DateTime)dr["TransDate"]) : null,
                         CreatedDateTime = (DateTime)dr["CreatedDateTime"],
@@ -445,12 +515,23 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
+                var photoData = Array.Empty<byte>();
+                if (t.Photo == null || t.Photo.Length == 0)
+                {
+                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                    var filePath = Path.Combine(folderName, t.PersonID, $"{t.TransNo.Replace("/", "")}{t.PhotoExtention}");
+                    var fileInfo = _file.GetFileInfo(filePath);
+                    if (fileInfo.Exists)
+                        photoData = System.IO.File.ReadAllBytes(filePath);
+                }
+                else
+                    photoData = t.Photo;
+
                 data = new Transaction
                 {
                     TransNo = t.TransNo, PersonId = t.PersonID, Srtransaction = t.SRTransaction, SrtransItem = t.SRTransItem,
-                    Amount = t.Amount, Description = t.Description, Photo = t.Photo, TransType = t.TransType, TransDate = t.TransDate.HasValue ? DateOnly.FromDateTime(t.TransDate.Value) : null,
+                    Amount = t.Amount, Description = t.Description, Photo = photoData, TransType = t.TransType, TransDate = t.TransDate.HasValue ? DateOnly.FromDateTime(t.TransDate.Value) : null,
                     CreatedDateTime = t.CreatedDateTime ?? new DateTime(), CreatedByUserId = t.CreatedByUserID, LastUpdateDateTime = t.LastUpdateDateTime ?? new DateTime(), LastUpdateByUserId = t.LastUpdateByUserID
-
                 };
 
                 response = new Response<Transaction>
@@ -526,9 +607,9 @@ namespace UangKuAPI.Controllers
                         TransType = (string)dr["TransType"],
                         TransDate = DateOnly.FromDateTime(DateFormat.DateTimeNow()),
                         CreatedDateTime = DateFormat.DateTimeNow(),
-                        CreatedByUserId = _param.User,
+                        CreatedByUserId = _param.User ?? string.Empty,
                         LastUpdateDateTime = DateFormat.DateTimeNow(),
-                        LastUpdateByUserId = _param.User
+                        LastUpdateByUserId = _param.User ?? string.Empty
                     };
                     data.Add(t);
 
@@ -555,9 +636,9 @@ namespace UangKuAPI.Controllers
                         TransType = "SU",
                         TransDate = DateOnly.FromDateTime(DateFormat.DateTimeNow()),
                         CreatedDateTime = DateFormat.DateTimeNow(),
-                        CreatedByUserId = _param.User,
+                        CreatedByUserId = _param.User ?? string.Empty,
                         LastUpdateDateTime = DateFormat.DateTimeNow(),
-                        LastUpdateByUserId = _param.User
+                        LastUpdateByUserId = _param.User ?? string.Empty
                     };
                     data.Add(t);
                 }
@@ -624,7 +705,7 @@ namespace UangKuAPI.Controllers
 
                 tQ.Select(tQ.TransNo, tQ.Amount, tQ.Description, tQ.Photo, tQ.TransType, tQ.PersonID,
                     tQ.TransDate, transQ.ItemName.As("SRTransaction"), itemQ.ItemName.As("SRTransItem"),
-                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID)
+                    tQ.CreatedDateTime, tQ.CreatedByUserID, tQ.LastUpdateDateTime, tQ.LastUpdateByUserID, tQ.PhotoExtention)
                     .InnerJoin(transQ).On(transQ.StandardReferenceID == "Transaction" && transQ.ItemID == tQ.SRTransaction)
                     .InnerJoin(itemQ).On(itemQ.ItemID == tQ.SRTransItem)
                     .Where(tQ.PersonID == filter.PersonID && tQ.TransDate >= filter.StartDate && tQ.TransDate <= filter.EndDate && itemQ.StandardReferenceID.In("Expenditure", "Income"));
@@ -668,6 +749,19 @@ namespace UangKuAPI.Controllers
 
                 foreach (DataRow dr in dt.Rows)
                 {
+                    var photoData = Array.Empty<byte>();
+                    if (dr["Photo"] is not byte[] photo || photo.Length == 0)
+                    {
+                        var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("TransactionDirectory");
+                        var transNo = dr["TransNo"] as string ?? string.Empty;
+                        var folderPath = Path.Combine(folderName, (string)dr["PersonID"], $"{transNo.Replace("/", "")}{dr["PhotoExtention"]}");
+                        var folderInfo = _file.GetFileInfo(folderPath);
+                        if (folderInfo.Exists)
+                            photoData = System.IO.File.ReadAllBytes(folderPath);
+                    }
+                    else
+                        photoData = (byte[])dr["Photo"];
+
                     var trans = new Transaction
                     {
                         TransNo = (string)dr["TransNo"],
@@ -676,7 +770,7 @@ namespace UangKuAPI.Controllers
                         SrtransItem = (string)dr["SRTransItem"],
                         Amount = dr["Amount"] != DBNull.Value ? (decimal)dr["Amount"] : 0,
                         Description = dr["Description"] != DBNull.Value ? (string)dr["Description"] : string.Empty,
-                        Photo = dr["Photo"] != DBNull.Value ? (byte[])dr["Photo"] : null,
+                        Photo = photoData,
                         TransType = dr["TransType"] != DBNull.Value ? (string)dr["TransType"] : string.Empty,
                         TransDate = dr["TransDate"] != DBNull.Value ? DateOnly.FromDateTime((DateTime)dr["TransDate"]) : null,
                         CreatedDateTime = (DateTime)dr["CreatedDateTime"],

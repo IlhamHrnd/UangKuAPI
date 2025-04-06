@@ -32,4 +32,5 @@ public partial class UserWishlist
     public byte[]? ProductPicture { get; set; }
 
     public int IsComplete { get; set; }
+    public string? PhotoExtention { get; set; }
 }

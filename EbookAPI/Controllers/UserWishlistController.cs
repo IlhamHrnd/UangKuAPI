@@ -1,8 +1,8 @@
-using System.Data;
-using System.Data.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using System.Data;
 using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
 using UangKuAPI.BusinessObjects.Models;
@@ -16,10 +16,12 @@ namespace UangKuAPI.Controllers
     {
         private readonly AppDbContext _context;
         private readonly Parameter _param;
-        public UserWishlistController(AppDbContext context, IOptions<Parameter> param)
+        private readonly IFileProvider _file;
+        public UserWishlistController(AppDbContext context, IOptions<Parameter> param, IWebHostEnvironment env)
         {
             _context = context;
             _param = param.Value;
+            _file = env.ContentRootFileProvider;
         }
 
         [HttpGet("GetNewUserWishlistID", Name = "GetNewUserWishlistID")]
@@ -122,13 +124,26 @@ namespace UangKuAPI.Controllers
 
                 uwQ.Select(uwQ.PersonID, uwQ.ProductName, uwQ.ProductQuantity, uwQ.ProductPrice, uwQ.ProductLink, uwQ.IsComplete,
                     uwQ.LastUpdateDateTime, uwQ.LastUpdateByUserID, uwQ.WishlistDate, uwQ.ProductPicture, uwQ.CreatedDateTime, 
-                    uwQ.CreatedByUserID, catQ.ItemName.As("SRProductCategory"))
+                    uwQ.CreatedByUserID, catQ.ItemName.As("SRProductCategory"), uwQ.PhotoExtention)
                     .Skip((filter.PageNumber - 1) * filter.PageSize)
                     .Take(filter.PageSize);
                 DataTable dt = uwQ.LoadDataTable();
 
                 foreach (DataRow dr in dt.Rows)
                 {
+                    var photoData = Array.Empty<byte>();
+                    if (dr["ProductPicture"] is not byte[] photo || photo.Length == 0)
+                    {
+                        var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                        var wishlistId = dr["WishlistID"] as string ?? string.Empty;
+                        var filePath = Path.Combine(folderName, (string)dr["PersonID"], $"{wishlistId.Replace("/", "")}{dr["PhotoExtention"]}");
+                        var fileInfo = _file.GetFileInfo(filePath);
+                        if (fileInfo.Exists)
+                            photoData = System.IO.File.ReadAllBytes(filePath);
+                    }
+                    else
+                        photoData = (byte[])dr["Photo"];
+
                     DateOnly lastUpdateDate = DateOnly.FromDateTime((DateTime)dr["LastUpdateDateTime"]);
 
                     var uw = new UserWishlist
@@ -140,7 +155,7 @@ namespace UangKuAPI.Controllers
                         ProductQuantity = dr["ProductQuantity"] != DBNull.Value ? (int)dr["ProductQuantity"] : 0,
                         ProductPrice = dr["ProductPrice"] != DBNull.Value ? (decimal)dr["ProductPrice"] : 0,
                         ProductLink = dr["ProductLink"] != DBNull.Value ? (string)dr["ProductLink"] : string.Empty,
-                        ProductPicture = dr["ProductPicture"] != DBNull.Value ? (byte[]?)dr["ProductPicture"] : null,
+                        ProductPicture = photoData,
                         CreatedByUserId = (string)dr["CreatedByUserID"],
                         CreatedDateTime = (DateTime)dr["CreatedDateTime"],
                         LastUpdateByUserId = (string)dr["LastUpdateByUserID"],
@@ -218,8 +233,20 @@ namespace UangKuAPI.Controllers
                     return NotFound(response);
                 }
 
+                var photoData = Array.Empty<byte>();
+                if (uw.ProductPicture == null || uw.ProductPicture.Length == 0)
+                {
+                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    var filePath = Path.Combine(folderName, uw.PersonID, $"{uw.WishlistID.Replace("/", "")}{uw.PhotoExtention}");
+                    var fileInfo = _file.GetFileInfo(filePath);
+                    if (fileInfo.Exists)
+                        photoData = System.IO.File.ReadAllBytes(filePath);
+                }
+                else
+                    photoData = uw.ProductPicture;
+
                 var CategoryName = !string.IsNullOrEmpty(uw.SRProductCategory) ? BusinessObjects.Entity.Custom.AppStandardReferenceItem.GetItemName("Wishlist", uw.SRProductCategory) : string.Empty;
-                var wishlistDate = uw.WishlistDate.HasValue ? uw.WishlistDate.Value : DateFormat.DateTimeNow();
+                var wishlistDate = uw.WishlistDate ?? DateFormat.DateTimeNow();
 
                 data = new UserWishlist
                 {
@@ -235,7 +262,7 @@ namespace UangKuAPI.Controllers
                     LastUpdateByUserId = uw.LastUpdateByUserID,
                     LastUpdateDateTime = uw.LastUpdateDateTime ?? DateFormat.DateTimeNow(),
                     WishlistDate = Converter.DateTimeToDateOnly(wishlistDate),
-                    ProductPicture = uw.ProductPicture,
+                    ProductPicture = photoData,
                     IsComplete = uw.IsComplete ?? 0
                 };
 
@@ -284,20 +311,43 @@ namespace UangKuAPI.Controllers
                 if (data != null)
                     return BadRequest(string.Format(AppConstant.AlreadyExistMsg, wishlist.WishlistId));
 
+                string filePath = string.Empty;
+                if (wishlist.ProductPicture != null && wishlist.ProductPicture.Length > 0)
+                {
+                    //Proses Pengecekan Folder Suda Ada Atau Belum
+                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    if (!Directory.Exists(folderName))
+                        Directory.CreateDirectory(folderName);
+
+                    var folderUser = Path.Combine(folderName, wishlist.PersonId);
+                    if (!Directory.Exists(folderUser))
+                        Directory.CreateDirectory(folderUser);
+
+                    filePath = Path.Combine(folderName, wishlist.PersonId, $"{wishlist.WishlistId.Replace("/", "")}{(!string.IsNullOrEmpty(wishlist.PhotoExtention) ? wishlist.PhotoExtention : ".png")}");
+                    var fileInfo = _file.GetFileInfo(filePath);
+                    if (fileInfo.Exists)
+                        return BadRequest(string.Format(AppConstant.AlreadyExistMsg, wishlist.WishlistId));
+                }
+
                 var uw = new UserWishlist
                 {
                     WishlistId = wishlist.WishlistId, PersonId = wishlist.PersonId, SrproductCategory = wishlist.SrproductCategory,
                     ProductName = wishlist.ProductName, ProductQuantity = wishlist.ProductQuantity, ProductPrice = wishlist.ProductPrice,
                     ProductLink = wishlist.ProductLink, CreatedByUserId = wishlist.CreatedByUserId, CreatedDateTime = DateFormat.DateTimeNow(),
                     LastUpdateByUserId = wishlist.LastUpdateByUserId, LastUpdateDateTime = DateFormat.DateTimeNow(), WishlistDate = wishlist.WishlistDate,
-                    ProductPicture = wishlist.ProductPicture, IsComplete = wishlist.IsComplete
+                    ProductPicture = Array.Empty<byte>(), IsComplete = wishlist.IsComplete, PhotoExtention = !string.IsNullOrEmpty(wishlist.PhotoExtention) ? wishlist.PhotoExtention : ".png"
                 };
                 _context.Add(uw);
                 int rows = await _context.SaveChangesAsync();
 
-                return rows > 0
-                    ? Ok(string.Format(AppConstant.CreatedSuccessMsg, "Wishlist", wishlist.WishlistId))
-                    : BadRequest(string.Format(AppConstant.FailedMsg, "Insert", "Wishlist", wishlist.WishlistId));
+                if (rows > 0)
+                {
+                    if (!string.IsNullOrEmpty(filePath))
+                        await System.IO.File.WriteAllBytesAsync(filePath, wishlist.ProductPicture ?? Array.Empty<byte>());
+                    return Ok(string.Format(AppConstant.CreatedSuccessMsg, "Wishlist", wishlist.WishlistId));
+                }
+                else
+                    return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", "Wishlist", wishlist.WishlistId));
             }
             catch (Exception e)
             {
@@ -330,6 +380,21 @@ namespace UangKuAPI.Controllers
                 if (data == null)
                     return NotFound(AppConstant.NotFoundMsg);
 
+                string filePath = string.Empty;
+                if (wishlist.ProductPicture != null && wishlist.ProductPicture.Length > 0)
+                {
+                    //Proses Pengecekan Folder Suda Ada Atau Belum
+                    var folderName = BusinessObjects.Entity.Custom.AppParameter.GetAppParameterValue("WishlistDirectory");
+                    if (!Directory.Exists(folderName))
+                        Directory.CreateDirectory(folderName);
+
+                    var folderUser = Path.Combine(folderName, wishlist.PersonId);
+                    if (!Directory.Exists(folderUser))
+                        Directory.CreateDirectory(folderUser);
+
+                    filePath = Path.Combine(folderName, wishlist.PersonId, $"{wishlist.WishlistId.Replace("/", "")}{(!string.IsNullOrEmpty(wishlist.PhotoExtention) ? wishlist.PhotoExtention : ".png")}");
+                }
+
                 data.SrproductCategory = wishlist.SrproductCategory;
                 data.ProductName = wishlist.ProductName;
                 data.ProductQuantity = wishlist.ProductQuantity;
@@ -338,14 +403,20 @@ namespace UangKuAPI.Controllers
                 data.LastUpdateByUserId = wishlist.LastUpdateByUserId;
                 data.LastUpdateDateTime = DateFormat.DateTimeNow();
                 data.WishlistDate = wishlist.WishlistDate;
-                data.ProductPicture = wishlist.ProductPicture;
+                data.ProductPicture = Array.Empty<byte>();
                 data.IsComplete = wishlist.IsComplete;
+                data.PhotoExtention = !string.IsNullOrEmpty(wishlist.PhotoExtention) ? wishlist.PhotoExtention : ".png";
                 _context.Update(data);
                 int rows = await _context.SaveChangesAsync();
 
-                return rows > 0
-                    ? Ok(string.Format(AppConstant.UpdateSuccessMsg, wishlist.WishlistId))
-                    : BadRequest(string.Format(AppConstant.FailedMsg, "Update", "Wishlist", wishlist.WishlistId));
+                if (rows > 0)
+                {
+                    if (!string.IsNullOrEmpty(filePath))
+                        await System.IO.File.WriteAllBytesAsync(filePath, wishlist.ProductPicture ?? Array.Empty<byte>());
+                    return Ok(string.Format(AppConstant.UpdateSuccessMsg, wishlist.WishlistId));
+                }
+                else
+                    return BadRequest(string.Format(AppConstant.FailedMsg, "Update", "Wishlist", wishlist.WishlistId));
             }
             catch (Exception e)
             {

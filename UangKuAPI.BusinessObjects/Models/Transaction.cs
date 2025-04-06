@@ -30,4 +30,6 @@ public partial class Transaction
     public DateTime LastUpdateDateTime { get; set; }
 
     public string LastUpdateByUserId { get; set; } = null!;
+
+    public string? PhotoExtention { get; set; }
 }

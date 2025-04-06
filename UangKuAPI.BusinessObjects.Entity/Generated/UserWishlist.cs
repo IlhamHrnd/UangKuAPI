@@ -356,11 +356,31 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 				}
 			}
 		}
-		
-		/// <summary>
-		/// Maps to userwishlist.LastUpdateDateTime
-		/// </summary>
-		[DataMember(EmitDefaultValue=false)]
+
+        /// <summary>
+        /// Maps to userwishlist.PhotoExtention
+        /// </summary>
+        [DataMember(EmitDefaultValue = false)]
+        virtual public System.String PhotoExtention
+        {
+            get
+            {
+                return base.GetSystemString(UserwishlistMetadata.ColumnNames.PhotoExtention);
+            }
+
+            set
+            {
+                if (base.SetSystemString(UserwishlistMetadata.ColumnNames.PhotoExtention, value))
+                {
+                    OnPropertyChanged(UserwishlistMetadata.PropertyNames.PhotoExtention);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Maps to userwishlist.LastUpdateDateTime
+        /// </summary>
+        [DataMember(EmitDefaultValue=false)]
 		virtual public System.DateTime? LastUpdateDateTime
 		{
 			get
@@ -605,6 +625,7 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 				case "WishlistDate": return this.WishlistDate;
 				case "ProductPicture": return this.ProductPicture;
 				case "IsComplete": return this.IsComplete;
+                case "PhotoExtention": return this.PhotoExtention;
 
                 default: return null;
             }
@@ -662,9 +683,9 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 		public esQueryItem LastUpdateByUserID
 		{
 			get { return new esQueryItem(this, UserwishlistMetadata.ColumnNames.LastUpdateByUserID, esSystemType.String); }
-		} 
-		
-		public esQueryItem LastUpdateDateTime
+		}
+
+        public esQueryItem LastUpdateDateTime
 		{
 			get { return new esQueryItem(this, UserwishlistMetadata.ColumnNames.LastUpdateDateTime, esSystemType.DateTime); }
 		} 
@@ -682,11 +703,16 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 		public esQueryItem IsComplete
 		{
 			get { return new esQueryItem(this, UserwishlistMetadata.ColumnNames.IsComplete, esSystemType.Int32); }
-		} 
-		
-		#endregion
-		
-	}
+		}
+
+        public esQueryItem PhotoExtention
+        {
+            get { return new esQueryItem(this, UserwishlistMetadata.ColumnNames.PhotoExtention, esSystemType.String); }
+        }
+
+        #endregion
+
+    }
 
 
 
@@ -770,8 +796,13 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 			c.PropertyName = UserwishlistMetadata.PropertyNames.IsComplete;
 			c.NumericPrecision = 11;
 			m_columns.Add(c);
-				
-		}
+
+            c = new esColumnMetadata(UserwishlistMetadata.ColumnNames.PhotoExtention, 14, typeof(System.String), esSystemType.String);
+            c.PropertyName = UserwishlistMetadata.PropertyNames.PhotoExtention;
+            c.CharacterMaxLength = 4;
+            m_columns.Add(c);
+
+        }
 		#endregion	
 	
 		static public UserwishlistMetadata Meta()
@@ -811,7 +842,8 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 			 public const string WishlistDate = "WishlistDate";
 			 public const string ProductPicture = "ProductPicture";
 			 public const string IsComplete = "IsComplete";
-		}
+             public const string PhotoExtention = "PhotoExtention";
+        }
 		#endregion	
 		
 		#region PropertyNames
@@ -831,7 +863,8 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 			 public const string WishlistDate = "WishlistDate";
 			 public const string ProductPicture = "ProductPicture";
 			 public const string IsComplete = "IsComplete";
-		}
+             public const string PhotoExtention = "PhotoExtention";
+        }
 		#endregion	
 
 		public esProviderSpecificMetadata GetProviderMetadata(string mapName)
@@ -888,11 +921,12 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 				meta.AddTypeMap("LastUpdateDateTime", new esTypeMap("DATETIME", "System.DateTime"));
 				meta.AddTypeMap("WishlistDate", new esTypeMap("DATE", "System.DateTime"));
 				meta.AddTypeMap("ProductPicture", new esTypeMap("MEDIUMBLOB", "System.Byte[]"));
-				meta.AddTypeMap("IsComplete", new esTypeMap("INT", "System.Int32"));			
-				
-				
-				
-				meta.Source = "UserWishlist";
+				meta.AddTypeMap("IsComplete", new esTypeMap("INT", "System.Int32"));
+                meta.AddTypeMap("PhotoExtention", new esTypeMap("VARCHAR", "System.String"));
+
+
+
+                meta.Source = "UserWishlist";
 				meta.Destination = "UserWishlist";
 				
 				meta.spInsert = "proc_userwishlistInsert";				

@@ -11,6 +11,23 @@ namespace UangKuAPI.BusinessObjects.Base
 {
     public class DateFormat
     {
+        public static DateTime LastBuild(string filePath, string fileExtention)
+        {
+            if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(fileExtention) || !Directory.Exists(filePath))
+                return DateTime.MinValue;
+
+            var allFile = Directory.GetFiles(filePath, $"*{fileExtention}", SearchOption.AllDirectories);
+
+            if (!allFile.Any())
+                return DateTime.MinValue;
+
+            var result = allFile
+                .Select(file => File.GetLastWriteTime(file))
+                .OrderByDescending(date => date)
+                .FirstOrDefault();
+            return result;
+        }
+
         public static string DateTimeNow(string format, DateTime? dateTime)
         {
             DateTime _dateTime = dateTime ?? DateTime.Now;

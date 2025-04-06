@@ -416,12 +416,32 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 				}
 			}
 		}
-		
-		#endregion
-		
-		#region Housekeeping methods
 
-		override protected IMetadata Meta
+        /// <summary>
+        /// Maps to UserDocument.FileExtention
+        /// </summary>
+        [DataMember(EmitDefaultValue = false)]
+        virtual public System.String PhotoExtention
+        {
+            get
+            {
+                return base.GetSystemString(TransactionMetadata.ColumnNames.PhotoExtention);
+            }
+
+            set
+            {
+                if (base.SetSystemString(TransactionMetadata.ColumnNames.PhotoExtention, value))
+                {
+                    OnPropertyChanged(TransactionMetadata.PropertyNames.PhotoExtention);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Housekeeping methods
+
+        override protected IMetadata Meta
 		{
 			get
 			{
@@ -584,6 +604,7 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 				case "CreatedByUserID": return this.CreatedByUserID;
 				case "LastUpdateDateTime": return this.LastUpdateDateTime;
 				case "LastUpdateByUserID": return this.LastUpdateByUserID;
+                case "PhotoExtention": return this.PhotoExtention;
 
                 default: return null;
             }
@@ -656,11 +677,16 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 		public esQueryItem LastUpdateByUserID
 		{
 			get { return new esQueryItem(this, TransactionMetadata.ColumnNames.LastUpdateByUserID, esSystemType.String); }
-		} 
-		
-		#endregion
-		
-	}
+		}
+
+        public esQueryItem PhotoExtention
+        {
+            get { return new esQueryItem(this, TransactionMetadata.ColumnNames.PhotoExtention, esSystemType.String); }
+        }
+
+        #endregion
+
+    }
 
 
 
@@ -739,8 +765,12 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 			c.PropertyName = TransactionMetadata.PropertyNames.LastUpdateByUserID;
 			c.CharacterMaxLength = 50;
 			m_columns.Add(c);
-				
-		}
+
+            c = new esColumnMetadata(TransactionMetadata.ColumnNames.PhotoExtention, 13, typeof(System.String), esSystemType.String);
+            c.PropertyName = TransactionMetadata.PropertyNames.PhotoExtention;
+            c.CharacterMaxLength = 4;
+            m_columns.Add(c);
+        }
 		#endregion	
 	
 		static public TransactionMetadata Meta()
@@ -779,7 +809,8 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 			 public const string CreatedByUserID = "CreatedByUserID";
 			 public const string LastUpdateDateTime = "LastUpdateDateTime";
 			 public const string LastUpdateByUserID = "LastUpdateByUserID";
-		}
+             public const string PhotoExtention = "PhotoExtention";
+        }
 		#endregion	
 		
 		#region PropertyNames
@@ -798,7 +829,8 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 			 public const string CreatedByUserID = "CreatedByUserID";
 			 public const string LastUpdateDateTime = "LastUpdateDateTime";
 			 public const string LastUpdateByUserID = "LastUpdateByUserID";
-		}
+             public const string PhotoExtention = "PhotoExtention";
+        }
 		#endregion	
 
 		public esProviderSpecificMetadata GetProviderMetadata(string mapName)
@@ -854,11 +886,12 @@ namespace UangKuAPI.BusinessObjects.Entity.Generated
 				meta.AddTypeMap("CreatedDateTime", new esTypeMap("DATETIME", "System.DateTime"));
 				meta.AddTypeMap("CreatedByUserID", new esTypeMap("VARCHAR", "System.String"));
 				meta.AddTypeMap("LastUpdateDateTime", new esTypeMap("DATETIME", "System.DateTime"));
-				meta.AddTypeMap("LastUpdateByUserID", new esTypeMap("VARCHAR", "System.String"));			
-				
-				
-				
-				meta.Source = "Transaction";
+				meta.AddTypeMap("LastUpdateByUserID", new esTypeMap("VARCHAR", "System.String"));
+                meta.AddTypeMap("PhotoExtention", new esTypeMap("VARCHAR", "System.String"));
+
+
+
+                meta.Source = "Transaction";
 				meta.Destination = "Transaction";
 				
 				meta.spInsert = "proc_transactionInsert";				

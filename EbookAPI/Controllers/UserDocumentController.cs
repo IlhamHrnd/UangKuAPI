@@ -104,7 +104,7 @@ namespace UangKuAPI.Controllers
                 else
                     listDocType = asriColl.Select(coll => coll.ItemName).ToList();
 
-                bool isAllowDocument = Converter.IsAllowDocumentType(listDocType, document.FileExtention);
+                bool isAllowDocument = Converter.IsAllowDocumentType(listDocType, document.FileExtention ?? string.Empty);
                 if (!isAllowDocument)
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document Extention Is Not Allow. Document Type : {document.FileExtention}"));
 
@@ -124,7 +124,7 @@ namespace UangKuAPI.Controllers
                 if (!Directory.Exists(folderUser))
                     Directory.CreateDirectory(folderUser);
 
-                var filePath = Path.Combine(folderName, document.PersonId, document.FileName);
+                var filePath = Path.Combine(folderName, document.PersonId, document.FileName ?? string.Empty);
                 var fileInfo = _file.GetFileInfo(filePath);
                 if (fileInfo.Exists)
                     return BadRequest(string.Format(AppConstant.AlreadyExistMsg, document.FileName));
@@ -186,7 +186,7 @@ namespace UangKuAPI.Controllers
                 else
                     listDocType = asriColl.Select(coll => coll.ItemName).ToList();
 
-                bool isAllowDocument = Converter.IsAllowDocumentType(listDocType, document.FileExtention);
+                bool isAllowDocument = Converter.IsAllowDocumentType(listDocType, document.FileExtention ?? string.Empty);
                 if (!isAllowDocument)
                     return BadRequest(string.Format(AppConstant.FailedMsg, "Insert", document.FileName, $"The Document Extention Is Not Allow. Document Type : {document.FileExtention}"));
 
@@ -226,7 +226,7 @@ namespace UangKuAPI.Controllers
 
                 if (rows > 0)
                 {
-                    var filePath = Path.Combine(folderName, document.PersonId, document.FileName);
+                    var filePath = Path.Combine(folderName, document.PersonId, document.FileName ?? string.Empty);
                     await System.IO.File.WriteAllBytesAsync(filePath, document.DocumentData);
                     return Ok(string.Format(AppConstant.UpdateSuccessMsg, document.DocumentId));
                 }

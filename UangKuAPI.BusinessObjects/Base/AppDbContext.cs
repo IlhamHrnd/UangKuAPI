@@ -311,6 +311,9 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(20)
                 .HasColumnName("SRTransaction");
             entity.Property(e => e.TransType).HasMaxLength(15);
+            entity.Property(e => e.PhotoExtention)
+                .HasMaxLength(4)
+                .HasColumnName("PhotoExtention");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -465,6 +468,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.SrproductCategory)
                 .HasMaxLength(20)
                 .HasColumnName("SRProductCategory");
+            entity.Property(e => e.PhotoExtention)
+                .HasMaxLength(4)
+                .HasColumnName("PhotoExtention");
         });
 
         OnModelCreatingPartial(modelBuilder);
