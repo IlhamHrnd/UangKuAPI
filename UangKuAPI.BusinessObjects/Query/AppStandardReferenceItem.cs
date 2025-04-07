@@ -31,7 +31,7 @@ namespace UangKuAPI.BusinessObjects.Query
                 return string.Empty;
 
             var asri = LoadByPrimaryKey(standardReferenceId, itemId);
-            return asri.ItemId ?? string.Empty;
+            return asri.ItemName ?? string.Empty;
         }
     }
 }
