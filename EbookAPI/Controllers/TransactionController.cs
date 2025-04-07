@@ -503,45 +503,39 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var t = new G.Transaction();
+                var query = (from t in _context.Transactions
+                             where t.TransNo == filter.TransNo
+                             select t).FirstOrDefault();
 
-                if (!t.LoadByPrimaryKey(filter.TransNo))
-                {
-                    response = new Response<Transaction>
+                if (string.IsNullOrEmpty(query?.TransNo))
+                    return NotFound(response = new Response<Transaction>
                     {
                         Data = data,
-                        Message = !string.IsNullOrEmpty(t.TransNo) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                        Succeeded = !string.IsNullOrEmpty(t.TransNo)
-                    };
-                    return NotFound(response);
-                }
+                        Message = !string.IsNullOrEmpty(data.TransNo) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                        Succeeded = !string.IsNullOrEmpty(data.TransNo)
+                    });
 
                 var photoData = Array.Empty<byte>();
-                if (t.Photo == null || t.Photo.Length == 0)
+                if (query?.Photo?.Length == 0)
                 {
                     var folderName = _appParameter.ParameterString("TransactionDirectory");
-                    var filePath = Path.Combine(folderName, t.PersonID, $"{t.TransNo.Replace("/", "")}{t.PhotoExtention}");
+                    var filePath = Path.Combine(folderName, query.PersonId, $"{query.TransNo.Replace("/", "")}{query.PhotoExtention}");
                     var fileInfo = _file.GetFileInfo(filePath);
                     if (fileInfo.Exists)
                         photoData = System.IO.File.ReadAllBytes(filePath);
                 }
                 else
-                    photoData = t.Photo;
+                    photoData = query?.Photo;
 
-                data = new Transaction
-                {
-                    TransNo = t.TransNo, PersonId = t.PersonID, Srtransaction = t.SRTransaction, SrtransItem = t.SRTransItem,
-                    Amount = t.Amount, Description = t.Description, Photo = photoData, TransType = t.TransType, TransDate = t.TransDate.HasValue ? DateOnly.FromDateTime(t.TransDate.Value) : null,
-                    CreatedDateTime = t.CreatedDateTime ?? new DateTime(), CreatedByUserId = t.CreatedByUserID, LastUpdateDateTime = t.LastUpdateDateTime ?? new DateTime(), LastUpdateByUserId = t.LastUpdateByUserID
-                };
+                if (query != null)
+                    query.Photo = photoData;
 
-                response = new Response<Transaction>
+                return Ok(response = new Response<Transaction>
                 {
-                    Data = data,
-                    Message = !string.IsNullOrEmpty(t.TransNo) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = !string.IsNullOrEmpty(t.TransNo)
-                };
-                return Ok(response);
+                    Data = query ?? new Transaction(),
+                    Message = !string.IsNullOrEmpty(query?.TransNo) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = !string.IsNullOrEmpty(query?.TransNo)
+                });
             }
             catch (Exception e)
             {

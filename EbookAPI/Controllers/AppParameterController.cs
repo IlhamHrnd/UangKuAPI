@@ -5,7 +5,6 @@ using UangKuAPI.BusinessObjects.Base;
 using UangKuAPI.BusinessObjects.Filter;
 using UangKuAPI.BusinessObjects.Response;
 using UangKuAPI.EntityFramework.Models;
-using UangKuAPI.EntitySpaces.Generated;
 
 namespace UangKuAPI.Controllers
 {
@@ -28,20 +27,10 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                var aQ = new AppparameterQuery("aQ");
-
-                aQ.Select(aQ.ParameterID)
-                    .OrderBy(aQ.ParameterID.Ascending);
-                DataTable dtRecord = aQ.LoadDataTable();
-
-                aQ.Select(aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime, aQ.LastUpdateByUserID, aQ.SRControl, aQ.IsUsedBySystem)
-                    .Skip((filter.PageNumber - 1) * filter.PageSize)
-                    .Take(filter.PageSize);
-                DataTable dt = aQ.LoadDataTable();
-
-                if (dt.Rows.Count == 0)
-                {
-                    response = new PageResponse<List<AppParameter>>(pagedData, 0, 0)
+                var record = (from ap in _context.AppParameters
+                              select ap).ToList();
+                if (record.Count == 0)
+                    return NotFound(response = new PageResponse<List<AppParameter>>(pagedData, 0, 0)
                     {
                         TotalPages = pagedData.Count,
                         TotalRecords = pagedData.Count,
@@ -49,25 +38,16 @@ namespace UangKuAPI.Controllers
                         NextPageLink = string.Empty,
                         Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = pagedData.Count > 0
-                    };
-                    return NotFound(response);
-                }
+                    });
 
-                foreach (DataRow dr in dt.Rows)
-                {
-                    var a = new AppParameter
-                    {
-                        ParameterId = (string)dr["ParameterID"],
-                        ParameterName = dr["ParameterName"] != DBNull.Value ? (string)dr["ParameterName"] : string.Empty,
-                        ParameterValue = dr["ParameterValue"] != DBNull.Value ? (string)dr["ParameterValue"] : string.Empty,
-                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                        LastUpdateByUserId = (string)dr["LastUpdateByUserID"],
-                        Srcontrol = (string)dr["SRControl"],
-                        IsUsedBySystem = (UInt64)dr["IsUsedBySystem"] == 1
-                    };
-                    pagedData.Add(a);
-                }
-                var totalRecord = dtRecord.Rows.Count;
+                var data = (from ap in _context.AppParameters
+                            orderby ap.ParameterId ascending
+                            select ap)
+                            .Skip((filter.PageNumber - 1) * filter.PageSize)
+                            .Take(filter.PageSize)
+                            .ToList();
+
+                var totalRecord = record.Count;
                 var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
 
                 string? prevPageLink = filter.PageNumber > 1
@@ -78,16 +58,15 @@ namespace UangKuAPI.Controllers
                     ? Url.Link("GetAllAppParameter", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                response = new PageResponse<List<AppParameter>>(pagedData, filter.PageNumber, filter.PageSize)
+                return Ok(response = new PageResponse<List<AppParameter>>(data, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
                     NextPageLink = nextPageLink,
-                    Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = pagedData.Count > 0
-                };
-                return Ok(response);
+                    Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = data.Count > 0
+                });
             }
             catch (Exception e)
             {
@@ -112,46 +91,24 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                var aQ = new AppparameterQuery("aQ");
+                var query = (from ap in _context.AppParameters
+                             orderby ap.ParameterId ascending
+                             select ap).ToList();
 
-                aQ.Select(aQ.ParameterID, aQ.ParameterName, aQ.ParameterValue, aQ.LastUpdateDateTime,
-                    aQ.LastUpdateByUserID, aQ.SRControl, aQ.IsUsedBySystem)
-                    .OrderBy(aQ.ParameterID.Ascending);
-                var dt = aQ.LoadDataTable();
-
-                if (dt.Rows.Count == 0)
-                {
-                    response = new Response<List<AppParameter>>
+                if (query.Count == 0)
+                    return NotFound(response = new Response<List<AppParameter>>
                     {
                         Data = pagedData,
                         Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = pagedData.Count > 0
-                    };
-                    return NotFound(response);
-                }
+                    });
 
-                foreach (DataRow dr in dt.Rows)
+                return Ok(response = new Response<List<AppParameter>>
                 {
-                    var a = new AppParameter
-                    {
-                        ParameterId = (string)dr["ParameterID"],
-                        ParameterName = dr["ParameterName"] != DBNull.Value ? (string)dr["ParameterName"] : string.Empty,
-                        ParameterValue = dr["ParameterValue"] != DBNull.Value ? (string)dr["ParameterValue"] : string.Empty,
-                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                        LastUpdateByUserId = (string)dr["LastUpdateByUserID"],
-                        Srcontrol = (string)dr["SRControl"],
-                        IsUsedBySystem = (UInt64)dr["IsUsedBySystem"] == 1
-                    };
-                    pagedData.Add(a);
-                }
-
-                response = new Response<List<AppParameter>>
-                {
-                    Data = pagedData,
-                    Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = pagedData.Count > 0
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = query.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = query.Count > 0
+                });
             }
             catch (Exception e)
             {
@@ -184,36 +141,24 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var a = new Appparameter();
+                var query = (from ap in _context.AppParameters
+                             where ap.ParameterId == filter.ParameterID
+                             select ap).FirstOrDefault();
 
-                if (!a.LoadByPrimaryKey(filter.ParameterID))
-                {
-                    response = new Response<AppParameter>
+                if (string.IsNullOrEmpty(query?.ParameterId))
+                    return NotFound(response = new Response<AppParameter>
                     {
                         Data = data,
-                        Message = !string.IsNullOrEmpty(a.ParameterID) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                        Succeeded = !string.IsNullOrEmpty(a.ParameterID)
-                    };
-                    return NotFound(response);
-                }
+                        Message = !string.IsNullOrEmpty(query?.ParameterId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                        Succeeded = !string.IsNullOrEmpty(query?.ParameterId)
+                    });
 
-                data = new AppParameter
+                return Ok(response = new Response<AppParameter>
                 {
-                    ParameterId = a.ParameterID,
-                    ParameterName = a.ParameterName,
-                    ParameterValue = a.ParameterValue,
-                    LastUpdateDateTime = a.LastUpdateDateTime ?? DateTime.Now,
-                    LastUpdateByUserId = a.LastUpdateByUserID,
-                    IsUsedBySystem = a.IsUsedBySystem == 1,
-                    Srcontrol = a.SRControl
-                };
-                response = new Response<AppParameter>
-                {
-                    Data = data,
-                    Message = !string.IsNullOrEmpty(data.ParameterId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = !string.IsNullOrEmpty(filter.ParameterID)
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = !string.IsNullOrEmpty(query.ParameterId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = !string.IsNullOrEmpty(query.ParameterId)
+                });
             }
             catch (Exception e)
             {

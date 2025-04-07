@@ -1,5 +1,4 @@
 ﻿using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.DataTransfer;
 using UangKuAPI.BusinessObjects.Interface;
 
 namespace UangKuAPI.BusinessObjects.Query
@@ -11,28 +10,19 @@ namespace UangKuAPI.BusinessObjects.Query
             
         }
 
-        public AppParameterDto LoadByPrimaryKey(string parId)
+        public EF.AppParameter LoadByPrimaryKey(string parId)
         {
             if (string.IsNullOrEmpty(parId))
-                return new AppParameterDto
-                {
-                    appParameter = new EntityFramework.Models.AppParameter()
-                };
+                return new EF.AppParameter();
 
             var query = (from ap in _context.AppParameters
                          where ap.ParameterId.Equals(parId)
                          select ap).FirstOrDefault();
 
             if (string.IsNullOrEmpty(query?.ParameterId))
-                return new AppParameterDto
-                {
-                    appParameter = new EntityFramework.Models.AppParameter()
-                };
+                return new EF.AppParameter();
 
-            return new AppParameterDto
-            {
-                appParameter = query
-            };
+            return query;
         }
 
         public string ParameterString(string parId)
@@ -41,7 +31,7 @@ namespace UangKuAPI.BusinessObjects.Query
                 return string.Empty;
 
             var ap = LoadByPrimaryKey(parId);
-            return ap?.appParameter?.ParameterValue ?? string.Empty;
+            return ap.ParameterValue ?? string.Empty;
         }
 
         public int ParameterInteger(string parId)
@@ -50,7 +40,7 @@ namespace UangKuAPI.BusinessObjects.Query
                 return 0;
 
             var ap = LoadByPrimaryKey(parId);
-            return ap?.appParameter?.ParameterValue == null ? 0 : Converter.StringToInt(ap.appParameter.ParameterValue);
+            return !string.IsNullOrEmpty(ap.ParameterValue) ? Converter.StringToInt(ap.ParameterValue) : 0;
         }
 
         public bool ParameterBoolean(string parId)
@@ -59,7 +49,7 @@ namespace UangKuAPI.BusinessObjects.Query
                 return false;
 
             var ap = LoadByPrimaryKey(parId);
-            return ap?.appParameter?.ParameterValue == null ? false : Converter.StringToBool(ap.appParameter.ParameterValue);
+            return ap.ParameterValue != null && Converter.StringToBool(ap.ParameterValue);
         }
     }
 }

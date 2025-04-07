@@ -1,10 +1,8 @@
-﻿using UangKuAPI.BusinessObjects.DataTransfer;
-
-namespace UangKuAPI.BusinessObjects.Interface
+﻿namespace UangKuAPI.BusinessObjects.Interface
 {
     public interface IUser
     {
-        UserDto LoadByPrimaryKey(string userId);
+        EF.User LoadByPrimaryKey(string userId);
         bool IsUserAdmin(string userId);
     }
 }

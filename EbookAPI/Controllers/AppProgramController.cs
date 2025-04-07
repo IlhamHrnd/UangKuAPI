@@ -179,35 +179,24 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var ap = new G.AppProgram();
+                var query = (from ap in _context.AppPrograms
+                             where ap.ProgramId == filter.ProgramID
+                             select ap).FirstOrDefault();
 
-                if (!ap.LoadByPrimaryKey(filter.ProgramID))
-                {
-                    response = new Response<AppProgram>
+                if (string.IsNullOrEmpty(query?.ProgramId))
+                    return NotFound(response = new Response<AppProgram>
                     {
                         Data = data,
-                        Message = !string.IsNullOrEmpty(ap.ProgramID) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                        Succeeded = !string.IsNullOrEmpty(ap.ProgramID)
-                    };
-                    return NotFound(response);
-                }
+                        Message = !string.IsNullOrEmpty(query?.ProgramId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                        Succeeded = !string.IsNullOrEmpty(query?.ProgramId)
+                    });
 
-                data = new AppProgram
+                return Ok(response = new Response<AppProgram>
                 {
-                    ProgramId = ap.ProgramID, ProgramName = ap.ProgramName, Note = ap.Note, IsProgram = Converter.SbyteToUlong(ap.IsProgram), IsProgramAddAble = Converter.SbyteToUlong(ap.IsProgramAddAble),
-                    IsProgramEditAble = Converter.SbyteToUlong(ap.IsProgramEditAble), IsProgramDeleteAble = Converter.SbyteToUlong(ap.IsProgramDeleteAble), IsProgramViewAble = Converter.SbyteToUlong(ap.IsProgramViewAble),
-                    IsProgramApprovalAble = Converter.SbyteToUlong(ap.IsProgramApprovalAble), IsProgramUnApprovalAble = Converter.SbyteToUlong(ap.IsProgramUnApprovalAble), IsProgramVoidAble = Converter.SbyteToUlong(ap.IsProgramVoidAble),
-                    IsProgramUnVoidAble = Converter.SbyteToUlong(ap.IsProgramUnVoidAble), IsProgramPrintAble = Converter.SbyteToUlong(ap.IsProgramPrintAble), IsVisible = Converter.SbyteToUlong(ap.IsVisible),
-                    LastUpdateDateTime = ap.LastUpdateDateTime ?? new DateTime(), LastUpdateByUserId = ap.LastUpdateByUserID, IsUsedBySystem = Converter.SbyteToUlong(ap.IsUsedBySystem) ?? 0
-                };
-
-                response = new Response<AppProgram>
-                {
-                    Data = data,
-                    Message = !string.IsNullOrEmpty(ap.ProgramID) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = !string.IsNullOrEmpty(ap.ProgramID)
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = !string.IsNullOrEmpty(query?.ProgramId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = !string.IsNullOrEmpty(query?.ProgramId)
+                });
             }
             catch (Exception e)
             {

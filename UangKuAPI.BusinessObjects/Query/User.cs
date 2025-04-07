@@ -1,5 +1,4 @@
 ﻿using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.DataTransfer;
 using UangKuAPI.BusinessObjects.Interface;
 
 namespace UangKuAPI.BusinessObjects.Query
@@ -12,28 +11,19 @@ namespace UangKuAPI.BusinessObjects.Query
             _appStandardReferenceItem = appStandardReferenceItem;
         }
 
-        public UserDto LoadByPrimaryKey(string userId)
+        public EF.User LoadByPrimaryKey(string userId)
         {
             if (string.IsNullOrEmpty(userId))
-                return new UserDto
-                {
-                    user = new EntityFramework.Models.User()
-                };
+                return new EF.User();
 
             var query = (from u in _context.Users
                          where u.Username.Equals(userId)
                          select u).FirstOrDefault();
 
             if (string.IsNullOrEmpty(query?.Username))
-                return new UserDto
-                {
-                    user = new EntityFramework.Models.User()
-                };
+                return new EF.User();
 
-            return new UserDto
-            {
-                user = query
-            };
+            return query;
         }
 
         public bool IsUserAdmin(string userId)
@@ -42,17 +32,17 @@ namespace UangKuAPI.BusinessObjects.Query
                 return false;
 
             var u = LoadByPrimaryKey(userId);
-            if (u?.user?.Username == null)
+            if (string.IsNullOrEmpty(u.Username))
                 return false;
 
-            if (string.IsNullOrEmpty(u.user.Sraccess))
+            if (string.IsNullOrEmpty(u.Sraccess))
                 return false;
 
-            var asri = _appStandardReferenceItem.LoadByPrimaryKey("Access", u.user.Sraccess);
-            if (asri?.appStandardReferenceItem?.ItemId == null)
+            var asri = _appStandardReferenceItem.LoadByPrimaryKey("Access", u.Sraccess);
+            if (string.IsNullOrEmpty(asri.ItemId))
                 return false;
 
-            if (asri.appStandardReferenceItem.ItemId == "Access-01" && asri.appStandardReferenceItem.ItemName == "Admin")
+            if (asri.ItemId == "Access-01" && asri.ItemName == "Admin")
                 return true;
 
             return false;

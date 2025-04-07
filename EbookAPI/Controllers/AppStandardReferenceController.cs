@@ -27,22 +27,11 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                var asrQ = new G.AppstandardreferenceQuery("asrQ");
+                var record = (from asr in _context.AppStandardReferences
+                              select asr).ToList();
 
-                asrQ.Select(asrQ.StandardReferenceID)
-                    .OrderBy(asrQ.StandardReferenceID.Ascending);
-                DataTable dtRecord = asrQ.LoadDataTable();
-
-                asrQ.Select(asrQ.StandardReferenceName, asrQ.ItemLength, asrQ.Note, asrQ.LastUpdateDateTime, asrQ.LastUpdateByUserID,
-                    "<CASE WHEN asrQ.IsUsedBySystem = 1 THEN 'true' ELSE 'false' END AS 'IsUsedBySystem'>",
-                    "<CASE WHEN asrQ.IsActive = 1 THEN 'true' ELSE 'false' END AS 'IsActive'>")
-                    .Skip((filter.PageNumber - 1) * filter.PageSize)
-                    .Take(filter.PageSize);
-                DataTable dt = asrQ.LoadDataTable();
-
-                if (dt.Rows.Count == 0)
-                {
-                    response = new PageResponse<List<AppStandardReference>>(pagedData, 0, 0)
+                if (record.Count == 0)
+                    return NotFound(response = new PageResponse<List<AppStandardReference>>(pagedData, 0, 0)
                     {
                         TotalPages = pagedData.Count,
                         TotalRecords = pagedData.Count,
@@ -50,26 +39,16 @@ namespace UangKuAPI.Controllers
                         NextPageLink = string.Empty,
                         Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = pagedData.Count > 0
-                    };
-                    return NotFound(response);
-                }
+                    });
 
-                foreach(DataRow dr in dt.Rows)
-                {
-                    var asr = new AppStandardReference
-                    {
-                        StandardReferenceId = (string)dr["StandardReferenceID"],
-                        StandardReferenceName = dr["StandardReferenceName"] != DBNull.Value ? (string)dr["StandardReferenceName"] : string.Empty,
-                        ItemLength = dr["ItemLength"] != DBNull.Value ? (int)dr["ItemLength"] : 0,
-                        IsUsedBySystem = bool.Parse((string)dr["IsUsedBySystem"]),
-                        IsActive = bool.Parse((string)dr["IsActive"]),
-                        Note = dr["Note"] != DBNull.Value ? (string)dr["Note"] : string.Empty,
-                        LastUpdateDateTime = (DateTime)dr["LastUpdateDateTime"],
-                        LastUpdateByUserId = (string)dr["LastUpdateByUserID"]
-                    };
-                    pagedData.Add(asr);
-                }
-                var totalRecord = dtRecord.Rows.Count;
+                var data = (from asr in _context.AppStandardReferences
+                            orderby asr.StandardReferenceId ascending
+                            select asr)
+                            .Skip((filter.PageNumber - 1) * filter.PageSize)
+                            .Take(filter.PageSize)
+                            .ToList();
+
+                var totalRecord = record.Count;
                 var totalPages = (int)Math.Ceiling((double)totalRecord / filter.PageSize);
 
                 string? prevPageLink = filter.PageNumber > 1
@@ -80,16 +59,15 @@ namespace UangKuAPI.Controllers
                     ? Url.Link("GetAllReferenceID", new { PageNumber = filter.PageNumber + 1, filter.PageSize })
                     : null;
 
-                response = new PageResponse<List<AppStandardReference>>(pagedData, filter.PageNumber, filter.PageSize)
+                return Ok(response = new PageResponse<List<AppStandardReference>>(data, filter.PageNumber, filter.PageSize)
                 {
                     TotalPages = totalPages,
                     TotalRecords = totalRecord,
                     PrevPageLink = prevPageLink,
                     NextPageLink = nextPageLink,
-                    Message = pagedData.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = pagedData.Count > 0
-                };
-                return Ok(response);
+                    Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = data.Count > 0
+                });
             }
             catch (Exception e)
             {
@@ -125,37 +103,24 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var asr = new G.Appstandardreference();
+                var query = (from asr in _context.AppStandardReferences
+                             where asr.StandardReferenceId == filter.ReferenceID
+                             select asr).FirstOrDefault();
 
-                if (!asr.LoadByPrimaryKey(filter.ReferenceID))
-                {
-                    response = new Response<AppStandardReference>
+                if (string.IsNullOrEmpty(query?.StandardReferenceId))
+                    return NotFound(response = new Response<AppStandardReference>
                     {
                         Data = data,
-                        Message = !string.IsNullOrEmpty(asr.StandardReferenceID) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                        Succeeded = !string.IsNullOrEmpty(asr.StandardReferenceID)
-                    };
-                    return NotFound(response);
-                }
+                        Message = !string.IsNullOrEmpty(query?.StandardReferenceId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                        Succeeded = !string.IsNullOrEmpty(query?.StandardReferenceId)
+                    });
 
-                data = new AppStandardReference
+                return Ok(response = new Response<AppStandardReference>
                 {
-                    StandardReferenceId = asr.StandardReferenceID,
-                    StandardReferenceName = !string.IsNullOrEmpty(asr.StandardReferenceName) ? asr.StandardReferenceName : string.Empty,
-                    ItemLength = asr.ItemLength > 0 ? asr.ItemLength : 0,
-                    IsUsedBySystem = asr.IsUsedBySystem == 1,
-                    IsActive = asr.IsActive == 1,
-                    Note = asr.Note,
-                    LastUpdateDateTime = asr.LastUpdateDateTime.HasValue ? (DateTime)asr.LastUpdateDateTime : new DateTime(),
-                    LastUpdateByUserId = asr.LastUpdateByUserID
-                };
-                response = new Response<AppStandardReference>
-                {
-                    Data = data,
-                    Message = !string.IsNullOrEmpty(asr.StandardReferenceID) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = !string.IsNullOrEmpty(asr.StandardReferenceID)
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = !string.IsNullOrEmpty(query.StandardReferenceId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = !string.IsNullOrEmpty(query.StandardReferenceId)
+                });
             }
             catch (Exception e)
             {

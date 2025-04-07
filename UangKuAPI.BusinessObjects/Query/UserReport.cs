@@ -1,5 +1,4 @@
 ﻿using UangKuAPI.BusinessObjects.Base;
-using UangKuAPI.BusinessObjects.DataTransfer;
 using UangKuAPI.BusinessObjects.Interface;
 
 namespace UangKuAPI.BusinessObjects.Query
@@ -11,28 +10,19 @@ namespace UangKuAPI.BusinessObjects.Query
             
         }
 
-        public UserReportDto LoadByPrimaryKey(string reportNo)
+        public EF.UserReport LoadByPrimaryKey(string reportNo)
         {
             if (string.IsNullOrEmpty(reportNo))
-                return new UserReportDto
-                {
-                    userReport = new EntityFramework.Models.UserReport()
-                };
+                return new EF.UserReport();
 
             var query = (from ur in _context.UserReports
                          where ur.ReportNo.Equals(reportNo)
                          select ur).FirstOrDefault();
 
             if (string.IsNullOrEmpty(query?.ReportNo))
-                return new UserReportDto
-                {
-                    userReport = new EntityFramework.Models.UserReport()
-                };
+                return new EF.UserReport();
 
-            return new UserReportDto
-            {
-                userReport = query
-            };
+            return query;
         }
 
         public bool IsUserHasReport(string personId)

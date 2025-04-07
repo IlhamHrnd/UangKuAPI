@@ -42,45 +42,43 @@ namespace UangKuAPI.Controllers
                     return BadRequest(response);
                 }
 
-                var p = new G.Profile();
+                var query = (from p in _context.Profiles
+                             where p.PersonId == filter.PersonID
+                             select p).FirstOrDefault();
 
-                if (!p.LoadByPrimaryKey(filter.PersonID))
-                {
-                    response = new Response<Profile>
+                if (string.IsNullOrEmpty(query?.PersonId))
+                    return NotFound(response = new Response<Profile>
                     {
                         Data = data,
-                        Message = !string.IsNullOrEmpty(p.PersonID) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                        Succeeded = !string.IsNullOrEmpty(p.PersonID)
-                    };
-                    return NotFound(response);
-                }
+                        Message = !string.IsNullOrEmpty(data.PersonId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                        Succeeded = !string.IsNullOrEmpty(data.PersonId)
+                    });
 
                 data = new Profile
                 {
-                    PersonId = p.PersonID,
-                    FirstName = Encryptor.DataDecrypt(p.FirstName, _param.Key01),
-                    MiddleName = Encryptor.DataDecrypt(p.MiddleName, _param.Key01),
-                    LastName = Encryptor.DataDecrypt(p.LastName, _param.Key01),
-                    BirthDate = p.BirthDate,
-                    PlaceOfBirth = Encryptor.DataDecrypt(p.PlaceOfBirth, _param.Key01),
-                    Photo = p.Photo,
-                    Address = Encryptor.DataDecrypt(p.Address, _param.Key01),
-                    Province = Encryptor.DataDecrypt(p.Province, _param.Key01),
-                    City = Encryptor.DataDecrypt(p.City, _param.Key01),
-                    District = Encryptor.DataDecrypt(p.District, _param.Key01),
-                    Subdistrict = Encryptor.DataDecrypt(p.Subdistrict, _param.Key01),
-                    PostalCode = p.PostalCode,
-                    LastUpdateDateTime = p.LastUpdateDateTime ?? new DateTime(),
-                    LastUpdateByUser = p.LastUpdateByUser
+                    PersonId = query.PersonId,
+                    FirstName = Encryptor.DataDecrypt(query.FirstName, _param.Key01 ?? string.Empty),
+                    MiddleName = Encryptor.DataDecrypt(query.MiddleName, _param.Key01 ?? string.Empty),
+                    LastName = Encryptor.DataDecrypt(query.LastName, _param.Key01 ?? string.Empty),
+                    BirthDate = query.BirthDate,
+                    PlaceOfBirth = Encryptor.DataDecrypt(query.PlaceOfBirth, _param.Key01 ?? string.Empty),
+                    Photo = query.Photo,
+                    Address = Encryptor.DataDecrypt(query.Address, _param.Key01 ?? string.Empty),
+                    Province = Encryptor.DataDecrypt(query.Province, _param.Key01 ?? string.Empty),
+                    City = Encryptor.DataDecrypt(query.City, _param.Key01 ?? string.Empty),
+                    District = Encryptor.DataDecrypt(query.District, _param.Key01 ?? string.Empty),
+                    Subdistrict = Encryptor.DataDecrypt(query.Subdistrict, _param.Key01 ?? string.Empty),
+                    PostalCode = query.PostalCode,
+                    LastUpdateDateTime = query.LastUpdateDateTime,
+                    LastUpdateByUser = query.LastUpdateByUser
                 };
 
-                response = new Response<Profile>
+                return Ok(response = new Response<Profile>
                 {
                     Data = data,
-                    Message = !string.IsNullOrEmpty(p.PersonID) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = !string.IsNullOrEmpty(p.PersonID)
-                };
-                return Ok(response);
+                    Message = !string.IsNullOrEmpty(data.PersonId) ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = !string.IsNullOrEmpty(data.PersonId)
+                });
             }
             catch (Exception e)
             {

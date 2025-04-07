@@ -26,42 +26,24 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                var pQ = new G.ProvincesQuery("pQ");
+                var query = (from p in _context.Provinces
+                             orderby p.ProvName ascending
+                             select p).ToList();
 
-                pQ.Select(pQ.ProvID, pQ.ProvName, pQ.LocationID, pQ.Status)
-                    .OrderBy(pQ.ProvName.Ascending);
-                var dt = pQ.LoadDataTable();
-
-                if (dt.Rows.Count == 0)
-                {
-                    response = new Response<List<Province>>
+                if (query.Count == 0)
+                    return NotFound(response = new Response<List<Province>>
                     {
                         Data = data,
                         Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = data.Count > 0
-                    };
-                    return NotFound(response);
-                }
+                    });
 
-                foreach (DataRow dr in dt.Rows)
+                return Ok(response = new Response<List<Province>>
                 {
-                    var prov = new Province
-                    {
-                        ProvId = (int)dr["ProvID"],
-                        ProvName = dr["ProvName"] != DBNull.Value ? (string)dr["ProvName"] : string.Empty,
-                        LocationId = dr["LocationID"] != DBNull.Value ? (int)dr["LocationID"] : 0,
-                        Status = dr["Status"] != DBNull.Value ? (int)dr["Status"] : 0
-                    };
-                    data.Add(prov);
-                }
-
-                response = new Response<List<Province>>
-                {
-                    Data = data,
-                    Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = data.Count > 0
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = query.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = query.Count > 0
+                });
             }
             catch (Exception e)
             {
@@ -83,53 +65,36 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(filter.ProvID))
+                if (filter.ProvID == 0)
                 {
                     response = new Response<List<City>>
                     {
                         Data = data,
                         Message = string.Format(AppConstant.RequiredMsg, "ProvincesID"),
-                        Succeeded = !string.IsNullOrEmpty(filter.ProvID)
+                        Succeeded = filter.ProvID != 0
                     };
                     return BadRequest(response);
                 }
 
-                var cQ = new G.CitiesQuery("cQ");
+                var query = (from c in _context.Cities
+                             where c.ProvId == filter.ProvID
+                             orderby c.CityName ascending
+                             select c).ToList();
 
-                cQ.Select(cQ.CityID, cQ.CityName, cQ.ProvID)
-                    .Where(cQ.ProvID == filter.ProvID)
-                    .OrderBy(cQ.CityName.Ascending);
-                var dt = cQ.LoadDataTable();
-
-                if (dt.Rows.Count == 0)
-                {
-                    response = new Response<List<City>>
+                if (query.Count == 0)
+                    return NotFound(response = new Response<List<City>>
                     {
                         Data = data,
                         Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = data.Count > 0
-                    };
-                    return NotFound(response);
-                }
+                    });
 
-                foreach (DataRow dr in dt.Rows)
+                return Ok(response = new Response<List<City>>
                 {
-                    var city = new City
-                    {
-                        CityId = (int)dr["CityID"],
-                        CityName = dr["CityName"] != DBNull.Value ? (string)dr["CityName"] : string.Empty,
-                        ProvId = dr["ProvID"] != DBNull.Value ? (int)dr["ProvID"] : 0
-                    };
-                    data.Add(city);
-                }
-
-                response = new Response<List<City>>
-                {
-                    Data = data,
-                    Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = data.Count > 0
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = query.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = query.Count > 0
+                });
             }
             catch (Exception e)
             {
@@ -151,53 +116,36 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(filter.CityID))
+                if (filter.CityID == 0)
                 {
                     response = new Response<List<District>>
                     {
                         Data = data,
                         Message = string.Format(AppConstant.RequiredMsg, "CityID"),
-                        Succeeded = !string.IsNullOrEmpty(filter.ProvID)
+                        Succeeded = filter.CityID != 0
                     };
                     return BadRequest(response);
                 }
 
-                var dQ = new G.DistrictsQuery("dQ");
+                var query = (from d in _context.Districts
+                             where d.CityId == filter.CityID
+                             orderby d.DisName ascending
+                             select d).ToList();
 
-                dQ.Select(dQ.DisID, dQ.DisName, dQ.CityID)
-                    .Where(dQ.CityID == filter.CityID)
-                    .OrderBy(dQ.DisName.Ascending);
-                var dt = dQ.LoadDataTable();
-
-                if (dt.Rows.Count == 0)
-                {
-                    response = new Response<List<District>>
+                if (query.Count == 0)
+                    return NotFound(response = new Response<List<District>>
                     {
                         Data = data,
                         Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = data.Count > 0
-                    };
-                    return NotFound(response);
-                }
+                    });
 
-                foreach (DataRow dr in dt.Rows)
+                return Ok(response = new Response<List<District>>
                 {
-                    var dis = new District
-                    {
-                        DisId = (int)dr["DisID"],
-                        DisName = dr["DisName"] != DBNull.Value ? (string)dr["DisName"] : string.Empty,
-                        CityId = dr["CityID"] != DBNull.Value ? (int)dr["CityID"] : 0
-                    };
-                    data.Add(dis);
-                }
-
-                response = new Response<List<District>>
-                {
-                    Data = data,
-                    Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = data.Count > 0
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = query.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = query.Count > 0
+                });
             }
             catch (Exception e)
             {
@@ -219,53 +167,36 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(filter.DistrictID))
+                if (filter.DistrictID == 0)
                 {
                     response = new Response<List<Subdistrict>>
                     {
                         Data = data,
                         Message = string.Format(AppConstant.RequiredMsg, "Subdistrict ID"),
-                        Succeeded = !string.IsNullOrEmpty(filter.ProvID)
+                        Succeeded = filter.DistrictID != 0
                     };
                     return BadRequest(response);
                 }
 
-                var sQ = new G.SubdistrictsQuery("sQ");
+                var query = (from sd in _context.Subdistricts
+                             where sd.DisId == filter.DistrictID
+                             orderby sd.SubdisName ascending
+                             select sd).ToList();
 
-                sQ.Select(sQ.SubdisID, sQ.SubdisName, sQ.DisID)
-                    .Where(sQ.DisID == filter.DistrictID)
-                    .OrderBy(sQ.SubdisName.Ascending);
-                var dt = sQ.LoadDataTable();
-
-                if (dt.Rows.Count == 0)
-                {
-                    response = new Response<List<Subdistrict>>
+                if (query.Count == 0)
+                    return NotFound(response = new Response<List<Subdistrict>>
                     {
                         Data = data,
                         Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
                         Succeeded = data.Count > 0
-                    };
-                    return NotFound(response);
-                }
+                    });
 
-                foreach (DataRow dr in dt.Rows)
+                return Ok(response = new Response<List<Subdistrict>>
                 {
-                    var sub = new Subdistrict
-                    {
-                        SubdisId = (int)dr["SubdisID"],
-                        SubdisName = dr["SubdisName"] != DBNull.Value ? (string)dr["SubdisName"] : string.Empty,
-                        DisId = dr["DisID"] != DBNull.Value ? (int)dr["DisID"] : 0
-                    };
-                    data.Add(sub);
-                }
-
-                response = new Response<List<Subdistrict>>
-                {
-                    Data = data,
-                    Message = data.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = data.Count > 0
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = query.Count > 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = query.Count > 0
+                });
             }
             catch (Exception e)
             {
@@ -287,80 +218,68 @@ namespace UangKuAPI.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(filter.ProvID))
+                if (filter.ProvID == 0)
                 {
                     response = new Response<PostalCode>
                     {
                         Data = data,
                         Message = string.Format(AppConstant.RequiredMsg, "Provinces ID"),
-                        Succeeded = !string.IsNullOrEmpty(filter.ProvID)
+                        Succeeded = filter.ProvID != 0
                     };
                     return BadRequest(response);
                 }
 
-                if (string.IsNullOrEmpty(filter.CityID))
+                if (filter.CityID == 0)
                 {
                     response = new Response<PostalCode>
                     {
                         Data = data,
                         Message = string.Format(AppConstant.RequiredMsg, "City ID"),
-                        Succeeded = !string.IsNullOrEmpty(filter.ProvID)
+                        Succeeded = filter.CityID != 0
                     };
                     return BadRequest(response);
                 }
 
-                if (string.IsNullOrEmpty(filter.DistrictID))
+                if (filter.DistrictID == 0)
                 {
                     response = new Response<PostalCode>
                     {
                         Data = data,
                         Message = string.Format(AppConstant.RequiredMsg, "District ID"),
-                        Succeeded = !string.IsNullOrEmpty(filter.ProvID)
+                        Succeeded = filter.DistrictID != 0
                     };
                     return BadRequest(response);
                 }
 
-                if (string.IsNullOrEmpty(filter.SubDisID))
+                if (filter.SubDisID == 0)
                 {
                     response = new Response<PostalCode>
                     {
                         Data = data,
                         Message = string.Format(AppConstant.RequiredMsg, "Subdistrict ID"),
-                        Succeeded = !string.IsNullOrEmpty(filter.ProvID)
+                        Succeeded = filter.SubDisID != 0
                     };
                     return BadRequest(response);
                 }
 
-                var pc = new G.Postalcode();
+                var query = (from pc in _context.PostalCodes
+                             where pc.ProvId == filter.ProvID && pc.CityId == filter.CityID && pc.SubdisId == filter.SubDisID
+                             select pc).FirstOrDefault();
 
-                if (!pc.LoadByPrimaryKey(filter.ProvID, filter.CityID, filter.DistrictID, filter.SubDisID))
-                {
-                    response = new Response<PostalCode>
+                if (query == null)
+                    return NotFound(response = new Response<PostalCode>
                     {
                         Data = data,
-                        Message = pc.PostalCode != 0 && pc.PostalCode != null ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                        Succeeded = pc.PostalCode != 0 && pc.PostalCode != null
-                    };
-                    return NotFound(response);
-                }
+                        Message = data?.PostalId != 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                        Succeeded = data?.PostalId != 0
+                    });
 
-                data = new PostalCode
+                return Ok(response = new Response<PostalCode>
                 {
-                    PostalId = pc.PostalID ?? 0,
-                    SubdisId = pc.SubdisID,
-                    DisId = pc.DisID,
-                    CityId = pc.CityID,
-                    ProvId = pc.ProvID,
-                    PostalCode1 = pc.PostalCode
-                };
-
-                response = new Response<PostalCode>
-                {
-                    Data = data,
-                    Message = pc.PostalCode != 0 && pc.PostalCode != null ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
-                    Succeeded = pc.PostalCode != 0 && pc.PostalCode != null
-                };
-                return Ok(response);
+                    Data = query,
+                    Message = query?.PostalId != 0 ? AppConstant.FoundMsg : AppConstant.NotFoundMsg,
+                    Succeeded = query?.PostalId != 0
+                });
             }
             catch (Exception e)
             {
